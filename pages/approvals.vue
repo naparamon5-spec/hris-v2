@@ -38,25 +38,24 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import type { Status } from '~/composables/useMockData'
+<script setup>
 const { approvals, badge } = useMockData()
 const items = useState('mock-approvals', () => approvals.map(a => ({ ...a })))
 const q = ref('')
 const cats = ['All', 'Leave of Absence', 'Overtime', 'Call Approval', 'Manual Arrival/Departure', 'Other Requests']
 const cat = ref('All')
-const selected = ref<number[]>([])
+const selected = ref([])
 const toast = ref('')
 const rows = computed(() => items.value.filter(t =>
   (cat.value === 'All' || t.app === cat.value) &&
   `${t.name} ${t.empId} ${t.app} ${t.date} ${t.no}`.toLowerCase().includes(q.value.toLowerCase())))
-const act = (ids: number[], s: Status) => {
+const act = (ids, s) => {
   items.value.forEach(t => { if (ids.includes(t.id)) t.status = s })
   toast.value = `${s} ${ids.length} record${ids.length === 1 ? '' : 's'}`
   selected.value = []
   setTimeout(() => (toast.value = ''), 2200)
 }
-const editOt = (t: { hours: number }) => {
+const editOt = (t) => {
   const v = prompt('Approved OT hours', String(t.hours))
   if (v && !isNaN(+v)) { t.hours = +v; toast.value = 'Saved'; setTimeout(() => (toast.value = ''), 1800) }
 }

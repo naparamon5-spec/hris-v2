@@ -10,12 +10,12 @@
   </AuthCard>
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({ layout: 'auth' })
 const { companies } = useMockData()
 const q = ref('')
 const company = useState('company', () => companies[0])
-const pick = (c: string) => { company.value = c; navigateTo('/') }
+const pick = (c) => { company.value = c; navigateTo('/') }
 const list = computed(() => companies.filter(c => c.toLowerCase().includes(q.value.toLowerCase())))
 </script>
 

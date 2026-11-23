@@ -36,7 +36,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 // Mock data only exists for November 2026; other months show full attendance.
 const { whosOut } = useMockData()
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -47,11 +47,11 @@ const sel = ref(now.getFullYear() === 2026 && now.getMonth() === 10 ? now.getDat
 const offset = computed(() => new Date(year.value, month.value, 1).getDay())
 const days = computed(() => new Date(year.value, month.value + 1, 0).getDate())
 const monthLabel = computed(() => new Date(year.value, month.value, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))
-const dayPeople = (d: number) => (year.value === 2026 && month.value === 10 ? whosOut[d] : undefined) || []
+const dayPeople = (d) => (year.value === 2026 && month.value === 10 ? whosOut[d] : undefined) || []
 const people = computed(() => dayPeople(sel.value))
 const dayName = computed(() => new Date(year.value, month.value, sel.value).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }))
-const isToday = (d: number) => year.value === now.getFullYear() && month.value === now.getMonth() && d === now.getDate()
-const shift = (n: number) => {
+const isToday = (d) => year.value === now.getFullYear() && month.value === now.getMonth() && d === now.getDate()
+const shift = (n) => {
   const dt = new Date(year.value, month.value + n, 1)
   year.value = dt.getFullYear(); month.value = dt.getMonth()
   sel.value = Math.min(sel.value, days.value)

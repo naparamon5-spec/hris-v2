@@ -43,48 +43,47 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import type { RequestRecord, RequestTypeKey, Status } from '~/composables/useMockData'
+<script setup>
 
 const route = useRoute()
-const type = computed(() => route.params.type as string)
+const type = computed(() => route.params.type)
 const isApproved = computed(() => type.value === 'approved')
 const meta = computed(() => isApproved.value
-  ? { title: 'Approved Records', desc: 'All your approved requests across categories.', subtypes: [] as readonly string[] }
-  : requestTypes[type.value as RequestTypeKey])
+  ? { title: 'Approved Records', desc: 'All your approved requests across categories.', subtypes: [] }
+  : requestTypes[type.value])
 
 const { requests, badge } = useMockData()
 const q = ref('')
-const filters = ['All', 'For Approval', 'Approved', 'Disapproved', 'Cancelled'] as const
-const status = ref<string>('All')
+const filters = ['All', 'For Approval', 'Approved', 'Disapproved', 'Cancelled']
+const status = ref('All')
 const toast = ref('')
-const flash = (m: string) => { toast.value = m; setTimeout(() => (toast.value = ''), 2200) }
+const flash = (m) => { toast.value = m; setTimeout(() => (toast.value = ''), 2200) }
 
-const source = computed<(RequestRecord & { category?: string })[]>(() => {
+const source = computed(() => {
   if (isApproved.value) {
-    return (Object.keys(requests.value) as RequestTypeKey[]).flatMap(k =>
+    return Object.keys(requests.value).flatMap(k =>
       requests.value[k].filter(r => r.status === 'Approved').map(r => ({ ...r, category: requestTypes[k].title })))
   }
-  return requests.value[type.value as RequestTypeKey] ?? []
+  return requests.value[type.value] ?? []
 })
 const rows = computed(() => source.value.filter(r =>
   (status.value === 'All' || r.status === status.value) &&
   `${r.no} ${r.type} ${r.approver}`.toLowerCase().includes(q.value.toLowerCase())))
 
 const formOpen = ref(false)
-const editing = ref<RequestRecord | null>(null)
-const openForm = (r: RequestRecord | null = null) => { editing.value = r; formOpen.value = true }
-const setStatus = (r: RequestRecord, s: Status) => { r.status = s; flash(`Record ${s === 'Cancelled' ? 'cancelled' : 'updated'}`) }
+const editing = ref(null)
+const openForm = (r = null) => { editing.value = r; formOpen.value = true }
+const setStatus = (r, s) => { r.status = s; flash(`Record ${s === 'Cancelled' ? 'cancelled' : 'updated'}`) }
 
-const save = (data: Partial<RequestRecord>) => {
-  const list = requests.value[type.value as RequestTypeKey]
+const save = (data) => {
+  const list = requests.value[type.value]
   if (editing.value) { Object.assign(editing.value, data); flash('Record Updated') }
   else {
     const prefix = list[0]?.no.split('-')[0] ?? 'REQ'
     list.unshift({
       no: `${prefix}-2026-${String(141 + Math.floor(Math.random() * 800)).padStart(4, '0')}`,
       dateFiled: 'Nov 23, 2026', approver: 'Ramon Napa', status: 'For Approval', ...data
-    } as RequestRecord)
+    })
     flash('Record Created · Sent for Approval')
   }
   formOpen.value = false

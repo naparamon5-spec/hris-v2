@@ -1,18 +1,5 @@
 // Mock data mirroring the hris_mobile app screens. Frontend only — no API calls.
-export type Status = 'Approved' | 'For Approval' | 'Disapproved' | 'Cancelled' | 'Draft'
-
-export interface RequestRecord {
-  no: string
-  type: string
-  dateFiled: string
-  date: string
-  from?: string
-  to?: string
-  hours: number
-  reason: string
-  approver: string
-  status: Status
-}
+// Request statuses: 'Approved' | 'For Approval' | 'Disapproved' | 'Cancelled' | 'Draft'
 
 export const requestTypes = {
   'leave-of-absence': {
@@ -35,14 +22,13 @@ export const requestTypes = {
     title: 'Other Requests', desc: 'COE, EPP items and other HR requests.', icon: 'doc',
     subtypes: ['Certificate of Employment', 'EPP Item', 'ID Replacement', 'Company Loan']
   }
-} as const
-export type RequestTypeKey = keyof typeof requestTypes
+}
 
 const approvers = ['Ramon Napa', 'Kristine Samonte', 'Vincent Cataylo']
-const statuses: Status[] = ['Approved', 'For Approval', 'Approved', 'Disapproved', 'Cancelled', 'Approved', 'For Approval']
+const statuses = ['Approved', 'For Approval', 'Approved', 'Disapproved', 'Cancelled', 'Approved', 'For Approval']
 const reasons = ['Family matter', 'Client meeting in Makati', 'Medical check-up', 'Network deployment', 'Personal errand', 'Year-end inventory']
 
-function makeRecords(key: RequestTypeKey, prefix: string): RequestRecord[] {
+function makeRecords(key, prefix) {
   const subs = requestTypes[key].subtypes
   return Array.from({ length: 9 }, (_, i) => {
     const day = 22 - i * 2
@@ -93,7 +79,7 @@ export const useMockData = () => {
   }
 
   // Shared state so records created in the UI persist while navigating.
-  const requests = useState<Record<RequestTypeKey, RequestRecord[]>>('mock-requests', () => ({
+  const requests = useState('mock-requests', () => ({
     'leave-of-absence': makeRecords('leave-of-absence', 'LOA'),
     'call-approval': makeRecords('call-approval', 'CA'),
     'manual-arrival-departure': makeRecords('manual-arrival-departure', 'MAD'),
@@ -102,19 +88,19 @@ export const useMockData = () => {
   }))
 
   const recentActivity = [
-    { title: 'Overtime approved', meta: 'OT-2026-0140 • by Ramon Napa', when: '2h ago', status: 'Approved' as Status },
-    { title: 'Leave of Absence filed', meta: 'LOA-2026-0139 • Vacation Leave', when: 'Yesterday', status: 'For Approval' as Status },
-    { title: 'Payslip released', meta: 'Period 22 • Nov 1–15', when: 'Nov 15', status: 'Approved' as Status },
-    { title: 'Call Approval disapproved', meta: 'CA-2026-0137 • Site Visit', when: 'Nov 12', status: 'Disapproved' as Status }
+    { title: 'Overtime approved', meta: 'OT-2026-0140 • by Ramon Napa', when: '2h ago', status: 'Approved' },
+    { title: 'Leave of Absence filed', meta: 'LOA-2026-0139 • Vacation Leave', when: 'Yesterday', status: 'For Approval' },
+    { title: 'Payslip released', meta: 'Period 22 • Nov 1–15', when: 'Nov 15', status: 'Approved' },
+    { title: 'Call Approval disapproved', meta: 'CA-2026-0137 • Site Visit', when: 'Nov 12', status: 'Disapproved' }
   ]
 
   const approvals = [
-    { id: 1, name: 'Maria Santos', empId: 'AN-0012', app: 'Overtime', no: 'OT-2026-0211', date: 'Nov 21, 2026', hours: 3, detail: 'Regular OT • 06:00 PM – 09:00 PM', status: 'For Approval' as Status },
-    { id: 2, name: 'Jose Reyes', empId: 'AN-0034', app: 'Leave of Absence', no: 'LOA-2026-0310', date: 'Nov 25, 2026', hours: 8, detail: 'Sick Leave • Whole day', status: 'For Approval' as Status },
-    { id: 3, name: 'Liza Garcia', empId: 'AN-0078', app: 'Call Approval', no: 'CA-2026-0098', date: 'Nov 20, 2026', hours: 4, detail: 'Client Call • BGC', status: 'For Approval' as Status },
-    { id: 4, name: 'Mark Bautista', empId: 'AN-0067', app: 'Manual Arrival/Departure', no: 'MAD-2026-0044', date: 'Nov 19, 2026', hours: 0, detail: 'Manual Arrival • 08:47 AM', status: 'For Approval' as Status },
-    { id: 5, name: 'Paolo Mendoza', empId: 'AN-0090', app: 'Overtime', no: 'OT-2026-0207', date: 'Nov 18, 2026', hours: 2.5, detail: 'Rest Day OT • 09:00 AM – 11:30 AM', status: 'For Approval' as Status },
-    { id: 6, name: 'Ana Villanueva', empId: 'AN-0051', app: 'Other Requests', no: 'OR-2026-0019', date: 'Nov 17, 2026', hours: 0, detail: 'Certificate of Employment', status: 'For Approval' as Status }
+    { id: 1, name: 'Maria Santos', empId: 'AN-0012', app: 'Overtime', no: 'OT-2026-0211', date: 'Nov 21, 2026', hours: 3, detail: 'Regular OT • 06:00 PM – 09:00 PM', status: 'For Approval' },
+    { id: 2, name: 'Jose Reyes', empId: 'AN-0034', app: 'Leave of Absence', no: 'LOA-2026-0310', date: 'Nov 25, 2026', hours: 8, detail: 'Sick Leave • Whole day', status: 'For Approval' },
+    { id: 3, name: 'Liza Garcia', empId: 'AN-0078', app: 'Call Approval', no: 'CA-2026-0098', date: 'Nov 20, 2026', hours: 4, detail: 'Client Call • BGC', status: 'For Approval' },
+    { id: 4, name: 'Mark Bautista', empId: 'AN-0067', app: 'Manual Arrival/Departure', no: 'MAD-2026-0044', date: 'Nov 19, 2026', hours: 0, detail: 'Manual Arrival • 08:47 AM', status: 'For Approval' },
+    { id: 5, name: 'Paolo Mendoza', empId: 'AN-0090', app: 'Overtime', no: 'OT-2026-0207', date: 'Nov 18, 2026', hours: 2.5, detail: 'Rest Day OT • 09:00 AM – 11:30 AM', status: 'For Approval' },
+    { id: 6, name: 'Ana Villanueva', empId: 'AN-0051', app: 'Other Requests', no: 'OR-2026-0019', date: 'Nov 17, 2026', hours: 0, detail: 'Certificate of Employment', status: 'For Approval' }
   ]
 
   const payslips = Array.from({ length: 8 }, (_, i) => {
@@ -167,7 +153,7 @@ export const useMockData = () => {
     { name: 'Abner Padilla', role: 'Logistics Officer', department: 'Operations', email: 'a.padilla@ardent.example', local: '604' }
   ]
 
-  const whosOut: Record<number, { name: string; type: string; kind: 'leave' | 'call' }[]> = {
+  const whosOut = {
     3: [{ name: 'Vincent Cataylo', type: 'Vacation Leave', kind: 'leave' }],
     10: [{ name: 'Jose Reyes', type: 'Sick Leave', kind: 'leave' }, { name: 'Liza Garcia', type: 'Client Call', kind: 'call' }],
     14: [{ name: 'Abner Padilla', type: 'Vacation Leave', kind: 'leave' }],
@@ -178,13 +164,14 @@ export const useMockData = () => {
     27: [{ name: 'Maria Santos', type: 'Client Call', kind: 'call' }]
   }
 
-  const notifications = [
+  // Shared so the header bell count updates when items are read.
+  const notifications = useState('mock-notifications', () => [
     { id: 1, title: 'Overtime approved', body: 'Your OT-2026-0140 was approved by Ramon Napa.', when: '2h ago', unread: true },
     { id: 2, title: 'New approval request', body: 'Maria Santos filed an Overtime request for Nov 21.', when: '5h ago', unread: true },
     { id: 3, title: 'Payslip available', body: 'Your payslip for Nov 1 – 15 is ready to view.', when: 'Nov 15', unread: false },
     { id: 4, title: 'Call Approval disapproved', body: 'CA-2026-0137 was disapproved. Reason: incomplete details.', when: 'Nov 12', unread: false },
     { id: 5, title: 'Holiday advisory', body: 'Nov 30 (Bonifacio Day) is a regular holiday.', when: 'Nov 10', unread: false }
-  ]
+  ])
 
   const certificates = [
     { name: 'Cisco CCNA', level: 2, earned: 3, total: 4, status: 'Active' },
@@ -194,10 +181,10 @@ export const useMockData = () => {
 
   const companies = ['Ardent Networks Inc.', 'Lamco International', 'Match', 'Fastronics', 'Diamond Concept', 'Diamond Office', 'Overland', 'Versatech International', 'EZ Touch', 'Real Modern Design', 'HRIS Test']
 
-  const badge = (s: string) =>
-    ({ Approved: 'ok', 'For Approval': 'warn', Draft: 'navy', Disapproved: 'red', Cancelled: 'gray' } as Record<string, string>)[s] ?? 'navy'
+  const badge = (s) =>
+    ({ Approved: 'ok', 'For Approval': 'warn', Draft: 'navy', Disapproved: 'red', Cancelled: 'gray' })[s] ?? 'navy'
 
-  const peso = (n: number) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const peso = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   return {
     user, leaveCredits, leaveHours, requests, recentActivity, approvals, payslips, timesheet,

@@ -29,11 +29,11 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { payslips } = useMockData()
 const bulk = ref(false)
 const bq = ref('')
-const picked = ref<number[]>([])
+const picked = ref([])
 const toast = ref('')
 const bulkRows = computed(() => payslips.filter(p => `${p.period} ${p.label}`.toLowerCase().includes(bq.value.toLowerCase())))
 const download = () => {

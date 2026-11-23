@@ -13,7 +13,7 @@
   </AuthCard>
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({ layout: 'auth' })
 const a = ref(''); const b = ref(''); const err = ref('')
 const done = () => { if (a.value !== b.value) { err.value = 'Passwords do not match.'; return } navigateTo('/login') }

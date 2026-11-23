@@ -30,7 +30,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const contacts = [
   { title: 'HR Helpdesk', desc: 'Leave, records and employment concerns', value: 'Local 502', icon: 'people' },
   { title: 'Payroll', desc: 'Payslip and salary questions', value: 'Local 410', icon: 'wallet' },

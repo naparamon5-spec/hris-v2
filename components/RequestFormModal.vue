@@ -34,19 +34,18 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import type { RequestRecord } from '~/composables/useMockData'
-const props = defineProps<{ title: string; subtypes: readonly string[]; record: RequestRecord | null; kind: string }>()
-const emit = defineEmits<{ close: []; save: [Partial<RequestRecord>] }>()
+<script setup>
+const props = defineProps({ title: String, subtypes: { type: Array, default: () => [] }, record: { type: Object, default: null }, kind: String })
+const emit = defineEmits(['close', 'save'])
 
-const to24 = (t?: string) => {
+const to24 = (t) => {
   if (!t) return ''
   const m = t.match(/(\d+):(\d+)\s*(AM|PM)/i)
   if (!m) return t
   let h = +m[1] % 12; if (m[3].toUpperCase() === 'PM') h += 12
   return `${String(h).padStart(2, '0')}:${m[2]}`
 }
-const to12 = (t: string) => {
+const to12 = (t) => {
   if (!t) return ''
   const [h, m] = t.split(':').map(Number)
   return `${String(h % 12 || 12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`

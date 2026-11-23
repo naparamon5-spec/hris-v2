@@ -19,7 +19,7 @@
   </section>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const values = ['Partnership', 'Service', 'Learning', 'Trust', 'Scale']
 const year = new Date().getFullYear()
 </script>

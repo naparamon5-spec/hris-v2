@@ -19,10 +19,10 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { notifications } = useMockData()
-const items = reactive(notifications)
-const tab = ref<'All' | 'Unread'>('All')
+const items = notifications.value
+const tab = ref('All')
 const rows = computed(() => items.filter(n => tab.value === 'All' || n.unread))
 const unread = computed(() => items.filter(n => n.unread).length)
 </script>

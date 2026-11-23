@@ -5,8 +5,8 @@
   </div>
 </template>
 
-<script setup lang="ts">
-defineProps<{ light?: boolean; sub?: string }>()
+<script setup>
+defineProps({ light: Boolean, sub: String })
 </script>
 
 <style scoped>

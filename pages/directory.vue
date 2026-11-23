@@ -14,7 +14,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { directory } = useMockData()
 const q = ref('')
 const filtered = computed(() => directory.filter(e => `${e.name} ${e.role} ${e.department}`.toLowerCase().includes(q.value.toLowerCase())))

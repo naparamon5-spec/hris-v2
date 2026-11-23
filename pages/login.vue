@@ -41,13 +41,13 @@
   </AuthCard>
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({ layout: 'auth' })
 const { companies } = useMockData()
 const company = useState('company', () => companies[0])
 const empId = ref('')
 const show = ref(false)
-const step = ref<'login' | 'otp'>('login')
+const step = ref('login')
 const signIn = () => { step.value = 'otp' }
 </script>
 

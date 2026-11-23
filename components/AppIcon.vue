@@ -2,9 +2,9 @@
   <svg viewBox="0 0 24 24" :width="size" :height="size" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" v-html="paths[name] || paths.doc" />
 </template>
 
-<script setup lang="ts">
-withDefaults(defineProps<{ name: string; size?: number }>(), { size: 18 })
-const paths: Record<string, string> = {
+<script setup>
+defineProps({ name: { type: String, required: true }, size: { type: Number, default: 18 } })
+const paths = {
   home: '<rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/>',
   requests: '<path d="M9 3h6l1 2h3v16H5V5h3z"/><path d="M9 12h6M9 16h4"/>',
   calendar: '<rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',

@@ -17,7 +17,7 @@
   </AuthCard>
 </template>
 
-<script setup lang="ts">
+<script setup>
 definePageMeta({ layout: 'auth' })
 const sent = ref(false)
 </script>

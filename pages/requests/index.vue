@@ -19,11 +19,10 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import type { RequestTypeKey } from '~/composables/useMockData'
+<script setup>
 const { requests } = useMockData()
-const pending = (k: RequestTypeKey) => requests.value[k].filter(r => r.status === 'For Approval').length
-const fileable = (Object.keys(requestTypes) as RequestTypeKey[])
+const pending = (k) => requests.value[k].filter(r => r.status === 'For Approval').length
+const fileable = Object.keys(requestTypes)
 const groups = computed(() => [
   {
     title: 'File a request',

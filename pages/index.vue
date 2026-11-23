@@ -51,7 +51,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { user, leaveCredits, approvals, recentActivity, badge } = useMockData()
 const icons = ['calendar', 'shield', 'check', 'clock']
 const h = new Date().getHours()

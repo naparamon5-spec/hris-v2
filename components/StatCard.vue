@@ -10,8 +10,8 @@
   </div>
 </template>
 
-<script setup lang="ts">
-defineProps<{ label: string; value: string; trend?: string; unit?: string; icon?: string; progress?: number }>()
+<script setup>
+defineProps({ label: String, value: String, trend: String, unit: String, icon: String, progress: { type: Number, default: undefined } })
 </script>
 
 <style scoped>

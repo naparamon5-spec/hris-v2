@@ -2,8 +2,8 @@
   <Transition name="t"><div v-if="msg" class="toast" role="status">{{ msg }}</div></Transition>
 </template>
 
-<script setup lang="ts">
-defineProps<{ msg: string }>()
+<script setup>
+defineProps({ msg: String })
 </script>
 
 <style scoped>

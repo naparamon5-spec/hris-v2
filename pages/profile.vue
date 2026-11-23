@@ -80,7 +80,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { user, certificates } = useMockData()
 const tabs = ['Personal', 'Certificates', 'Settings']
 const tab = ref('Personal')
@@ -89,7 +89,7 @@ const draft = ref(user.bio)
 const editing = ref(false)
 const twofa = ref(false)
 const toast = ref('')
-const flash = (m: string) => { toast.value = m; setTimeout(() => (toast.value = ''), 2000) }
+const flash = (m) => { toast.value = m; setTimeout(() => (toast.value = ''), 2000) }
 const employment = [['Company', user.company], ['Employee ID', user.id], ['Position', user.role], ['Department', user.department], ['Manager', user.manager], ['Date hired', user.hired]]
 const contact = [['Email', user.email], ['Mobile', user.phone]]
 </script>

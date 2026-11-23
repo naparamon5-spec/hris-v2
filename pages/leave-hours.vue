@@ -17,7 +17,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { leaveHours } = useMockData()
 const tables = [
   { title: 'Approved Leave', rows: leaveHours.approvedLeave },

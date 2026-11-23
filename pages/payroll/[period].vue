@@ -37,12 +37,12 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const { payslips, user, peso } = useMockData()
 const route = useRoute()
 const slip = computed(() => payslips.find(p => p.period === Number(route.params.period)))
 const toast = ref('')
-const flash = (k: string) => { toast.value = `Downloading payslip as ${k}… (mock)`; setTimeout(() => (toast.value = ''), 2200) }
+const flash = (k) => { toast.value = `Downloading payslip as ${k}… (mock)`; setTimeout(() => (toast.value = ''), 2200) }
 </script>
 
 <style scoped>

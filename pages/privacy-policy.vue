@@ -11,7 +11,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 const updated = 'November 2026'
 const sections = [
   { h: 'Information we collect', p: 'HRIS stores the employment, attendance, leave, payroll and contact information needed to run HR processes for your company.' },
