@@ -50,9 +50,14 @@ const to12 = (t) => {
   const [h, m] = t.split(':').map(Number)
   return `${String(h % 12 || 12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`
 }
+// Local date as YYYY-MM-DD (toISOString() would shift the day in UTC+8).
+const toIsoDate = (label) => {
+  const d = new Date(label)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 const r = props.record
 const f = reactive({
-  type: r?.type ?? '', date: r ? new Date(r.date).toISOString().slice(0, 10) : '',
+  type: r?.type ?? '', date: r ? toIsoDate(r.date) : '',
   from: to24(r?.from), to: to24(r?.to), hours: r?.hours ?? 0, reason: r?.reason ?? ''
 })
 const submit = () => emit('save', {

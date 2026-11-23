@@ -41,7 +41,7 @@
       <div class="set">
         <span class="icon-tile"><AppIcon name="shield" /></span>
         <div><b>Two-Factor Auth (2FA)</b><small class="m">{{ twofa ? '2FA Enabled' : 'Add an extra layer of security' }}</small></div>
-        <label class="switch"><input v-model="twofa" type="checkbox" @change="flash(twofa ? '2FA Enabled' : '2FA Disabled')"><i /></label>
+        <label class="switch"><input :checked="twofa" type="checkbox" @click.prevent="toggle2fa"><i /></label>
       </div>
       <div class="set">
         <span class="icon-tile"><AppIcon name="user" /></span>
@@ -61,9 +61,9 @@
         <span class="icon-tile"><AppIcon name="bell" /></span>
         <div><b>Support</b></div><AppIcon name="chevron" class="m" />
       </NuxtLink>
-      <NuxtLink to="/login" class="set logout">
+      <button type="button" class="set logout" @click="logOut">
         <span class="icon-tile"><AppIcon name="logout" /></span><div><b>Log out</b></div>
-      </NuxtLink>
+      </button>
     </div>
 
     <div v-if="editing" class="overlay" @click.self="editing = false">
@@ -88,6 +88,19 @@ const bio = ref(user.bio)
 const draft = ref(user.bio)
 const editing = ref(false)
 const twofa = ref(false)
+const { confirm } = useConfirm()
+const toggle2fa = async () => {
+  const turningOn = !twofa.value
+  const ok = await confirm(turningOn
+    ? { title: 'Enable two-factor authentication?', message: 'You will need a 6-digit code from your authenticator app each time you sign in.', confirmText: 'Enable 2FA', icon: 'shield' }
+    : { title: 'Disable two-factor authentication?', message: 'Your account will be protected by your password only.', confirmText: 'Disable 2FA', tone: 'danger', icon: 'shield' })
+  if (!ok) return
+  twofa.value = turningOn
+  flash(turningOn ? '2FA Enabled' : '2FA Disabled')
+}
+const logOut = async () => {
+  if (await confirm({ title: 'Log out?', message: 'You will need to sign in again to use HRIS.', confirmText: 'Log out', tone: 'danger', icon: 'logout' })) navigateTo('/login')
+}
 const toast = ref('')
 const flash = (m) => { toast.value = m; setTimeout(() => (toast.value = ''), 2000) }
 const employment = [['Company', user.company], ['Employee ID', user.id], ['Position', user.role], ['Department', user.department], ['Manager', user.manager], ['Date hired', user.hired]]
@@ -111,7 +124,7 @@ const contact = [['Email', user.email], ['Mobile', user.phone]]
 .track { height: 6px; background: #f0f0f2; border-radius: 99px; overflow: hidden; }
 .fill { height: 100%; background: linear-gradient(90deg, var(--ardent-red), var(--ardent-coral)); }
 .upload { border: 2px dashed var(--ardent-gray); box-shadow: none; display: flex; align-items: center; justify-content: center; gap: .5rem; font: 600 .9rem Montserrat, sans-serif; color: var(--muted); cursor: pointer; min-height: 90px; }
-.set { display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border); color: inherit; }
+.set { width: 100%; background: none; border-left: 0; border-right: 0; border-top: 0; font: inherit; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border); color: inherit; }
 .set:last-child { border-bottom: 0; }
 .set div { flex: 1; display: flex; flex-direction: column; }
 .logout b { color: var(--ardent-red); }

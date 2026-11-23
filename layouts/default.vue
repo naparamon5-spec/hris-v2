@@ -64,13 +64,9 @@
               <NuxtLink to="/profile" role="menuitem" @click="menu = false"
                 ><AppIcon name="user" :size="16" /> My profile</NuxtLink
               >
-              <NuxtLink
-                to="/login"
-                role="menuitem"
-                class="danger"
-                @click="menu = false"
-                ><AppIcon name="logout" :size="16" /> Sign out</NuxtLink
-              >
+              <button type="button" role="menuitem" class="danger" @click="signOut">
+                <AppIcon name="logout" :size="16" /> Sign out
+              </button>
             </div>
           </Transition>
         </div>
@@ -86,6 +82,12 @@
 const open = ref(false)
 const menu = ref(false)
 const onBlur = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) menu.value = false }
+const { confirm } = useConfirm()
+const signOut = async () => {
+  menu.value = false
+  const ok = await confirm({ title: 'Sign out?', message: 'You will need to sign in again to use HRIS.', confirmText: 'Sign out', tone: 'danger', icon: 'logout' })
+  if (ok) navigateTo('/login')
+}
 const { user, notifications, companies } = useMockData()
 const company = useState('company', () => companies[0])
 const unread = computed(() => notifications.value.filter(n => n.unread).length)
@@ -381,20 +383,26 @@ header {
   color: var(--muted);
   font-size: 0.72rem;
 }
-.menu-pop a {
+.menu-pop a,
+.menu-pop button {
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  width: 100%;
   padding: 0.6rem 0.7rem;
+  border: 0;
   border-radius: 10px;
+  background: none;
   color: var(--text);
-  font-size: 0.85rem;
-  font-weight: 500;
+  font: 500 0.85rem 'Montserrat', sans-serif;
+  text-align: left;
+  cursor: pointer;
 }
-.menu-pop a:hover {
+.menu-pop a:hover,
+.menu-pop button:hover {
   background: #f4f5f7;
 }
-.menu-pop a.danger {
+.menu-pop .danger {
   color: var(--ardent-red);
 }
 .pop-enter-active,

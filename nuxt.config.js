@@ -5,7 +5,8 @@ export default defineNuxtConfig({
   experimental: { appManifest: false },
   css: ['~/assets/css/main.css'],
   app: {
-    pageTransition: { name: 'page', mode: 'out-in' },
+    pageTransition: false,
+    layoutTransition: false,
     head: {
       title: 'Ardent HRIS',
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],

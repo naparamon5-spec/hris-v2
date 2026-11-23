@@ -73,7 +73,21 @@ const rows = computed(() => source.value.filter(r =>
 const formOpen = ref(false)
 const editing = ref(null)
 const openForm = (r = null) => { editing.value = r; formOpen.value = true }
-const setStatus = (r, s) => { r.status = s; flash(`Record ${s === 'Cancelled' ? 'cancelled' : 'updated'}`) }
+const { confirm } = useConfirm()
+const setStatus = async (r, s) => {
+  const reverse = r.status === 'Approved'
+  const ok = await confirm({
+    title: reverse ? 'Reverse this approved record?' : 'Cancel this request?',
+    message: `${r.no} · ${r.type} on ${r.date} will be ${reverse ? 'reversed and marked cancelled' : 'cancelled'}. This can't be undone.`,
+    confirmText: reverse ? 'Yes, reverse' : 'Yes, cancel it',
+    cancelText: 'Keep it',
+    tone: 'danger',
+    icon: reverse ? 'clock' : 'doc'
+  })
+  if (!ok) return
+  r.status = s
+  flash(reverse ? 'Record Reversed' : 'Record Cancelled')
+}
 
 const save = (data) => {
   const list = requests.value[type.value]
@@ -89,7 +103,17 @@ const save = (data) => {
   formOpen.value = false
 }
 
-onMounted(() => { if (route.query.new) openForm() })
+// "File leave" / quick actions link here with ?new=1: open the form, then drop the
+// query so a reload or Back doesn't reopen it. Watching (not just onMounted) also
+// covers arriving while this page is already open.
+const router = useRouter()
+const openFromQuery = () => {
+  if (!route.query.new || isApproved.value) return
+  openForm()
+  router.replace({ query: { ...route.query, new: undefined } })
+}
+onMounted(openFromQuery)
+watch(() => route.query.new, openFromQuery)
 </script>
 
 <style scoped>

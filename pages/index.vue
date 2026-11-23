@@ -19,9 +19,9 @@
     </section>
 
     <h3 class="section-title">Leave credits</h3>
-    <div class="grid grid-4">
-      <NuxtLink v-for="(c, i) in leaveCredits" :key="c.label" to="/leave-hours" class="plain">
-        <StatCard :label="c.label" :value="String(c.value)" :unit="c.unit" :icon="icons[i]" :progress="i < 2 ? (c.value / 15) * 100 : undefined" />
+    <div class="grid credits">
+      <NuxtLink v-for="(c, i) in credits" :key="c.label" to="/leave-hours" class="plain">
+        <StatCard :label="c.label" :value="String(c.value)" :unit="c.unit" :icon="icons[i]" :progress="(c.value / 15) * 100" />
       </NuxtLink>
     </div>
 
@@ -53,7 +53,9 @@
 
 <script setup>
 const { user, leaveCredits, approvals, recentActivity, badge } = useMockData()
-const icons = ['calendar', 'shield', 'check', 'clock']
+// Home shows only Vacation and Sick Leave; the full list is on Leave Hours.
+const credits = leaveCredits.slice(0, 2)
+const icons = ['calendar', 'shield']
 const h = new Date().getHours()
 const greeting = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
 const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
@@ -67,6 +69,7 @@ const quick = {
 
 <style scoped>
 .plain { color: inherit; display: block; }
+.credits { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .hero {
   position: relative; overflow: hidden; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: stretch; justify-content: space-between;
   background: var(--grad-navy); color: #fff; border-radius: 22px; padding: 1.9rem 2rem; box-shadow: var(--shadow-lg);

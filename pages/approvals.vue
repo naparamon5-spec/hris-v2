@@ -9,15 +9,21 @@
       </div>
     </div>
 
-    <div v-if="selected.length" class="bulk card">
-      <b>{{ selected.length }} selected</b>
-      <div><button class="btn btn-danger btn-sm" @click="act(selected, 'Disapproved')">Disapprove</button>
-        <button class="btn btn-primary btn-sm" @click="act(selected, 'Approved')">Approve</button></div>
+    <div class="select-row">
+      <label class="all" :class="{ off: !pendingIds.length }">
+        <input ref="allBox" type="checkbox" :checked="allChecked" :disabled="!pendingIds.length" @change="toggleAll">
+        <span>{{ allChecked ? 'Deselect all' : `Select all pending (${pendingIds.length})` }}</span>
+      </label>
+      <small v-if="selected.length" class="m">{{ selected.length }} of {{ pendingIds.length }} selected</small>
     </div>
 
-    <div class="list">
-      <div v-for="t in rows" :key="t.id" class="card task" :class="{ done: t.status !== 'For Approval' }">
-        <input v-if="t.status === 'For Approval'" v-model="selected" type="checkbox" :value="t.id">
+    <div class="list" :class="{ selecting: selected.length }">
+      <div
+        v-for="t in rows" :key="t.id" class="card task"
+        :class="{ done: t.status !== 'For Approval', picked: selected.includes(t.id) }"
+        @click="t.status === 'For Approval' && selected.length && toggle(t.id, $event)"
+      >
+        <input v-if="t.status === 'For Approval'" v-model="selected" type="checkbox" :value="t.id" :aria-label="`Select ${t.name}`" @click.stop>
         <span v-else style="width:16px" />
         <span class="av">{{ t.name.split(' ').map(s => s[0]).join('') }}</span>
         <div class="info">
@@ -34,6 +40,18 @@
       </div>
       <p v-if="!rows.length" class="empty">Nothing here</p>
     </div>
+
+    <!-- Bulk action bar: stays on screen while anything is selected -->
+    <Transition name="bar">
+      <div v-if="selected.length" class="action-bar" role="toolbar" aria-label="Bulk actions">
+        <div class="ab-count"><b>{{ selected.length }}</b><span>selected</span></div>
+        <div class="ab-btns">
+          <button class="btn btn-sm ab-ghost" @click="selected = []">Clear</button>
+          <button class="btn btn-sm ab-dis" @click="act(selected, 'Disapproved')">Disapprove</button>
+          <button class="btn btn-primary btn-sm" @click="act(selected, 'Approved')">Approve {{ selected.length }}</button>
+        </div>
+      </div>
+    </Transition>
     <Toast :msg="toast" />
   </div>
 </template>
@@ -49,10 +67,45 @@ const toast = ref('')
 const rows = computed(() => items.value.filter(t =>
   (cat.value === 'All' || t.app === cat.value) &&
   `${t.name} ${t.empId} ${t.app} ${t.date} ${t.no}`.toLowerCase().includes(q.value.toLowerCase())))
-const act = (ids, s) => {
+const { confirm } = useConfirm()
+
+// Select all = every still-pending record in the current filtered view.
+const pendingIds = computed(() => rows.value.filter(t => t.status === 'For Approval').map(t => t.id))
+const allChecked = computed(() => pendingIds.value.length > 0 && pendingIds.value.every(id => selected.value.includes(id)))
+const allBox = ref(null)
+watchEffect(() => {
+  if (allBox.value) allBox.value.indeterminate = selected.value.length > 0 && !allChecked.value
+})
+// While selecting, clicking a card (not its buttons) toggles it.
+const toggle = (id, e) => {
+  if (e.target.closest('button')) return
+  selected.value = selected.value.includes(id) ? selected.value.filter(x => x !== id) : [...selected.value, id]
+}
+const toggleAll = () => {
+  selected.value = allChecked.value
+    ? selected.value.filter(id => !pendingIds.value.includes(id))
+    : [...new Set([...selected.value, ...pendingIds.value])]
+}
+// Drop selections that are no longer visible after filtering.
+watch(pendingIds, ids => { selected.value = selected.value.filter(id => ids.includes(id)) })
+
+const act = async (ids, s) => {
+  const n = ids.length
+  const approve = s === 'Approved'
+  const one = n === 1 ? items.value.find(t => t.id === ids[0]) : null
+  const ok = await confirm({
+    title: `${approve ? 'Approve' : 'Disapprove'} ${n === 1 ? 'this request' : `${n} requests`}?`,
+    message: one
+      ? `${one.name} · ${one.app} (${one.no}) will be marked ${s.toLowerCase()}.`
+      : `All ${n} selected requests will be marked ${s.toLowerCase()}.`,
+    confirmText: approve ? 'Yes, approve' : 'Yes, disapprove',
+    tone: approve ? 'primary' : 'danger',
+    icon: approve ? 'check' : 'shield'
+  })
+  if (!ok) return
   items.value.forEach(t => { if (ids.includes(t.id)) t.status = s })
-  toast.value = `${s} ${ids.length} record${ids.length === 1 ? '' : 's'}`
-  selected.value = []
+  toast.value = `${s} ${n} record${n === 1 ? '' : 's'}`
+  selected.value = selected.value.filter(id => !ids.includes(id))
   setTimeout(() => (toast.value = ''), 2200)
 }
 const editOt = (t) => {
@@ -62,8 +115,37 @@ const editOt = (t) => {
 </script>
 
 <style scoped>
-.bulk { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: .8rem 1.25rem; border-left: 4px solid var(--ardent-red); }
-.bulk .btn + .btn { margin-left: .4rem; }
+.select-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .2rem .4rem .7rem 1.3rem; }
+.all { display: flex; align-items: center; gap: .9rem; font-size: .85rem; font-weight: 600; cursor: pointer; }
+.all.off { opacity: .5; cursor: default; }
+.all input { accent-color: var(--ardent-red); width: 16px; height: 16px; }
+.task { transition: border-color .15s, background .15s, box-shadow .15s; }
+.task.picked { border-color: var(--ardent-red); background: #fff7f8; box-shadow: var(--ring); }
+.selecting .task:not(.done) { cursor: pointer; }
+.selecting .btns { display: none; }
+.list { padding-bottom: 5rem; }
+.action-bar {
+  position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 40;
+  display: flex; align-items: center; gap: 1.25rem; padding: .6rem .6rem .6rem 1.2rem;
+  width: max-content; max-width: calc(100vw - 2rem);
+  background: var(--ardent-navy); color: #fff; border-radius: 999px; box-shadow: 0 18px 40px -12px rgba(19,51,65,.6);
+}
+.ab-count { display: flex; align-items: baseline; gap: .35rem; font-size: .85rem; white-space: nowrap; }
+.ab-count b { font-size: 1.1rem; }
+.ab-count span { color: rgba(255,255,255,.7); }
+.ab-btns { display: flex; gap: .4rem; }
+.ab-ghost { background: transparent; color: rgba(255,255,255,.8); }
+.ab-ghost:hover { color: #fff; background: rgba(255,255,255,.08); }
+.ab-dis { background: rgba(255,255,255,.1); color: #fff; }
+.ab-dis:hover { background: rgba(255,255,255,.18); }
+.bar-enter-active, .bar-leave-active { transition: opacity .18s, transform .18s; }
+.bar-enter-from, .bar-leave-to { opacity: 0; transform: translate(-50%, 12px); }
+@media (min-width: 861px) { .action-bar { left: calc(50% + 126px); } }
+@media (max-width: 640px) {
+  .action-bar { left: 1rem; right: 1rem; transform: none; width: auto; border-radius: 18px; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding: .7rem; }
+  .bar-enter-from, .bar-leave-to { transform: translateY(12px); }
+  .ab-btns { flex: 1 1 100%; } .ab-btns .btn { flex: 1; }
+}
 .list { display: flex; flex-direction: column; gap: .6rem; }
 .task { display: flex; align-items: center; gap: .9rem; padding: 1rem 1.25rem; }
 .task.done { opacity: .7; }
