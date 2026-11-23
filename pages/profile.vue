@@ -53,14 +53,6 @@
         <div><b>Change Password</b><small class="m">Update your account password</small></div>
         <NuxtLink to="/change-password" class="btn btn-ghost btn-sm">Change</NuxtLink>
       </div>
-      <NuxtLink to="/privacy-policy" class="set">
-        <span class="icon-tile"><AppIcon name="doc" /></span>
-        <div><b>Privacy Policy</b></div><AppIcon name="chevron" class="m" />
-      </NuxtLink>
-      <NuxtLink to="/support" class="set">
-        <span class="icon-tile"><AppIcon name="bell" /></span>
-        <div><b>Support</b></div><AppIcon name="chevron" class="m" />
-      </NuxtLink>
       <button type="button" class="set logout" @click="logOut">
         <span class="icon-tile"><AppIcon name="logout" /></span><div><b>Log out</b></div>
       </button>
