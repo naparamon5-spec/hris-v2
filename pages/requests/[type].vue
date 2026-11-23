@@ -38,7 +38,7 @@
       <p v-if="!rows.length" class="empty">No requests found</p>
     </div>
 
-    <RequestFormModal v-if="formOpen" :title="(editing ? 'Edit ' : 'New ') + meta.title" :subtypes="meta.subtypes" :record="editing" :kind="type" @close="formOpen = false" @save="save" />
+    <RequestFormModal v-if="formOpen" :title="(editing ? 'Edit ' : 'New ') + meta.title" :subtypes="meta.subtypes" :record="editing" :kind="type" @close="closeForm" @save="save" />
     <Toast :msg="toast" />
   </div>
 </template>
@@ -52,12 +52,23 @@ const meta = computed(() => isApproved.value
   ? { title: 'Approved Records', desc: 'All your approved requests across categories.', subtypes: [] }
   : requestTypes[type.value])
 
+// Unknown request type (e.g. /requests/foo): show the 404 page instead of a blank screen.
+if (!meta.value) {
+  throw createError({ statusCode: 404, statusMessage: 'Request type not found', fatal: true })
+}
+
 const { requests, badge } = useMockData()
 const q = ref('')
 const filters = ['All', 'For Approval', 'Approved', 'Disapproved', 'Cancelled']
 const status = ref('All')
 const toast = ref('')
-const flash = (m) => { toast.value = m; setTimeout(() => (toast.value = ''), 2200) }
+let toastTimer
+const flash = (m) => {
+  clearTimeout(toastTimer)
+  toast.value = m
+  toastTimer = setTimeout(() => (toast.value = ''), 2200)
+}
+onBeforeUnmount(() => clearTimeout(toastTimer))
 
 const source = computed(() => {
   if (isApproved.value) {
@@ -73,6 +84,7 @@ const rows = computed(() => source.value.filter(r =>
 const formOpen = ref(false)
 const editing = ref(null)
 const openForm = (r = null) => { editing.value = r; formOpen.value = true }
+const closeForm = () => { formOpen.value = false; editing.value = null }
 const { confirm } = useConfirm()
 const setStatus = async (r, s) => {
   const reverse = r.status === 'Approved'
@@ -93,14 +105,16 @@ const save = (data) => {
   const list = requests.value[type.value]
   if (editing.value) { Object.assign(editing.value, data); flash('Record Updated') }
   else {
+    // Next number after the highest existing one, so numbers never repeat.
     const prefix = list[0]?.no.split('-')[0] ?? 'REQ'
+    const next = Math.max(0, ...list.map(r => Number(r.no.split('-').pop()) || 0)) + 1
     list.unshift({
-      no: `${prefix}-2026-${String(141 + Math.floor(Math.random() * 800)).padStart(4, '0')}`,
+      no: `${prefix}-2026-${String(next).padStart(4, '0')}`,
       dateFiled: 'Nov 23, 2026', approver: 'Ramon Napa', status: 'For Approval', ...data
     })
     flash('Record Created · Sent for Approval')
   }
-  formOpen.value = false
+  closeForm()
 }
 
 // "File leave" / quick actions link here with ?new=1: open the form, then drop the

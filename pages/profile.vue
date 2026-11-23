@@ -5,7 +5,7 @@
       <div class="who">
         <h1>{{ user.name }}</h1>
         <p class="m">{{ user.role }} · {{ user.department }} · {{ user.id }}</p>
-        <p class="bio">{{ bio }} <button class="link" @click="editing = true">Edit Bio</button></p>
+        <p class="bio">{{ bio }} <button class="link" @click="openBio">Edit Bio</button></p>
       </div>
     </div>
 
@@ -66,13 +66,14 @@
       </button>
     </div>
 
-    <div v-if="editing" class="overlay" @click.self="editing = false">
+    <div v-if="editing" class="overlay" @click.self="editing = false" @keydown.esc="editing = false">
       <div class="card modal">
         <h2>Edit Bio</h2>
-        <textarea v-model="draft" class="input" style="width:100%" placeholder="Write a short bio about yourself…" />
+        <textarea ref="bioBox" v-model="draft" class="input" style="width:100%" maxlength="200" placeholder="Write a short bio about yourself…" />
+        <small class="m">{{ draft.length }}/200</small>
         <div class="foot">
           <button class="btn btn-ghost" @click="editing = false">Cancel</button>
-          <button class="btn btn-primary" @click="bio = draft; editing = false; flash('Bio Updated')">Save</button>
+          <button class="btn btn-primary" :disabled="!draft.trim()" @click="saveBio">Save</button>
         </div>
       </div>
     </div>
@@ -87,6 +88,18 @@ const tab = ref('Personal')
 const bio = ref(user.bio)
 const draft = ref(user.bio)
 const editing = ref(false)
+const bioBox = ref(null)
+// Always start from the saved bio, so cancelled edits don't come back.
+const openBio = () => {
+  draft.value = bio.value
+  editing.value = true
+  nextTick(() => bioBox.value?.focus())
+}
+const saveBio = () => {
+  bio.value = draft.value.trim()
+  editing.value = false
+  flash('Bio Updated')
+}
 const twofa = ref(false)
 const { confirm } = useConfirm()
 const toggle2fa = async () => {
@@ -102,7 +115,13 @@ const logOut = async () => {
   if (await confirm({ title: 'Log out?', message: 'You will need to sign in again to use HRIS.', confirmText: 'Log out', tone: 'danger', icon: 'logout' })) navigateTo('/login')
 }
 const toast = ref('')
-const flash = (m) => { toast.value = m; setTimeout(() => (toast.value = ''), 2000) }
+let toastTimer
+const flash = (m) => {
+  clearTimeout(toastTimer)
+  toast.value = m
+  toastTimer = setTimeout(() => (toast.value = ''), 2000)
+}
+onBeforeUnmount(() => clearTimeout(toastTimer))
 const employment = [['Company', user.company], ['Employee ID', user.id], ['Position', user.role], ['Department', user.department], ['Manager', user.manager], ['Date hired', user.hired]]
 const contact = [['Email', user.email], ['Mobile', user.phone]]
 </script>
