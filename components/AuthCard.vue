@@ -1,6 +1,6 @@
 <template>
   <section class="hero">
-    <ArdentLogo light sub="HRIS" />
+    <HrisLogo light :size="44" />
     <div class="copy">
       <span class="eyebrow">#OneArdent</span>
       <h1>People first.<br><span>Powering innovation.</span></h1>

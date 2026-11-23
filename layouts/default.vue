@@ -1,7 +1,7 @@
 <template>
   <div class="shell">
     <aside :class="{ open }">
-      <ArdentLogo light sub="HRIS v2" class="brand" />
+      <HrisLogo light class="brand" />
       <span class="nav-label">Menu</span>
       <nav>
         <NuxtLink

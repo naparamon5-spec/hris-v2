@@ -181,6 +181,14 @@ export const useMockData = () => {
 
   const companies = ['Ardent Networks Inc.', 'Lamco International', 'Match', 'Fastronics', 'Diamond Concept', 'Diamond Office', 'Overland', 'Versatech International', 'EZ Touch', 'Real Modern Design', 'HRIS Test']
 
+  // Logo file per company (public/logos/<id>.png, from hris_mobile assets/logos).
+  const logoIds = {
+    'Ardent Networks Inc.': 'ardent', 'Lamco International': 'lamco', Match: 'match', Fastronics: 'fastronics',
+    'Diamond Concept': 'diamond_concept', 'Diamond Office': 'diamond_office', Overland: 'overland',
+    'Versatech International': 'versatech', 'EZ Touch': 'ez_touch', 'Real Modern Design': 'rmd'
+  }
+  const companyLogo = (name) => (logoIds[name] ? `/logos/${logoIds[name]}.png` : null)
+
   const badge = (s) =>
     ({ Approved: 'ok', 'For Approval': 'warn', Draft: 'navy', Disapproved: 'red', Cancelled: 'gray' })[s] ?? 'navy'
 
@@ -188,6 +196,6 @@ export const useMockData = () => {
 
   return {
     user, leaveCredits, leaveHours, requests, recentActivity, approvals, payslips, timesheet,
-    directory, whosOut, notifications, certificates, companies, badge, peso
+    directory, whosOut, notifications, certificates, companies, companyLogo, badge, peso
   }
 }

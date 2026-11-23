@@ -11,7 +11,7 @@
 
     <div class="card slip">
       <div class="top">
-        <ArdentLogo :sub="user.company" />
+        <ArdentLogo />
         <span class="tag">PAYSLIP</span>
       </div>
       <div class="emp">
