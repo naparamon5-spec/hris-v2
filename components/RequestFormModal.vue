@@ -3,28 +3,28 @@
     <form class="card modal" @submit.prevent="submit">
       <h2>{{ title }}</h2>
       <div class="field">
-        <label>{{ kind === 'other-requests' ? 'Request Type' : kind === 'leave-of-absence' ? 'Leave Type' : 'Type' }}</label>
-        <select v-model="f.type" class="input" required>
+        <label for="rf-type">{{ kind === 'other-requests' ? 'Request Type' : kind === 'leave-of-absence' ? 'Leave Type' : 'Type' }}</label>
+        <select id="rf-type" v-model="f.type" class="input" required>
           <option value="" disabled>Select…</option>
           <option v-for="s in subtypes" :key="s">{{ s }}</option>
         </select>
       </div>
       <div class="field">
-        <label>{{ kind === 'call-approval' ? 'Call Approval Date' : 'Date' }}</label>
-        <input v-model="f.date" class="input" type="date" required>
+        <label for="rf-date">{{ kind === 'call-approval' ? 'Call Approval Date' : 'Date' }}</label>
+        <input id="rf-date" v-model="f.date" class="input" type="date" required>
       </div>
       <div v-if="kind !== 'other-requests'" class="two">
-        <div class="field"><label>{{ kind === 'leave-of-absence' ? 'From' : 'Time From' }}</label><input v-model="f.from" class="input" type="time" required></div>
-        <div class="field"><label>{{ kind === 'leave-of-absence' ? 'To' : 'Time To' }}</label><input v-model="f.to" class="input" type="time" required></div>
+        <div class="field"><label for="rf-from">{{ kind === 'leave-of-absence' ? 'From' : 'Time From' }}</label><input id="rf-from" v-model="f.from" class="input" type="time" required></div>
+        <div class="field"><label for="rf-to">{{ kind === 'leave-of-absence' ? 'To' : 'Time To' }}</label><input id="rf-to" v-model="f.to" class="input" type="time" required></div>
       </div>
       <div v-if="kind !== 'other-requests'" class="field">
-        <label>Applied Hours</label>
-        <input v-model.number="f.hours" class="input" type="number" min="0" step="0.5">
+        <label for="rf-hours">Applied Hours</label>
+        <input id="rf-hours" v-model.number="f.hours" class="input" type="number" min="0" step="0.5">
         <small v-if="kind === 'leave-of-absence'" class="m">Current Remaining: 68 hrs (VL) · 48 hrs (SL)</small>
       </div>
       <div class="field">
-        <label>Reason</label>
-        <textarea v-model="f.reason" class="input" placeholder="Add a reason for this request…" />
+        <label for="rf-reason">Reason</label>
+        <textarea id="rf-reason" v-model="f.reason" class="input" placeholder="Add a reason for this request…" />
       </div>
       <div class="foot">
         <button type="button" class="btn btn-ghost" @click="$emit('close')">Cancel</button>

@@ -3,7 +3,7 @@
     <div class="page-head"><div><h1>Approvals</h1><p>Review requests filed by your team.</p></div></div>
 
     <div class="toolbar">
-      <input v-model="q" class="input" placeholder="Search by name, ID, type, date…">
+      <input v-model="q" class="input" type="search" aria-label="Search approvals" placeholder="Search by name, ID, type, date…">
       <div class="chips">
         <button v-for="c in cats" :key="c" class="chip" :class="{ on: cat === c }" @click="cat = c">{{ c }}</button>
       </div>

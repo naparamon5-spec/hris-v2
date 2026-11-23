@@ -34,6 +34,8 @@
         <button class="menu" aria-label="Menu" @click="open = !open">☰</button>
         <label class="search"
           ><AppIcon name="search" :size="16" /><input
+            type="search"
+            aria-label="Search requests and people"
             placeholder="Search requests, people…"
           /><kbd>/</kbd></label
         >

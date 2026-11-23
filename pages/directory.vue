@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="page-head"><div><h1>Directory</h1><p>{{ filtered.length }} team members</p></div></div>
-    <div class="toolbar"><input v-model="q" class="input" placeholder="Search people or roles"></div>
+    <div class="toolbar"><input v-model="q" class="input" type="search" aria-label="Search people or roles" placeholder="Search people or roles"></div>
     <div class="grid people">
       <div v-for="e in filtered" :key="e.name" class="card person">
         <span class="av">{{ e.name.split(' ').map(s => s[0]).join('') }}</span>

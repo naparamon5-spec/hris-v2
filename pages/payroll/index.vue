@@ -6,7 +6,7 @@
     </div>
 
     <div class="toolbar">
-      <input v-model="q" class="input" placeholder="Search period no. or month (e.g. 22, Oct)">
+      <input v-model="q" class="input" type="search" aria-label="Search payslips" placeholder="Search period no. or month (e.g. 22, Oct)">
       <select v-model="year" class="input sel" aria-label="Year"><option v-for="y in years" :key="y">{{ y }}</option></select>
       <select v-model="half" class="input sel" aria-label="Cut-off">
         <option value="all">All cut-offs</option><option value="1">1st half (1–15)</option><option value="2">2nd half (16–end)</option>
@@ -30,7 +30,7 @@
     <div v-if="bulk" class="overlay" @click.self="bulk = false">
       <div class="card modal">
         <h2>Download Payslips</h2>
-        <input v-model="bq" class="input" placeholder="Search period no. or month (e.g. 12, Oct)" style="width:100%;margin-bottom:.75rem">
+        <input v-model="bq" class="input" type="search" aria-label="Search payslips to download" placeholder="Search period no. or month (e.g. 12, Oct)" style="width:100%;margin-bottom:.75rem">
         <label v-for="p in bulkRows" :key="p.period" class="pick"><input v-model="picked" type="checkbox" :value="p.period"> Period {{ p.period }} · {{ p.label }}</label>
         <div class="foot">
           <button class="btn btn-ghost" @click="bulk = false">Cancel</button>

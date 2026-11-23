@@ -7,7 +7,7 @@
     </div>
 
     <div class="toolbar">
-      <input v-model="q" class="input" placeholder="Search by No., Type, Approver…">
+      <input v-model="q" class="input" type="search" aria-label="Search requests" placeholder="Search by No., Type, Approver…">
       <div v-if="!isApproved" class="chips">
         <button v-for="s in filters" :key="s" class="chip" :class="{ on: status === s }" @click="status = s">{{ s }}</button>
       </div>
@@ -15,7 +15,7 @@
 
     <div class="card table-wrap" style="padding:.5rem">
       <table class="table stack">
-        <thead><tr><th>No.</th><th v-if="isApproved">Category</th><th>Type</th><th>Date</th><th>Hours</th><th>Approver</th><th>Status</th><th /></tr></thead>
+        <thead><tr><th>No.</th><th v-if="isApproved">Category</th><th>Type</th><th>Date</th><th>Hours</th><th>Approver</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>
           <tr v-for="r in rows" :key="r.no">
             <td data-label="No."><b>{{ r.no }}</b><br><small class="m">Filed {{ r.dateFiled }}</small></td>

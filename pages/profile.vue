@@ -41,7 +41,7 @@
       <div class="set">
         <span class="icon-tile"><AppIcon name="shield" /></span>
         <div><b>Two-Factor Auth (2FA)</b><small class="m">{{ twofa ? '2FA Enabled' : 'Add an extra layer of security' }}</small></div>
-        <label class="switch"><input :checked="twofa" type="checkbox" @click.prevent="toggle2fa"><i /></label>
+        <label class="switch"><input :checked="twofa" type="checkbox" role="switch" aria-label="Two-factor authentication" @click.prevent="toggle2fa"><i /></label>
       </div>
       <div class="set">
         <span class="icon-tile"><AppIcon name="user" /></span>
@@ -61,7 +61,7 @@
     <div v-if="editing" class="overlay" @click.self="editing = false" @keydown.esc="editing = false">
       <div class="card modal">
         <h2>Edit Bio</h2>
-        <textarea ref="bioBox" v-model="draft" class="input" style="width:100%" maxlength="200" placeholder="Write a short bio about yourself…" />
+        <textarea ref="bioBox" v-model="draft" class="input" aria-label="Bio" style="width:100%" maxlength="200" placeholder="Write a short bio about yourself…" />
         <small class="m">{{ draft.length }}/200</small>
         <div class="foot">
           <button class="btn btn-ghost" @click="editing = false">Cancel</button>

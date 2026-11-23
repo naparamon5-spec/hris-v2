@@ -3,7 +3,7 @@
     <h2>Switch company</h2>
     <p class="sub">Choose which company account to open.</p>
     <NuxtLink to="/" class="alt" style="margin:-1rem 0 1rem;text-align:left">‹ Back to dashboard</NuxtLink>
-    <input v-model="q" class="input" placeholder="Search companies…" style="width:100%;margin-bottom:1rem">
+    <input v-model="q" class="input" type="search" aria-label="Search companies" placeholder="Search companies…" style="width:100%;margin-bottom:1rem">
     <button v-for="c in list" :key="c" class="co" @click="pick(c)" :class="{ on: c === company }">
       <span class="co-logo"><ArdentLogo :company="c" /></span><b>{{ c }}</b><AppIcon name="chevron" />
     </button>

@@ -3,7 +3,7 @@
     <NuxtLink to="/requests" class="back">‹ Requests</NuxtLink>
     <div class="page-head">
       <div><h1>Timesheet</h1><p>Select a cut-off period to view daily entries.</p></div>
-      <select v-model="year" class="input" style="width:auto"><option>2026</option><option>2025</option></select>
+      <select v-model="year" class="input" style="width:auto" aria-label="Year"><option>2026</option><option>2025</option></select>
     </div>
 
     <div class="periods">
