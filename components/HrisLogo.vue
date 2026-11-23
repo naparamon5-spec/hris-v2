@@ -3,7 +3,7 @@
     <!-- Same mark as hris_mobile AniHrisIcon: white squircle with a bold red 'H'. -->
     <span class="icon" :style="{ '--s': size + 'px' }" aria-hidden="true">H</span>
     <span class="text">
-      <b>ANI HRIS</b>
+      <b>HRIS</b>
       <small v-if="sub">{{ sub }}</small>
     </span>
   </div>
