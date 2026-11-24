@@ -5,9 +5,6 @@
     <div class="toolbar">
       <input v-model="q" class="input" type="search" aria-label="Search approvals" placeholder="Search by name, ID, type, date…">
       <FilterMenu v-model="extra" :fields="filterFields" />
-      <div class="chips">
-        <button v-for="c in cats" :key="c" class="chip" :class="{ on: cat === c }" @click="cat = c">{{ c }}</button>
-      </div>
     </div>
 
     <div class="select-row">
@@ -66,13 +63,12 @@
 const { approvals, badge } = useMockData()
 const items = useState('mock-approvals', () => approvals.map(a => ({ ...a })))
 const q = ref('')
-const cats = ['All', 'Leave of Absence', 'Overtime', 'Call Approval', 'Manual Arrival/Departure', 'Other Requests']
-const cat = ref('All')
 const selected = ref([])
 const toast = ref('')
-// Filters menu: status, employee and request date (category stays as chips).
-const extra = ref({ status: '', employee: '', dateFrom: '', dateTo: '' })
+// Filters menu: category, status, employee and request date.
+const extra = ref({ category: '', status: '', employee: '', dateFrom: '', dateTo: '' })
 const filterFields = computed(() => [
+  { key: 'category', label: 'Category', options: ['Leave of Absence', 'Overtime', 'Call Approval', 'Manual Arrival/Departure', 'Other Requests'] },
   { key: 'status', label: 'Status', options: ['For Approval', 'Approved', 'Disapproved'] },
   { key: 'employee', label: 'Employee', options: uniq(items.value, t => t.name) },
   { key: 'date', label: 'Request date', type: 'date-range' }
@@ -80,7 +76,7 @@ const filterFields = computed(() => [
 const rows = computed(() => {
   const f = extra.value
   return items.value.filter(t =>
-    (cat.value === 'All' || t.app === cat.value) &&
+    (!f.category || t.app === f.category) &&
     (!f.status || t.status === f.status) &&
     (!f.employee || t.name === f.employee) &&
     inDateRange(t.date, f.dateFrom, f.dateTo) &&
