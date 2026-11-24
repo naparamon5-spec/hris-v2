@@ -49,7 +49,11 @@ const groups = computed(() => [
 <style scoped>
 .group .section-title { margin-top: 0; }
 .group + .group { margin-top: 1.75rem; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .9rem; }
+.cards { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: .9rem; --cols: 5; }
+/* Same column grid for every section, so every card is the width of a 'File a request' card. */
+@media (max-width: 1200px) { .cards { --cols: 3; } }
+@media (max-width: 860px) { .cards { --cols: 2; } }
+@media (max-width: 480px) { .cards { --cols: 1; } }
 .tile {
   position: relative; display: flex; flex-direction: column; gap: .3rem;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
