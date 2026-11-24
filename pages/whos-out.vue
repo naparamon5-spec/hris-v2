@@ -9,7 +9,13 @@
             <b>{{ monthLabel }}</b>
             <button class="nb" aria-label="Next month" @click="shift(1)"><AppIcon name="chevron" :size="16" /></button>
           </div>
-          <button class="btn btn-ghost btn-sm" @click="goToday">Today</button>
+          <div class="head-right">
+            <div class="counts" :aria-label="`${monthName} totals`">
+              <span class="cnt loa"><b>{{ monthCount.leave }}</b> LOA</span>
+              <span class="cnt ca"><b>{{ monthCount.call }}</b> CA</span>
+            </div>
+            <button class="btn btn-ghost btn-sm" @click="goToday">Today</button>
+          </div>
         </div>
         <div class="cal">
           <span v-for="w in weekdays" :key="w" class="wd">{{ w }}</span>
@@ -19,10 +25,16 @@
             <span class="dots"><i v-for="(p, i) in dayPeople(d).slice(0, 3)" :key="i" :class="p.kind" /></span>
           </button>
         </div>
-        <div class="legend"><span><i class="leave" /> Leave</span><span><i class="call" /> Call Approval</span></div>
+        <div class="legend"><span><i class="leave" /> Leave of Absence (LOA)</span><span><i class="call" /> Call Approval (CA)</span><small class="m">Counts: one per person per day</small></div>
       </div>
       <div class="card day-card">
-        <h3 class="day-title">{{ dayName }}</h3>
+        <div class="day-head">
+          <h3 class="day-title">{{ dayName }}</h3>
+          <div class="counts">
+            <span class="cnt loa"><b>{{ dayCount.leave }}</b> LOA</span>
+            <span class="cnt ca"><b>{{ dayCount.call }}</b> CA</span>
+          </div>
+        </div>
         <div v-if="people.length">
           <div v-for="p in pageRows" :key="p.name + p.type" class="person">
             <span class="av">{{ p.name.split(' ').map(s => s[0]).join('') }}</span>
@@ -50,6 +62,11 @@ const days = computed(() => new Date(year.value, month.value + 1, 0).getDate())
 const monthLabel = computed(() => new Date(year.value, month.value, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))
 const dayPeople = (d) => (year.value === 2026 && month.value === 10 ? whosOut[d] : undefined) || []
 const people = computed(() => dayPeople(sel.value))
+// LOA / CA counts for the selected day and for the whole month (one per person per day).
+const tally = (list) => ({ leave: list.filter(p => p.kind === 'leave').length, call: list.filter(p => p.kind === 'call').length })
+const dayCount = computed(() => tally(people.value))
+const monthCount = computed(() => tally(Array.from({ length: days.value }, (_, i) => dayPeople(i + 1)).flat()))
+const monthName = computed(() => new Date(year.value, month.value, 1).toLocaleDateString('en-US', { month: 'long' }))
 const { page, size, total, pages, pageRows } = usePagination(people, 5)
 watch(sel, () => { page.value = 1 })
 const dayName = computed(() => new Date(year.value, month.value, sel.value).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }))
@@ -83,8 +100,17 @@ const goToday = () => { year.value = now.getFullYear(); month.value = now.getMon
 .leave { background: var(--ardent-coral); }
 .call { background: #2e9d6a; }
 .day.sel .dots i { background: #fff; }
-.legend { display: flex; gap: 1.25rem; margin-top: 1rem; font-size: .8rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin-top: 1rem; font-size: .8rem; color: var(--muted); }
 .legend span { display: flex; align-items: center; gap: .4rem; }
+.head-right { display: flex; align-items: center; gap: .6rem; }
+.legend small { margin-left: auto; }
+.day-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; margin-bottom: .75rem; }
+.day-head .day-title { margin-bottom: 0; }
+.counts { display: flex; gap: .4rem; flex: none; }
+.cnt { font-size: .72rem; font-weight: 700; padding: .25rem .6rem; border-radius: 999px; white-space: nowrap; }
+.cnt b { font-size: .85rem; }
+.cnt.loa { color: var(--ardent-red); background: #fde8ea; }
+.cnt.ca { color: #1f7a52; background: #e3f5ec; }
 .day-card { display: flex; flex-direction: column; align-self: stretch; }
 .day-title { font-size: 1rem; margin-bottom: .75rem; }
 .person { display: flex; align-items: center; gap: .8rem; padding: .75rem 0; border-bottom: 1px solid var(--border); }
