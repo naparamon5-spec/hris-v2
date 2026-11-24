@@ -7,13 +7,13 @@
     </div>
 
     <div class="toolbar">
-      <input v-model="q" class="input" type="search" aria-label="Search requests" placeholder="Search by No., Type, Approver…">
+      <input v-model="q" class="input" type="search" aria-label="Search requests" placeholder="Search by No., Type, Reason, Approver…">
       <FilterMenu v-model="extra" :fields="filterFields" />
     </div>
 
     <div class="card table-wrap" style="padding:.5rem">
       <table class="table stack">
-        <thead><tr><th>No.</th><th v-if="isApproved">Category</th><th>Type</th><th>Date</th><th>Hours</th><th>Approver</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <thead><tr><th>No.</th><th v-if="isApproved">Category</th><th>Type</th><th>Date</th><th>Hours</th><th>{{ reasonLabel }}</th><th>Approver</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>
           <tr v-for="r in pageRows" :key="r.no">
             <td data-label="No."><b>{{ r.no }}</b><br><small class="m">Filed {{ r.dateFiled }}</small></td>
@@ -21,6 +21,10 @@
             <td data-label="Type">{{ r.type }}</td>
             <td data-label="Date"><span>{{ r.date }}<br><small class="m">{{ r.from }} – {{ r.to }}</small></span></td>
             <td data-label="Hours">{{ r.hours }}</td>
+            <td :data-label="reasonLabel" class="why">
+              <span :title="r.reason">{{ r.reason || '—' }}</span>
+              <small v-if="r.customer" class="m">{{ r.customer }}</small>
+            </td>
             <td data-label="Approver">{{ r.approver }}</td>
             <td data-label="Status"><span class="badge" :class="'badge-' + badge(r.status)">{{ r.status }}</span></td>
             <td class="acts">
@@ -53,6 +57,8 @@ const approvedLists = {
   'approved-requests': { title: 'Approved Requests', desc: 'Decided other requests (COE, EPP items and more).', keys: ['other-requests'] }
 }
 const isApproved = computed(() => type.value in approvedLists)
+// Same wording as hris_mobile: Call Approval shows Purpose (+ customer), the rest Reason.
+const reasonLabel = computed(() => (type.value === 'call-approval' ? 'Purpose' : isApproved.value ? 'Reason / Purpose' : 'Reason'))
 const meta = computed(() => isApproved.value
   ? { ...approvedLists[type.value], subtypes: [] }
   : requestTypes[type.value])
@@ -107,7 +113,7 @@ const rows = computed(() => {
     (!f.approver || r.approver === f.approver) &&
     inDateRange(r.date, f.dateFrom, f.dateTo) &&
     inDateRange(r.dateFiled, f.filedFrom, f.filedTo) &&
-    `${r.no} ${r.type} ${r.approver}`.toLowerCase().includes(q.value.toLowerCase()))
+    `${r.no} ${r.type} ${r.approver} ${r.reason || ''} ${r.customer || ''}`.toLowerCase().includes(q.value.toLowerCase()))
 })
 
 const formOpen = ref(false)
@@ -162,5 +168,9 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 
 <style scoped>
 .acts { white-space: nowrap; text-align: right; }
+.why { max-width: 240px; }
+.why span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.why small { display: block; font-size: .74rem; }
+@media (max-width: 640px) { .why { max-width: none; } .why span { white-space: normal; } }
 .acts .btn + .btn { margin-left: .35rem; }
 </style>

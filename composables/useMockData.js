@@ -27,6 +27,8 @@ export const requestTypes = {
 const approvers = ['Ramon Napa', 'Kristine Samonte', 'Vincent Cataylo']
 const statuses = ['Approved', 'For Approval', 'Posted', 'Disapproved', 'Cancelled', 'Approved', 'For Approval', 'Posted']
 const reasons = ['Family matter', 'Client meeting in Makati', 'Medical check-up', 'Network deployment', 'Personal errand', 'Year-end inventory']
+const purposes = ['Site survey for network upgrade', 'Firewall configuration', 'Quarterly business review', 'On-site troubleshooting', 'Product demo', 'Cabling inspection']
+const customers = ['ACME Corp', 'BGC Tower 3', 'Makati Medical Center', 'SM Megamall', 'Globe Telecom', 'Ayala Land']
 
 function makeRecords(key, prefix) {
   const subs = requestTypes[key].subtypes
@@ -40,7 +42,8 @@ function makeRecords(key, prefix) {
       from: key === 'leave-of-absence' ? '08:00 AM' : '06:00 PM',
       to: key === 'leave-of-absence' ? '05:00 PM' : '09:00 PM',
       hours: key === 'leave-of-absence' ? 8 : 3,
-      reason: reasons[i % reasons.length],
+      reason: key === 'call-approval' ? purposes[i % purposes.length] : reasons[i % reasons.length],
+      ...(key === 'call-approval' ? { customer: customers[i % customers.length] } : {}),
       approver: approvers[i % approvers.length],
       status: statuses[i % statuses.length]
     }
@@ -99,12 +102,12 @@ export const useMockData = () => {
   ]
 
   const approvals = [
-    { id: 1, name: 'Maria Santos', empId: 'AN-0012', app: 'Overtime', no: 'OT-2026-0211', date: 'Nov 21, 2026', hours: 3, detail: 'Regular OT • 06:00 PM – 09:00 PM', status: 'For Approval' },
-    { id: 2, name: 'Jose Reyes', empId: 'AN-0034', app: 'Leave of Absence', no: 'LOA-2026-0310', date: 'Nov 25, 2026', hours: 8, detail: 'Sick Leave • Whole day', status: 'For Approval' },
-    { id: 3, name: 'Liza Garcia', empId: 'AN-0078', app: 'Call Approval', no: 'CA-2026-0098', date: 'Nov 20, 2026', hours: 4, detail: 'Client Call • BGC', status: 'For Approval' },
-    { id: 4, name: 'Mark Bautista', empId: 'AN-0067', app: 'Manual Arrival/Departure', no: 'MAD-2026-0044', date: 'Nov 19, 2026', hours: 0, detail: 'Manual Arrival • 08:47 AM', status: 'For Approval' },
-    { id: 5, name: 'Paolo Mendoza', empId: 'AN-0090', app: 'Overtime', no: 'OT-2026-0207', date: 'Nov 18, 2026', hours: 2.5, detail: 'Rest Day OT • 09:00 AM – 11:30 AM', status: 'For Approval' },
-    { id: 6, name: 'Ana Villanueva', empId: 'AN-0051', app: 'Other Requests', no: 'OR-2026-0019', date: 'Nov 17, 2026', hours: 0, detail: 'Certificate of Employment', status: 'For Approval' }
+    { id: 1, name: 'Maria Santos', empId: 'AN-0012', app: 'Overtime', no: 'OT-2026-0211', date: 'Nov 21, 2026', hours: 3, detail: 'Regular OT • 06:00 PM – 09:00 PM', reason: 'Release deployment for client go-live', status: 'For Approval' },
+    { id: 2, name: 'Jose Reyes', empId: 'AN-0034', app: 'Leave of Absence', no: 'LOA-2026-0310', date: 'Nov 25, 2026', hours: 8, detail: 'Sick Leave • Whole day', reason: 'Fever and check-up', status: 'For Approval' },
+    { id: 3, name: 'Liza Garcia', empId: 'AN-0078', app: 'Call Approval', no: 'CA-2026-0098', date: 'Nov 20, 2026', hours: 4, detail: 'Client Call • BGC', reason: 'Quarterly business review', customer: 'BGC Tower 3', status: 'For Approval' },
+    { id: 4, name: 'Mark Bautista', empId: 'AN-0067', app: 'Manual Arrival/Departure', no: 'MAD-2026-0044', date: 'Nov 19, 2026', hours: 0, detail: 'Manual Arrival • 08:47 AM', reason: 'Biometric scanner was offline', status: 'For Approval' },
+    { id: 5, name: 'Paolo Mendoza', empId: 'AN-0090', app: 'Overtime', no: 'OT-2026-0207', date: 'Nov 18, 2026', hours: 2.5, detail: 'Rest Day OT • 09:00 AM – 11:30 AM', reason: 'Weekend server migration', status: 'For Approval' },
+    { id: 6, name: 'Ana Villanueva', empId: 'AN-0051', app: 'Other Requests', no: 'OR-2026-0019', date: 'Nov 17, 2026', hours: 0, detail: 'Certificate of Employment', reason: 'Bank loan requirement', status: 'For Approval' }
   ]
 
   const payslips = Array.from({ length: 8 }, (_, i) => {

@@ -22,9 +22,18 @@
         <input id="rf-hours" v-model.number="f.hours" class="input" type="number" min="0" step="0.5">
         <small v-if="kind === 'leave-of-absence'" class="m">Current Remaining: 68 hrs (VL) · 48 hrs (SL)</small>
       </div>
+      <!-- Same wording as hris_mobile: Call Approval asks for Customer + Purpose, the rest for a Reason. -->
+      <div v-if="kind === 'call-approval'" class="field">
+        <label for="rf-customer">Customer</label>
+        <input id="rf-customer" v-model="f.customer" class="input" maxlength="200" placeholder="Customer or client name" required>
+      </div>
       <div class="field">
-        <label for="rf-reason">Reason</label>
-        <textarea id="rf-reason" v-model="f.reason" class="input" placeholder="Add a reason for this request…" />
+        <label for="rf-reason">{{ isCa ? 'Purpose' : 'Reason' }}</label>
+        <textarea
+          id="rf-reason" v-model="f.reason" class="input" :maxlength="maxLen" required
+          :placeholder="isCa ? 'What is the call or visit for?' : 'Add a reason for this request…'"
+        />
+        <small class="m count">{{ f.reason.length }}/{{ maxLen }}</small>
       </div>
       <div class="foot">
         <button type="button" class="btn btn-ghost" @click="$emit('close')">Cancel</button>
@@ -56,17 +65,21 @@ const toIsoDate = (label) => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 const r = props.record
+// hris_server limits: CA customer/purpose ≤ 200, MAD/OT reason ≤ 75, Other Requests reason ≤ 150.
+const isCa = computed(() => props.kind === 'call-approval')
+const maxLen = computed(() => ({ 'call-approval': 200, 'manual-arrival-departure': 75, overtime: 75, 'other-requests': 150 })[props.kind] ?? 200)
 const f = reactive({
   type: r?.type ?? '', date: r ? toIsoDate(r.date) : '',
-  from: to24(r?.from), to: to24(r?.to), hours: r?.hours ?? 0, reason: r?.reason ?? ''
+  from: to24(r?.from), to: to24(r?.to), hours: r?.hours ?? 0, reason: r?.reason ?? '', customer: r?.customer ?? ''
 })
 const submit = () => emit('save', {
-  type: f.type, reason: f.reason, hours: f.hours, from: to12(f.from), to: to12(f.to),
+  type: f.type, reason: f.reason.trim(), ...(isCa.value ? { customer: f.customer.trim() } : {}), hours: f.hours, from: to12(f.from), to: to12(f.to),
   date: new Date(f.date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 })
 </script>
 
 <style scoped>
+.count { display: block; text-align: right; font-size: .72rem; margin-top: .2rem; }
 .overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; place-items: center; z-index: 50; padding: 1rem; }
 .modal { width: 100%; max-width: 480px; max-height: 92vh; overflow: auto; padding: 1.5rem; }
 .modal h2 { font-size: 1.2rem; margin-bottom: 1.25rem; }

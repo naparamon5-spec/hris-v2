@@ -32,6 +32,7 @@
           <b>{{ t.name }} <small class="m">{{ t.empId }}</small></b>
           <small>{{ t.app }} • {{ t.no }}</small>
           <small class="m">{{ t.date }} · {{ t.detail }}<template v-if="t.hours"> · {{ t.hours }} hrs</template></small>
+          <small v-if="t.reason" class="why"><b>{{ t.app === 'Call Approval' ? 'Purpose' : 'Reason' }}:</b> {{ t.reason }}<template v-if="t.customer"> · {{ t.customer }}</template></small>
         </div>
         <div v-if="t.status === 'For Approval'" class="btns">
           <button class="btn btn-danger btn-sm" @click="act([t.id], 'Disapproved')">Disapprove</button>
@@ -79,7 +80,7 @@ const rows = computed(() => {
     (!f.status || t.status === f.status) &&
     (!f.employee || t.name === f.employee) &&
     inDateRange(t.date, f.dateFrom, f.dateTo) &&
-    `${t.name} ${t.empId} ${t.app} ${t.date} ${t.no}`.toLowerCase().includes(q.value.toLowerCase()))
+    `${t.name} ${t.empId} ${t.app} ${t.date} ${t.no} ${t.reason || ''}`.toLowerCase().includes(q.value.toLowerCase()))
 })
 const { confirm } = useConfirm()
 
@@ -160,6 +161,8 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 5)
   .bar-enter-from, .bar-leave-to { transform: translateY(12px); }
   .ab-btns { flex: 1 1 100%; } .ab-btns .btn { flex: 1; }
 }
+.why { color: var(--text); }
+.why b { font-weight: 600; color: var(--muted); }
 .list { display: flex; flex-direction: column; gap: .6rem; }
 .task { display: flex; align-items: center; gap: .9rem; padding: 1rem 1.25rem; }
 .task.done { opacity: .7; }
