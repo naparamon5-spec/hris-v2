@@ -34,7 +34,6 @@
           <small class="m">{{ t.date }} · {{ t.detail }}<template v-if="t.hours"> · {{ t.hours }} hrs</template></small>
         </div>
         <div v-if="t.status === 'For Approval'" class="btns">
-          <button v-if="t.app === 'Overtime'" class="btn btn-ghost btn-sm" @click="editOt(t)">Edit hours</button>
           <button class="btn btn-danger btn-sm" @click="act([t.id], 'Disapproved')">Disapprove</button>
           <button class="btn btn-primary btn-sm" @click="act([t.id], 'Approved')">Approve</button>
         </div>
@@ -122,10 +121,6 @@ const act = async (ids, s) => {
   toast.value = `${s} ${n} record${n === 1 ? '' : 's'}`
   selected.value = selected.value.filter(id => !ids.includes(id))
   setTimeout(() => (toast.value = ''), 2200)
-}
-const editOt = (t) => {
-  const v = prompt('Approved OT hours', String(t.hours))
-  if (v && !isNaN(+v)) { t.hours = +v; toast.value = 'Saved'; setTimeout(() => (toast.value = ''), 1800) }
 }
 const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 </script>
