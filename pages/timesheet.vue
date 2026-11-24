@@ -8,21 +8,27 @@
       </select>
     </div>
 
-    <!-- One row of periods; scroll sideways with the arrows when there are more. -->
+    <!-- One row of periods (newest on the left). Slide it with the arrows, the mouse
+         wheel, by dragging, or by swiping on touch screens. -->
     <div class="strip">
-      <button type="button" class="nav" aria-label="Earlier periods" :disabled="idx >= periods.length - 1" @click="step(1)">
+      <button type="button" class="nav" aria-label="Slide left (newer periods)" :disabled="atStart" @click="slide(-1)">
         <AppIcon name="chevron" :size="16" class="flip" />
       </button>
-      <div ref="track" class="track">
+      <div
+        ref="track" class="track" :class="{ dragging }"
+        @scroll.passive="updateEdges" @wheel="onWheel"
+        @pointerdown="onDown" @pointermove="onMove" @pointerup="onUp" @pointercancel="onUp" @pointerleave="onUp"
+        @click.capture="blockClickAfterDrag"
+      >
         <button
           v-for="p in periods" :key="p.code" type="button" class="card period" :class="{ on: sel === p.code }"
-          :aria-pressed="sel === p.code" @click="sel = p.code"
+          :aria-pressed="sel === p.code" @click="sel = p.code" @keydown.left.prevent="move(-1)" @keydown.right.prevent="move(1)"
         >
           <b>Period {{ Number(p.code) }}<span v-if="p === periods[0] && isCurrentYear" class="now">Current</span></b>
           <small class="m">{{ p.range }}</small>
         </button>
       </div>
-      <button type="button" class="nav" aria-label="Later periods" :disabled="idx <= 0" @click="step(-1)">
+      <button type="button" class="nav" aria-label="Slide right (older periods)" :disabled="atEnd" @click="slide(1)">
         <AppIcon name="chevron" :size="16" />
       </button>
     </div>
@@ -84,16 +90,62 @@ const rows = computed(() => sheet.value.data)
 const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 watch(sel, () => { page.value = 1 })
 
-// Arrows move to the next/previous period and keep it in view.
+// ---- Period strip sliding ----
 const track = ref(null)
-const step = (dir) => {
-  const next = periods.value[idx.value + dir]
-  if (next) sel.value = next.code
+const atStart = ref(true)
+const atEnd = ref(true)
+const updateEdges = () => {
+  const t = track.value
+  if (!t) return
+  atStart.value = t.scrollLeft <= 2
+  atEnd.value = t.scrollLeft + t.clientWidth >= t.scrollWidth - 2
 }
+// Arrows slide the strip one screenful in the direction they point (selection stays).
+const slide = (dir) => {
+  const t = track.value
+  if (t) t.scrollBy({ left: dir * t.clientWidth * 0.85, behavior: 'smooth' })
+}
+// Mouse wheel: scrolling up/down slides the strip sideways.
+const onWheel = (e) => {
+  const t = track.value
+  if (!t || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return // trackpad sideways swipe: native
+  const can = e.deltaY > 0 ? !atEnd.value : !atStart.value
+  if (!can) return // at the edge: let the page behave normally
+  e.preventDefault()
+  t.scrollLeft += e.deltaY
+}
+// Drag with the mouse to slide (touch screens swipe natively).
+let startX = 0, startLeft = 0, moved = 0, down = false
+const dragging = ref(false)
+const onDown = (e) => {
+  if (e.pointerType !== 'mouse' || e.button !== 0) return
+  down = true; moved = 0; startX = e.clientX; startLeft = track.value.scrollLeft
+}
+const onMove = (e) => {
+  if (!down) return
+  const dx = e.clientX - startX
+  moved = Math.max(moved, Math.abs(dx))
+  if (moved > 5) { dragging.value = true; track.value.scrollLeft = startLeft - dx }
+}
+const onUp = () => { down = false; setTimeout(() => { dragging.value = false }, 0) }
+// A drag must not also select the card it ended on.
+const blockClickAfterDrag = (e) => { if (moved > 5) { e.stopPropagation(); e.preventDefault(); moved = 0 } }
+// Keyboard: ← / → on a focused card selects the card on that side.
+const move = async (dir) => {
+  const next = periods.value[idx.value + dir]
+  if (!next) return
+  sel.value = next.code
+  await nextTick()
+  track.value?.querySelector('.period.on')?.focus()
+}
+// Keep the selected card visible and the arrow states right.
 watch(sel, async () => {
   await nextTick()
   track.value?.querySelector('.period.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' })
 })
+watch(periods, async () => { await nextTick(); track.value && (track.value.scrollLeft = 0); updateEdges() })
+onMounted(() => { updateEdges(); window.addEventListener('resize', updateEdges) })
+onBeforeUnmount(() => window.removeEventListener('resize', updateEdges))
 
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -110,6 +162,9 @@ const typeBadge = (d) =>
 .strip { display: flex; align-items: center; gap: .5rem; }
 .track { flex: 1; display: flex; gap: .6rem; overflow-x: auto; scroll-snap-type: x proximity; padding: 4px 2px; scrollbar-width: none; }
 .track::-webkit-scrollbar { display: none; }
+.track { cursor: grab; user-select: none; }
+.track.dragging { cursor: grabbing; scroll-snap-type: none; }
+.track.dragging .period { pointer-events: none; }
 .period { flex: 0 0 150px; scroll-snap-align: start; display: flex; flex-direction: column; gap: .1rem; text-align: left; cursor: pointer; padding: .7rem .95rem; font-family: inherit; color: inherit; }
 .period b { display: flex; align-items: center; gap: .4rem; font-size: .88rem; }
 .period small { font-size: .76rem; }
