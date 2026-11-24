@@ -25,7 +25,7 @@ export const requestTypes = {
 }
 
 const approvers = ['Ramon Napa', 'Kristine Samonte', 'Vincent Cataylo']
-const statuses = ['Approved', 'For Approval', 'Approved', 'Disapproved', 'Cancelled', 'Approved', 'For Approval']
+const statuses = ['Approved', 'For Approval', 'Posted', 'Disapproved', 'Cancelled', 'Approved', 'For Approval', 'Posted']
 const reasons = ['Family matter', 'Client meeting in Makati', 'Medical check-up', 'Network deployment', 'Personal errand', 'Year-end inventory']
 
 function makeRecords(key, prefix) {
@@ -243,7 +243,14 @@ export const useMockData = () => {
   const companyLogo = (name) => (logoIds[name] ? `/logos/${logoIds[name]}.png` : null)
 
   const badge = (s) =>
-    ({ Approved: 'ok', 'For Approval': 'warn', Draft: 'navy', Disapproved: 'red', Cancelled: 'gray' })[s] ?? 'navy'
+    ({
+      Approved: 'ok', 'Witness Approved': 'ok', // green
+      Posted: 'blue',                            // blue — processed by payroll
+      'For Approval': 'warn', 'For Witness Approval': 'warn',
+      Disapproved: 'red', 'Witness Disapproved': 'red',
+      Cancelled: 'gray', Inactive: 'gray',
+      Active: 'navy', Saved: 'navy', Draft: 'navy'
+    })[s] ?? 'navy'
 
   const peso = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 

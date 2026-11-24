@@ -92,6 +92,7 @@ textarea.input { resize: vertical; min-height: 90px; }
 .badge-warn { background: #fff4e5; color: #a35a0b; }
 .badge-red { background: #fdecef; color: var(--ardent-red); }
 .badge-navy { background: #e7eef2; color: var(--ardent-navy); }
+.badge-blue { background: #e6f0fd; color: #1d5fc7; }
 .badge-gray { background: #f0f1f3; color: #6b7280; }
 
 /* Tables */

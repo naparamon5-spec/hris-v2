@@ -33,7 +33,7 @@
               <td data-label="Leave type">{{ r.leave_type }}</td>
               <td data-label="Hours">{{ r.applied_hours }}</td>
               <td data-label="Approved by">{{ r.approved_by || '—' }}</td>
-              <td data-label="Status"><span class="badge badge-ok">{{ r.status }}</span></td>
+              <td data-label="Status"><span class="badge" :class="'badge-' + badge(r.status)">{{ r.status }}</span></td>
             </tr>
           </tbody>
         </table>
@@ -46,7 +46,7 @@
 
 <script setup>
 // Replace with: api('/auth/leaves/hours') and api('/auth/requests/loa') (status Approved/Posted)
-const { leaveHours: h } = useMockData()
+const { leaveHours: h, badge } = useMockData()
 
 // Same cards and order as hris_mobile leave_hours_screen.dart. Approved Leave / UT always
 // show; the others only when the leave type is assigned (server sends null otherwise).

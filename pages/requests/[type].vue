@@ -64,10 +64,10 @@ if (!meta.value) {
 
 const { requests, badge } = useMockData()
 const q = ref('')
-const filters = ['All', 'For Approval', 'Approved', 'Disapproved', 'Cancelled']
+const filters = ['All', 'For Approval', 'Approved', 'Posted', 'Disapproved', 'Cancelled']
 // Approved Records / Approved Requests = decided history (hris_server
 // GET /auth/approvals?scope=history returns approved, disapproved and cancelled).
-const decided = ['Approved', 'Disapproved', 'Cancelled']
+const decided = ['Approved', 'Posted', 'Disapproved', 'Cancelled']
 const statusFilters = computed(() => (isApproved.value ? ['All', ...decided] : filters))
 // Switching list (e.g. Approved Records -> Approved Requests) starts unfiltered.
 const blankExtra = () => ({ status: '', category: '', type: '', approver: '', dateFrom: '', dateTo: '', filedFrom: '', filedTo: '' })
