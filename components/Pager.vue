@@ -1,6 +1,6 @@
 <template>
-  <nav v-if="total > 0" class="pager" aria-label="Pagination">
-    <span class="info">Showing <b>{{ from }}–{{ to }}</b> of <b>{{ total }}</b></span>
+  <nav class="pager" aria-label="Pagination">
+    <span class="info"><template v-if="total">Showing <b>{{ from }}–{{ to }}</b> of <b>{{ total }}</b></template><template v-else>No results</template></span>
     <div v-if="pages > 1" class="ctrls">
       <button type="button" class="pg" :disabled="page === 1" aria-label="Previous page" @click="go(page - 1)">
         <AppIcon name="chevron" :size="16" class="flip" />
@@ -37,7 +37,7 @@ const numbers = computed(() => {
 </script>
 
 <style scoped>
-.pager { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; padding: .9rem .25rem .2rem; font-size: .82rem; color: var(--muted); }
+.pager { margin-top: auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; padding: .9rem .25rem .2rem; font-size: .82rem; color: var(--muted); }
 .info b { color: var(--text); }
 .ctrls { display: flex; align-items: center; gap: .3rem; }
 .pg { min-width: 34px; height: 34px; padding: 0 .55rem; border-radius: 10px; border: 1px solid var(--border); background: #fff; color: var(--text); font: 600 .82rem Montserrat, sans-serif; display: grid; place-items: center; cursor: pointer; transition: all .15s; }

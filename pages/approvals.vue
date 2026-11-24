@@ -39,8 +39,8 @@
         <span v-else class="badge" :class="'badge-' + badge(t.status)">{{ t.status }}</span>
       </div>
       <p v-if="!rows.length" class="empty">Nothing here</p>
-      <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
     </div>
+    <Pager v-model:page="page" :pages="pages" :total="total" :size="size" :class="{ 'bar-space': selected.length }" />
 
     <!-- Bulk action bar: stays on screen while anything is selected -->
     <Transition name="bar">
@@ -125,7 +125,7 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 .task.picked { border-color: var(--ardent-red); background: #fff7f8; box-shadow: var(--ring); }
 .selecting .task:not(.done) { cursor: pointer; }
 .selecting .btns { display: none; }
-.list { padding-bottom: 5rem; }
+.bar-space { margin-bottom: 4.5rem; }
 .action-bar {
   position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 40;
   display: flex; align-items: center; gap: 1.25rem; padding: .6rem .6rem .6rem 1.2rem;

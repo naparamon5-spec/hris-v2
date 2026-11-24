@@ -461,11 +461,24 @@ header {
   height: 32px;
 }
 main {
-  padding: 1.5rem 2rem 2.5rem;
+  padding: 1.5rem 2rem 2rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
-/* Content starts right after the sidebar and uses the full width (no centered gap). */
+/* Content starts right after the sidebar and uses the full width (no centered gap).
+   It also fills the screen height, so a Pager (margin-top: auto) sits at the bottom
+   and does not move when a page has fewer rows or none. */
 .wrap {
   width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.wrap > :deep(*) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 .menu {
   display: none;

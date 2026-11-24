@@ -12,7 +12,6 @@
           </div>
           <b>{{ i.title }}</b>
           <small>{{ i.desc }}</small>
-          <span class="go">Open <AppIcon name="chevron" :size="14" /></span>
         </NuxtLink>
       </div>
     </section>
@@ -57,6 +56,4 @@ const groups = computed(() => [
 .tile b { font-size: .98rem; }
 .tile small { color: var(--muted); font-size: .8rem; line-height: 1.45; flex: 1; }
 .pill { font-size: .7rem; font-weight: 700; color: #a3590b; background: #fff1e0; padding: .25rem .6rem; border-radius: 999px; white-space: nowrap; }
-.go { display: inline-flex; align-items: center; gap: .15rem; margin-top: .6rem; font-size: .78rem; font-weight: 700; color: var(--ardent-red); }
-.tile:hover .go { gap: .35rem; }
-</style>
+.tile:hover </style>

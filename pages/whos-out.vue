@@ -21,16 +21,17 @@
         </div>
         <div class="legend"><span><i class="leave" /> Leave</span><span><i class="call" /> Call Approval</span></div>
       </div>
-      <div class="card">
+      <div class="card day-card">
         <h3 class="day-title">{{ dayName }}</h3>
         <div v-if="people.length">
-          <div v-for="p in people" :key="p.name + p.type" class="person">
+          <div v-for="p in pageRows" :key="p.name + p.type" class="person">
             <span class="av">{{ p.name.split(' ').map(s => s[0]).join('') }}</span>
             <div><b>{{ p.name }}</b><small class="m">{{ p.type }}</small></div>
             <span class="badge" :class="p.kind === 'leave' ? 'badge-red' : 'badge-ok'">{{ p.kind === 'leave' ? 'Leave' : 'Call Approval' }}</span>
           </div>
         </div>
         <p v-else class="empty">🎉 Full attendance</p>
+        <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
       </div>
     </div>
   </div>
@@ -49,6 +50,8 @@ const days = computed(() => new Date(year.value, month.value + 1, 0).getDate())
 const monthLabel = computed(() => new Date(year.value, month.value, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))
 const dayPeople = (d) => (year.value === 2026 && month.value === 10 ? whosOut[d] : undefined) || []
 const people = computed(() => dayPeople(sel.value))
+const { page, size, total, pages, pageRows } = usePagination(people, 5)
+watch(sel, () => { page.value = 1 })
 const dayName = computed(() => new Date(year.value, month.value, sel.value).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }))
 const isToday = (d) => year.value === now.getFullYear() && month.value === now.getMonth() && d === now.getDate()
 const shift = (n) => {
@@ -81,6 +84,7 @@ const goToday = () => { year.value = now.getFullYear(); month.value = now.getMon
 .day.sel .dots i { background: #fff; }
 .legend { display: flex; gap: 1.25rem; margin-top: 1rem; font-size: .8rem; color: var(--muted); }
 .legend span { display: flex; align-items: center; gap: .4rem; }
+.day-card { display: flex; flex-direction: column; align-self: stretch; }
 .day-title { font-size: 1rem; margin-bottom: .75rem; }
 .person { display: flex; align-items: center; gap: .8rem; padding: .75rem 0; border-bottom: 1px solid var(--border); }
 .person:last-child { border-bottom: 0; }

@@ -129,7 +129,7 @@ const openFromQuery = () => {
 }
 onMounted(openFromQuery)
 watch(() => route.query.new, openFromQuery)
-const { page, size, total, pages, pageRows } = usePagination(rows, 8)
+const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 </script>
 
 <style scoped>
