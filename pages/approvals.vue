@@ -14,16 +14,7 @@
         <input ref="allBox" type="checkbox" :checked="allChecked" :disabled="!pendingIds.length" @change="toggleAll">
         <span>{{ allChecked ? 'Deselect all' : `Select all pending (${pendingIds.length})` }}</span>
       </label>
-      <!-- Bulk actions sit here (above the list), so nothing floats over the pager
-           and the pager never moves when you select rows. -->
-      <Transition name="bar">
-        <div v-if="selected.length" class="bulk" role="toolbar" aria-label="Bulk actions">
-          <small class="m"><b>{{ selected.length }}</b> of {{ pendingIds.length }} selected</small>
-          <button class="btn btn-ghost btn-sm" @click="selected = []">Clear</button>
-          <button class="btn btn-danger btn-sm" @click="act(selected, 'Disapproved')">Disapprove</button>
-          <button class="btn btn-primary btn-sm" @click="act(selected, 'Approved')">Approve {{ selected.length }}</button>
-        </div>
-      </Transition>
+      <small v-if="selected.length" class="m">{{ selected.length }} of {{ pendingIds.length }} selected</small>
     </div>
 
     <div class="list" :class="{ selecting: selected.length }">
@@ -53,8 +44,19 @@
       </div>
       <p v-if="!rows.length" class="empty">Nothing here</p>
     </div>
-    <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
+    <Pager v-model:page="page" :pages="pages" :total="total" :size="size" :class="{ 'bar-space': selected.length }" />
 
+    <!-- Bulk action bar: stays on screen while anything is selected -->
+    <Transition name="bar">
+      <div v-if="selected.length" class="action-bar" role="toolbar" aria-label="Bulk actions">
+        <div class="ab-count"><b>{{ selected.length }}</b><span>selected</span></div>
+        <div class="ab-btns">
+          <button class="btn btn-sm ab-ghost" @click="selected = []">Clear</button>
+          <button class="btn btn-sm ab-dis" @click="act(selected, 'Disapproved')">Disapprove</button>
+          <button class="btn btn-primary btn-sm" @click="act(selected, 'Approved')">Approve {{ selected.length }}</button>
+        </div>
+      </div>
+    </Transition>
     <Toast :msg="toast" />
   </div>
 </template>
@@ -119,7 +121,7 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 </script>
 
 <style scoped>
-.select-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; min-height: 46px; padding: 0 .4rem .5rem 1.3rem; }
+.select-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .2rem .4rem .7rem 1.3rem; }
 .all { display: flex; align-items: center; gap: .9rem; font-size: .85rem; font-weight: 600; cursor: pointer; }
 .all.off { opacity: .5; cursor: default; }
 .all input { accent-color: var(--ardent-red); width: 16px; height: 16px; }
@@ -129,14 +131,29 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 .task:not(.done):hover:not(.picked) { border-color: var(--ardent-gray, #d7d7d7); background: #fcfcfd; }
 .task:focus-visible { outline: none; box-shadow: var(--ring); }
 .selecting .btns { display: none; }
-.bulk { display: flex; align-items: center; gap: .4rem; }
-.bulk small { margin-right: .4rem; white-space: nowrap; }
-.bulk small b { color: var(--text); }
-.bar-enter-active, .bar-leave-active { transition: opacity .15s; }
-.bar-enter-from, .bar-leave-to { opacity: 0; }
+/* Only on narrow screens, where the full-width bar would cover the pager. */
+@media (max-width: 860px) { .bar-space { margin-bottom: 4.5rem; } }
+.action-bar {
+  position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 40;
+  display: flex; align-items: center; gap: 1.25rem; padding: .6rem .6rem .6rem 1.2rem;
+  width: max-content; max-width: calc(100vw - 2rem);
+  background: var(--ardent-navy); color: #fff; border-radius: 999px; box-shadow: 0 18px 40px -12px rgba(19,51,65,.6);
+}
+.ab-count { display: flex; align-items: baseline; gap: .35rem; font-size: .85rem; white-space: nowrap; }
+.ab-count b { font-size: 1.1rem; }
+.ab-count span { color: rgba(255,255,255,.7); }
+.ab-btns { display: flex; gap: .4rem; }
+.ab-ghost { background: transparent; color: rgba(255,255,255,.8); }
+.ab-ghost:hover { color: #fff; background: rgba(255,255,255,.08); }
+.ab-dis { background: rgba(255,255,255,.1); color: #fff; }
+.ab-dis:hover { background: rgba(255,255,255,.18); }
+.bar-enter-active, .bar-leave-active { transition: opacity .18s, transform .18s; }
+.bar-enter-from, .bar-leave-to { opacity: 0; transform: translate(-50%, 12px); }
+@media (min-width: 861px) { .action-bar { left: calc(50% + 126px); } }
 @media (max-width: 640px) {
-  .select-row { flex-wrap: wrap; }
-  .bulk { width: 100%; flex-wrap: wrap; } .bulk small { width: 100%; } .bulk .btn { flex: 1; }
+  .action-bar { left: 1rem; right: 1rem; transform: none; width: auto; border-radius: 18px; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding: .7rem; }
+  .bar-enter-from, .bar-leave-to { transform: translateY(12px); }
+  .ab-btns { flex: 1 1 100%; } .ab-btns .btn { flex: 1; }
 }
 .list { display: flex; flex-direction: column; gap: .6rem; }
 .task { display: flex; align-items: center; gap: .9rem; padding: 1rem 1.25rem; }
