@@ -61,20 +61,24 @@ export const useMockData = () => {
     { label: 'Approved UT (AM/PM)', value: 2, unit: 'times' }
   ]
 
+  // Leave Hours — same shape as hris_server GET /auth/leaves/hours ("hh:mm" strings;
+  // null = leave type not assigned to the employee, so its card is hidden like mobile).
+  // `history` stands in for approved LOAs from GET /auth/requests/loa
+  // (status Approved/Posted) — the server has no separate leave-history endpoint.
   const leaveHours = {
-    summary: [
-      { label: 'VL Paid', value: 68 }, { label: 'SL Paid', value: 48 },
-      { label: 'Additional VL', value: 8 }, { label: 'Accumulated Leave', value: 124 }
-    ],
-    approvedLeave: [
-      { date: 'Nov 3, 2026', type: 'Vacation Leave', hours: 8 },
-      { date: 'Oct 14, 2026', type: 'Sick Leave', hours: 8 },
-      { date: 'Sep 22, 2026', type: 'Vacation Leave', hours: 16 },
-      { date: 'Aug 8, 2026', type: 'Birthday Leave', hours: 8 }
-    ],
-    approvedUt: [
-      { date: 'Oct 30, 2026', type: 'PM Undertime', hours: 4 },
-      { date: 'Sep 5, 2026', type: 'AM Undertime', hours: 4 }
+    approved_leave: '16:00', approved_ut: '08:00',
+    approved_leave_used: '24:00', approved_ut_used: '08:00',
+    vl_paid: '68:00', sl_paid: '48:00', additional_vl: '08:00', accumulated_leave: '124:00',
+    history: [
+      { no: 'H1188', leave_type: 'Vacation Leave', txn_date: 'November 03, 2026', applied_hours: '8:00', approved_by: 'Ramon Napa', status: 'Approved' },
+      { no: 'H1171', leave_type: 'Approved UT (AM/PM)', txn_date: 'October 30, 2026', applied_hours: '4:00', approved_by: 'Ramon Napa', status: 'Posted' },
+      { no: 'H1150', leave_type: 'Sick Leave', txn_date: 'October 14, 2026', applied_hours: '8:00', approved_by: 'Ramon Napa', status: 'Posted' },
+      { no: 'H1132', leave_type: 'Vacation Leave', txn_date: 'September 22, 2026', applied_hours: '16:00', approved_by: 'Kristine Samonte', status: 'Posted' },
+      { no: 'H1119', leave_type: 'Approved UT (AM/PM)', txn_date: 'September 05, 2026', applied_hours: '4:00', approved_by: 'Ramon Napa', status: 'Posted' },
+      { no: 'H1097', leave_type: 'Approved Leave', txn_date: 'August 08, 2026', applied_hours: '8:00', approved_by: 'Ramon Napa', status: 'Posted' },
+      { no: 'H1063', leave_type: 'Sick Leave', txn_date: 'July 17, 2026', applied_hours: '8:00', approved_by: 'Vincent Cataylo', status: 'Posted' },
+      { no: 'H1041', leave_type: 'Additional VL', txn_date: 'June 26, 2026', applied_hours: '8:00', approved_by: 'Ramon Napa', status: 'Posted' },
+      { no: 'H1020', leave_type: 'Vacation Leave', txn_date: 'May 11, 2026', applied_hours: '24:00', approved_by: 'Ramon Napa', status: 'Posted' }
     ]
   }
 
@@ -125,20 +129,69 @@ export const useMockData = () => {
     }
   })
 
-  const timesheet = Array.from({ length: 11 }, (_, i) => {
-    const d = 16 + i
-    const dow = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][(d + 0) % 7]
-    const weekend = dow === 'Sat' || dow === 'Sun'
-    return {
-      date: `Nov ${d}`, dow,
-      in: weekend ? '—' : ['08:52', '09:04', '08:41', '08:58', '09:17'][i % 5],
-      out: weekend ? '—' : ['18:04', '18:10', '17:55', '19:30', '18:22'][i % 5],
-      late: !weekend && i % 5 === 4 ? 17 : 0,
-      ot: !weekend && i % 5 === 3 ? 1.5 : 0,
-      totalHrs: weekend ? 0 : 8,
-      remarks: weekend ? 'Rest day' : i % 5 === 4 ? 'Late' : ''
+  // Timesheet — same shapes as hris_server:
+  //   GET /auth/pay-periods?type=timesheet -> { data: [{ code, year, range, date_from, date_to }] }
+  //   GET /auth/timesheets/<year>-<code>   -> { data: [Day], totals, total }
+  // Semi-monthly periods: 1st half = odd code (1–15), 2nd half = even code (16–end).
+  // Only periods that have started by "today" are listed, like the server's ts_timesheet.
+  const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const pad2 = (n) => String(n).padStart(2, '0')
+  const iso = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
+  const periodDates = (year, n) => {
+    const m = Math.floor((n - 1) / 2)
+    const first = n % 2 === 1
+    return { from: new Date(year, m, first ? 1 : 16), to: new Date(year, m, first ? 15 : new Date(year, m + 1, 0).getDate()) }
+  }
+  const timesheetPeriods = (year) => {
+    const today = new Date()
+    const out = []
+    for (let n = 1; n <= 24; n++) {
+      const { from, to } = periodDates(year, n)
+      if (from > today) break
+      out.push({
+        code: String(n).padStart(3, '0'), year: String(year),
+        range: `${MON[from.getMonth()]} ${pad2(from.getDate())} – ${MON[to.getMonth()]} ${pad2(to.getDate())}`,
+        date_from: iso(from), date_to: iso(to)
+      })
     }
-  })
+    return out.reverse() // newest first
+  }
+  const HOLIDAYS = { '01-01': 'Legal Holiday', '04-09': 'Legal Holiday', '05-01': 'Legal Holiday', '06-12': 'Legal Holiday', '08-21': 'Special Holiday', '11-01': 'Special Holiday', '11-30': 'Legal Holiday', '12-25': 'Legal Holiday', '12-30': 'Legal Holiday' }
+  const timesheetFor = (year, code) => {
+    const { from, to } = periodDates(Number(year), Number(code))
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const ins = ['08:52', '09:04', '08:41', '08:58', '09:17', '08:47', '08:33']
+    const outs = ['18:04', '18:10', '17:55', '19:30', '18:22', '18:01', '20:05']
+    const data = []
+    for (let d = new Date(from); d <= to && d <= today; d.setDate(d.getDate() + 1)) {
+      const seed = d.getDate() + d.getMonth() * 31
+      const dow = d.getDay()
+      const holiday = HOLIDAYS[`${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`]
+      const rest = dow === 0 || dow === 6
+      const leave = !rest && !holiday && seed % 13 === 5
+      const worked = !rest && !holiday && !leave
+      const tin = worked ? ins[seed % ins.length] : ''
+      const tout = worked ? outs[seed % outs.length] : ''
+      const ot = worked && (tout === '19:30' || tout === '20:05') ? (tout === '20:05' ? 2 : 1.5) : 0
+      const late = worked && tin > '09:00'
+      data.push({
+        date: iso(d),
+        day_type: holiday || (rest ? (dow === 6 ? 'Saturday' : 'Sunday') : leave ? 'Vacation Leave' : 'Regular'),
+        leave_type: leave ? 'Vacation Leave' : '',
+        time_in: tin, time_out: tout,
+        basic_hrs: worked ? 8 : 0, basic_nd_hrs: 0,
+        ot_hrs: ot, nd_ot_hrs: 0,
+        leave_hrs: leave ? 8 : 0,
+        total_hrs: (worked ? 8 : 0) + ot + (leave ? 8 : 0),
+        remarks: late ? 'Late' : ''
+      })
+    }
+    const totals = data.reduce((t, r) => ({
+      basic: t.basic + r.basic_hrs, basic_nd: t.basic_nd + r.basic_nd_hrs, ot: t.ot + r.ot_hrs,
+      nd_ot: t.nd_ot + r.nd_ot_hrs, leave: t.leave + r.leave_hrs, total: t.total + r.total_hrs
+    }), { basic: 0, basic_nd: 0, ot: 0, nd_ot: 0, leave: 0, total: 0 })
+    return { data, totals, total: data.length }
+  }
 
   const directory = [
     { name: 'Ramon Napa', role: 'IT Manager', department: 'Technical', email: 'r.napa@ardent.example', local: '214' },
@@ -195,7 +248,7 @@ export const useMockData = () => {
   const peso = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   return {
-    user, leaveCredits, leaveHours, requests, recentActivity, approvals, payslips, timesheet,
+    user, leaveCredits, leaveHours, requests, recentActivity, approvals, payslips, timesheetPeriods, timesheetFor,
     directory, whosOut, notifications, certificates, companies, companyLogo, badge, peso
   }
 }
