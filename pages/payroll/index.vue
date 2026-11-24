@@ -20,12 +20,13 @@
     <h3 class="section-title">Payslip history <span class="count">{{ rows.length }}</span></h3>
     <div class="card" style="padding:.25rem 1.25rem">
       <p v-if="!rows.length" class="empty">No payslips match these filters. <a href="#" @click.prevent="reset">Clear filters</a></p>
-      <NuxtLink v-for="p in rows" :key="p.period" :to="`/payroll/${p.period}`" class="row">
+      <NuxtLink v-for="p in pageRows" :key="p.period" :to="`/payroll/${p.period}`" class="row">
         <span class="icon-tile"><AppIcon name="wallet" /></span>
         <div><b>Period {{ p.period }} · {{ p.label }}</b><small class="m">Pay date {{ p.payDate }}</small></div>
         <AppIcon name="chevron" class="m" />
       </NuxtLink>
     </div>
+    <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
 
     <div v-if="bulk" class="overlay" @click.self="bulk = false">
       <div class="card modal">
@@ -70,6 +71,7 @@ const download = () => {
   picked.value = []
   setTimeout(() => (toast.value = ''), 2200)
 }
+const { page, size, total, pages, pageRows } = usePagination(rows, 6)
 </script>
 
 <style scoped>

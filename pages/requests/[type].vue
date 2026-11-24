@@ -17,7 +17,7 @@
       <table class="table stack">
         <thead><tr><th>No.</th><th v-if="isApproved">Category</th><th>Type</th><th>Date</th><th>Hours</th><th>Approver</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>
-          <tr v-for="r in rows" :key="r.no">
+          <tr v-for="r in pageRows" :key="r.no">
             <td data-label="No."><b>{{ r.no }}</b><br><small class="m">Filed {{ r.dateFiled }}</small></td>
             <td v-if="isApproved" data-label="Category">{{ r.category }}</td>
             <td data-label="Type">{{ r.type }}</td>
@@ -37,6 +37,7 @@
       </table>
       <p v-if="!rows.length" class="empty">No requests found</p>
     </div>
+    <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
 
     <RequestFormModal v-if="formOpen" :title="(editing ? 'Edit ' : 'New ') + meta.title" :subtypes="meta.subtypes" :record="editing" :kind="type" @close="closeForm" @save="save" />
     <Toast :msg="toast" />
@@ -128,6 +129,7 @@ const openFromQuery = () => {
 }
 onMounted(openFromQuery)
 watch(() => route.query.new, openFromQuery)
+const { page, size, total, pages, pageRows } = usePagination(rows, 8)
 </script>
 
 <style scoped>

@@ -19,7 +19,7 @@
 
     <div class="list" :class="{ selecting: selected.length }">
       <div
-        v-for="t in rows" :key="t.id" class="card task"
+        v-for="t in pageRows" :key="t.id" class="card task"
         :class="{ done: t.status !== 'For Approval', picked: selected.includes(t.id) }"
         @click="t.status === 'For Approval' && selected.length && toggle(t.id, $event)"
       >
@@ -39,6 +39,7 @@
         <span v-else class="badge" :class="'badge-' + badge(t.status)">{{ t.status }}</span>
       </div>
       <p v-if="!rows.length" class="empty">Nothing here</p>
+      <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
     </div>
 
     <!-- Bulk action bar: stays on screen while anything is selected -->
@@ -112,6 +113,7 @@ const editOt = (t) => {
   const v = prompt('Approved OT hours', String(t.hours))
   if (v && !isNaN(+v)) { t.hours = +v; toast.value = 'Saved'; setTimeout(() => (toast.value = ''), 1800) }
 }
+const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 </script>
 
 <style scoped>

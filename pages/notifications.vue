@@ -9,13 +9,14 @@
       <button :class="{ on: tab === 'Unread' }" @click="tab = 'Unread'">Unread</button>
     </div>
     <div class="card" style="padding:.25rem 1.25rem">
-      <div v-for="n in rows" :key="n.id" class="n" :class="{ unread: n.unread }" @click="n.unread = false">
+      <div v-for="n in pageRows" :key="n.id" class="n" :class="{ unread: n.unread }" @click="n.unread = false">
         <span class="icon-tile"><AppIcon name="bell" /></span>
         <div><b>{{ n.title }}</b><small>{{ n.body }}</small></div>
         <small class="m when">{{ n.when }}</small>
       </div>
       <p v-if="!rows.length" class="empty">You're all caught up</p>
     </div>
+    <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
   </div>
 </template>
 
@@ -25,6 +26,7 @@ const items = notifications.value
 const tab = ref('All')
 const rows = computed(() => items.filter(n => tab.value === 'All' || n.unread))
 const unread = computed(() => items.filter(n => n.unread).length)
+const { page, size, total, pages, pageRows } = usePagination(rows, 6)
 </script>
 
 <style scoped>
