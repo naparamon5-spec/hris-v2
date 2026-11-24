@@ -30,7 +30,7 @@
     </aside>
     <div v-if="open" class="scrim" @click="open = false" />
     <div class="main">
-      <header>
+      <header :class="{ hidden: hideHeader }">
         <button class="menu" aria-label="Menu" @click="open = !open">☰</button>
         <label class="search"
           ><AppIcon name="search" :size="16" /><input
@@ -82,6 +82,25 @@
 
 <script setup>
 const open = ref(false)
+
+// Hide the top bar while scrolling down; show it again on any scroll up (or near the top).
+const hideHeader = ref(false)
+let lastY = 0
+let ticking = false
+const onScroll = () => {
+  if (ticking) return
+  ticking = true
+  requestAnimationFrame(() => {
+    const y = window.scrollY
+    if (y < 80) hideHeader.value = false
+    else if (y > lastY + 6) hideHeader.value = !menu.value // keep it while the avatar menu is open
+    else if (y < lastY - 6) hideHeader.value = false
+    lastY = y
+    ticking = false
+  })
+}
+onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
+onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 const menu = ref(false)
 const onBlur = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) menu.value = false }
 const { confirm } = useConfirm()
@@ -241,6 +260,12 @@ nav a.active .ico {
   display: flex;
   flex-direction: column;
 }
+header.hidden {
+  transform: translateY(-100%);
+}
+header:focus-within {
+  transform: none;
+}
 header {
   display: flex;
   align-items: center;
@@ -248,8 +273,10 @@ header {
   padding: 0.75rem 2rem;
   background: #fff;
   border-bottom: 1px solid var(--border);
-  /* Scrolls away with the page content (not pinned). z-index keeps the avatar menu above content. */
-  position: relative;
+  /* Pinned, but slides away while scrolling down and returns on scroll up. */
+  position: sticky;
+  top: 0;
+  transition: transform 0.25s ease, box-shadow 0.2s;
   z-index: 10;
 }
 .search {
