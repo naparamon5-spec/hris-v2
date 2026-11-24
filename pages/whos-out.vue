@@ -9,13 +9,7 @@
             <b>{{ monthLabel }}</b>
             <button class="nb" aria-label="Next month" @click="shift(1)"><AppIcon name="chevron" :size="16" /></button>
           </div>
-          <div class="head-right">
-            <div class="counts" :aria-label="`${monthName} totals`">
-              <span class="cnt loa"><b>{{ monthCount.leave }}</b> LOA</span>
-              <span class="cnt ca"><b>{{ monthCount.call }}</b> CA</span>
-            </div>
-            <button class="btn btn-ghost btn-sm" @click="goToday">Today</button>
-          </div>
+          <button class="btn btn-ghost btn-sm" @click="goToday">Today</button>
         </div>
         <div class="cal">
           <span v-for="w in weekdays" :key="w" class="wd">{{ w }}</span>
@@ -25,7 +19,7 @@
             <span class="dots"><i v-for="(p, i) in dayPeople(d).slice(0, 3)" :key="i" :class="p.kind" /></span>
           </button>
         </div>
-        <div class="legend"><span><i class="leave" /> Leave of Absence (LOA)</span><span><i class="call" /> Call Approval (CA)</span><small class="m">Counts: one per person per day</small></div>
+        <div class="legend"><span><i class="leave" /> Leave of Absence (LOA)</span><span><i class="call" /> Call Approval (CA)</span></div>
       </div>
       <div class="card day-card">
         <div class="day-head">
@@ -62,11 +56,10 @@ const days = computed(() => new Date(year.value, month.value + 1, 0).getDate())
 const monthLabel = computed(() => new Date(year.value, month.value, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))
 const dayPeople = (d) => (year.value === 2026 && month.value === 10 ? whosOut[d] : undefined) || []
 const people = computed(() => dayPeople(sel.value))
-// LOA / CA counts for the selected day and for the whole month (one per person per day).
+// LOA / CA counts for the selected day.
 const tally = (list) => ({ leave: list.filter(p => p.kind === 'leave').length, call: list.filter(p => p.kind === 'call').length })
 const dayCount = computed(() => tally(people.value))
-const monthCount = computed(() => tally(Array.from({ length: days.value }, (_, i) => dayPeople(i + 1)).flat()))
-const monthName = computed(() => new Date(year.value, month.value, 1).toLocaleDateString('en-US', { month: 'long' }))
+
 const { page, size, total, pages, pageRows } = usePagination(people, 5)
 watch(sel, () => { page.value = 1 })
 const dayName = computed(() => new Date(year.value, month.value, sel.value).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }))
@@ -102,8 +95,6 @@ const goToday = () => { year.value = now.getFullYear(); month.value = now.getMon
 .day.sel .dots i { background: #fff; }
 .legend { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin-top: 1rem; font-size: .8rem; color: var(--muted); }
 .legend span { display: flex; align-items: center; gap: .4rem; }
-.head-right { display: flex; align-items: center; gap: .6rem; }
-.legend small { margin-left: auto; }
 .day-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; margin-bottom: .75rem; }
 .day-head .day-title { margin-bottom: 0; }
 .counts { display: flex; gap: .4rem; flex: none; }
