@@ -4,6 +4,7 @@
 
     <div class="toolbar">
       <input v-model="q" class="input" type="search" aria-label="Search approvals" placeholder="Search by name, ID, type, date…">
+      <FilterMenu v-model="extra" :fields="filterFields" />
       <div class="chips">
         <button v-for="c in cats" :key="c" class="chip" :class="{ on: cat === c }" @click="cat = c">{{ c }}</button>
       </div>
@@ -69,9 +70,22 @@ const cats = ['All', 'Leave of Absence', 'Overtime', 'Call Approval', 'Manual Ar
 const cat = ref('All')
 const selected = ref([])
 const toast = ref('')
-const rows = computed(() => items.value.filter(t =>
-  (cat.value === 'All' || t.app === cat.value) &&
-  `${t.name} ${t.empId} ${t.app} ${t.date} ${t.no}`.toLowerCase().includes(q.value.toLowerCase())))
+// Filters menu: status, employee and request date (category stays as chips).
+const extra = ref({ status: '', employee: '', dateFrom: '', dateTo: '' })
+const filterFields = computed(() => [
+  { key: 'status', label: 'Status', options: ['For Approval', 'Approved', 'Disapproved'] },
+  { key: 'employee', label: 'Employee', options: uniq(items.value, t => t.name) },
+  { key: 'date', label: 'Request date', type: 'date-range' }
+])
+const rows = computed(() => {
+  const f = extra.value
+  return items.value.filter(t =>
+    (cat.value === 'All' || t.app === cat.value) &&
+    (!f.status || t.status === f.status) &&
+    (!f.employee || t.name === f.employee) &&
+    inDateRange(t.date, f.dateFrom, f.dateTo) &&
+    `${t.name} ${t.empId} ${t.app} ${t.date} ${t.no}`.toLowerCase().includes(q.value.toLowerCase()))
+})
 const { confirm } = useConfirm()
 
 // Select all = every still-pending record in the current filtered view.

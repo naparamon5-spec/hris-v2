@@ -25,6 +25,7 @@ const paths = {
   logout: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
   shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
   award: '<circle cx="12" cy="8" r="6"/><path d="M8.2 13.9L7 23l5-3 5 3-1.2-9.1"/>',
-  chevron: '<path d="M9 18l6-6-6-6"/>'
+  chevron: '<path d="M9 18l6-6-6-6"/>',
+  filter: '<path d="M3 5h18M6 12h12M10 19h4"/>'
 }
 </script>

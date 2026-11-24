@@ -8,6 +8,7 @@
 
     <div class="toolbar">
       <input v-model="q" class="input" type="search" aria-label="Search requests" placeholder="Search by No., Type, Approver…">
+      <FilterMenu v-model="extra" :fields="filterFields" />
       <div class="chips">
         <button v-for="s in statusFilters" :key="s" class="chip" :class="{ on: status === s }" @click="status = s">{{ s }}</button>
       </div>
@@ -73,7 +74,9 @@ const decided = ['Approved', 'Disapproved', 'Cancelled']
 const statusFilters = computed(() => (isApproved.value ? ['All', ...decided] : filters))
 const status = ref('All')
 // Switching list (e.g. Approved Records -> Approved Requests) starts unfiltered.
-watch(type, () => { status.value = 'All'; q.value = '' })
+const blankExtra = () => ({ category: '', type: '', approver: '', dateFrom: '', dateTo: '', filedFrom: '', filedTo: '' })
+const extra = ref(blankExtra())
+watch(type, () => { status.value = 'All'; q.value = ''; extra.value = blankExtra() })
 const toast = ref('')
 let toastTimer
 const flash = (m) => {
@@ -90,9 +93,25 @@ const source = computed(() => {
   }
   return requests.value[type.value] ?? []
 })
-const rows = computed(() => source.value.filter(r =>
-  (status.value === 'All' || r.status === status.value) &&
-  `${r.no} ${r.type} ${r.approver}`.toLowerCase().includes(q.value.toLowerCase())))
+// Filters menu: category (approved lists), type, approver, request date and filed date.
+const filterFields = computed(() => [
+  ...(isApproved.value ? [{ key: 'category', label: 'Category', options: uniq(source.value, r => r.category) }] : []),
+  { key: 'type', label: 'Type', options: uniq(source.value, r => r.type) },
+  { key: 'approver', label: 'Approver', options: uniq(source.value, r => r.approver) },
+  { key: 'date', label: 'Request date', type: 'date-range' },
+  { key: 'filed', label: 'Date filed', type: 'date-range' }
+])
+const rows = computed(() => {
+  const f = extra.value
+  return source.value.filter(r =>
+    (status.value === 'All' || r.status === status.value) &&
+    (!f.category || r.category === f.category) &&
+    (!f.type || r.type === f.type) &&
+    (!f.approver || r.approver === f.approver) &&
+    inDateRange(r.date, f.dateFrom, f.dateTo) &&
+    inDateRange(r.dateFiled, f.filedFrom, f.filedTo) &&
+    `${r.no} ${r.type} ${r.approver}`.toLowerCase().includes(q.value.toLowerCase()))
+})
 
 const formOpen = ref(false)
 const editing = ref(null)

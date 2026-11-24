@@ -219,11 +219,11 @@ export const useMockData = () => {
 
   // Shared so the header bell count updates when items are read.
   const notifications = useState('mock-notifications', () => [
-    { id: 1, title: 'Overtime approved', body: 'Your OT-2026-0140 was approved by Ramon Napa.', when: '2h ago', unread: true },
-    { id: 2, title: 'New approval request', body: 'Maria Santos filed an Overtime request for Nov 21.', when: '5h ago', unread: true },
-    { id: 3, title: 'Payslip available', body: 'Your payslip for Nov 1 – 15 is ready to view.', when: 'Nov 15', unread: false },
-    { id: 4, title: 'Call Approval disapproved', body: 'CA-2026-0137 was disapproved. Reason: incomplete details.', when: 'Nov 12', unread: false },
-    { id: 5, title: 'Holiday advisory', body: 'Nov 30 (Bonifacio Day) is a regular holiday.', when: 'Nov 10', unread: false }
+    { id: 1, title: 'Overtime approved', body: 'Your OT-2026-0140 was approved by Ramon Napa.', when: '2h ago', unread: true, kind: 'Requests' },
+    { id: 2, title: 'New approval request', body: 'Maria Santos filed an Overtime request for Nov 21.', when: '5h ago', unread: true, kind: 'Approvals' },
+    { id: 3, title: 'Payslip available', body: 'Your payslip for Nov 1 – 15 is ready to view.', when: 'Nov 15', unread: false, kind: 'Payroll' },
+    { id: 4, title: 'Call Approval disapproved', body: 'CA-2026-0137 was disapproved. Reason: incomplete details.', when: 'Nov 12', unread: false, kind: 'Requests' },
+    { id: 5, title: 'Holiday advisory', body: 'Nov 30 (Bonifacio Day) is a regular holiday.', when: 'Nov 10', unread: false, kind: 'Advisory' }
   ])
 
   const certificates = [

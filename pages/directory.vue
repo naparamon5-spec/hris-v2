@@ -1,7 +1,10 @@
 <template>
   <div>
     <div class="page-head"><div><h1>Directory</h1><p>{{ filtered.length }} team members</p></div></div>
-    <div class="toolbar"><input v-model="q" class="input" type="search" aria-label="Search people or roles" placeholder="Search people or roles"></div>
+    <div class="toolbar">
+      <input v-model="q" class="input" type="search" aria-label="Search people or roles" placeholder="Search people or roles">
+      <FilterMenu v-model="extra" :fields="filterFields" />
+    </div>
     <div class="grid people">
       <div v-for="e in pageRows" :key="e.name" class="card person">
         <span class="av">{{ e.name.split(' ').map(s => s[0]).join('') }}</span>
@@ -18,7 +21,16 @@
 <script setup>
 const { directory } = useMockData()
 const q = ref('')
-const filtered = computed(() => directory.filter(e => `${e.name} ${e.role} ${e.department}`.toLowerCase().includes(q.value.toLowerCase())))
+// Filters menu: department and position (server: GET /auth/directory?department=).
+const extra = ref({ department: '', role: '' })
+const filterFields = [
+  { key: 'department', label: 'Department', options: uniq(directory, e => e.department) },
+  { key: 'role', label: 'Position', options: uniq(directory, e => e.role) }
+]
+const filtered = computed(() => directory.filter(e =>
+  (!extra.value.department || e.department === extra.value.department) &&
+  (!extra.value.role || e.role === extra.value.role) &&
+  `${e.name} ${e.role} ${e.department}`.toLowerCase().includes(q.value.toLowerCase())))
 const { page, size, total, pages, pageRows } = usePagination(filtered, 8)
 </script>
 
