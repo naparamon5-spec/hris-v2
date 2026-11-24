@@ -103,7 +103,7 @@ const cancelPw = () => { askPw.value = false; if (!unlocked.value) navigateTo('/
 <style scoped>
 .locked { display: flex; align-items: center; gap: 1rem; max-width: 820px; }
 .locked div { flex: 1; display: flex; flex-direction: column; }
-.pw-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(19,51,65,.55); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 1rem; }
+.pw-overlay { position: fixed; inset: 0; margin: 0; z-index: 100; background: rgba(19,51,65,.55); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 1rem; }
 .pw-card { width: 100%; max-width: 400px; background: #fff; border-radius: 20px; padding: 1.75rem 1.5rem 1.4rem; text-align: center; box-shadow: var(--shadow-lg); }
 .pw-card h2 { font-size: 1.15rem; }
 .pw-card > p { margin: .5rem 0 1.25rem; font-size: .88rem; line-height: 1.5; }
