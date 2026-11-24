@@ -1,6 +1,6 @@
 <template>
   <div v-if="meta">
-    <NuxtLink to="/requests" class="back">‹ Requests</NuxtLink>
+    <NuxtLink to="/requests" class="back">‹ Back</NuxtLink>
     <div class="page-head">
       <div><h1>{{ meta.title }}</h1><p>{{ meta.desc }}</p></div>
       <button v-if="!isApproved" class="btn btn-primary" @click="openForm()"><AppIcon name="plus" /> Create</button>

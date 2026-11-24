@@ -1,6 +1,6 @@
 <template>
   <div>
-    <NuxtLink to="/requests" class="back">‹ Requests</NuxtLink>
+    <NuxtLink to="/requests" class="back">‹ Back</NuxtLink>
     <div class="page-head">
       <div><h1>Timesheet</h1><p>Select a cut-off period to view your daily time records.</p></div>
       <AppSelect v-model="year" :options="years" aria-label="Year" class="year" />

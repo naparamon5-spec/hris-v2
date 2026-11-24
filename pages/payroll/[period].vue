@@ -1,6 +1,6 @@
 <template>
   <div v-if="slip">
-    <NuxtLink to="/payroll" class="back">‹ Payroll</NuxtLink>
+    <NuxtLink to="/payroll" class="back">‹ Back</NuxtLink>
     <div class="page-head">
       <div><h1>Payslip</h1><p>Period {{ slip.period }} · {{ slip.label }} · Pay date • {{ slip.payDate }}</p></div>
       <div v-if="unlocked" style="display:flex;gap:.5rem">

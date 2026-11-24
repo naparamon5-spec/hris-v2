@@ -1,6 +1,6 @@
 <template>
   <div>
-    <NuxtLink to="/requests" class="back">‹ Requests</NuxtLink>
+    <NuxtLink to="/requests" class="back">‹ Back</NuxtLink>
     <div class="page-head"><div><h1>Leave Hours</h1><p>Your remaining leave hours and approved leave.</p></div></div>
 
     <h3 class="section-title">Remaining leave hours</h3>
