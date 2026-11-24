@@ -9,9 +9,6 @@
     <div class="toolbar">
       <input v-model="q" class="input" type="search" aria-label="Search requests" placeholder="Search by No., Type, Approver…">
       <FilterMenu v-model="extra" :fields="filterFields" />
-      <div class="chips">
-        <button v-for="s in statusFilters" :key="s" class="chip" :class="{ on: status === s }" @click="status = s">{{ s }}</button>
-      </div>
     </div>
 
     <div class="card table-wrap" style="padding:.5rem">
@@ -72,11 +69,10 @@ const filters = ['All', 'For Approval', 'Approved', 'Disapproved', 'Cancelled']
 // GET /auth/approvals?scope=history returns approved, disapproved and cancelled).
 const decided = ['Approved', 'Disapproved', 'Cancelled']
 const statusFilters = computed(() => (isApproved.value ? ['All', ...decided] : filters))
-const status = ref('All')
 // Switching list (e.g. Approved Records -> Approved Requests) starts unfiltered.
-const blankExtra = () => ({ category: '', type: '', approver: '', dateFrom: '', dateTo: '', filedFrom: '', filedTo: '' })
+const blankExtra = () => ({ status: '', category: '', type: '', approver: '', dateFrom: '', dateTo: '', filedFrom: '', filedTo: '' })
 const extra = ref(blankExtra())
-watch(type, () => { status.value = 'All'; q.value = ''; extra.value = blankExtra() })
+watch(type, () => { q.value = ''; extra.value = blankExtra() })
 const toast = ref('')
 let toastTimer
 const flash = (m) => {
@@ -93,8 +89,9 @@ const source = computed(() => {
   }
   return requests.value[type.value] ?? []
 })
-// Filters menu: category (approved lists), type, approver, request date and filed date.
+// Filters menu: status, category (approved lists), type, approver, request date and filed date.
 const filterFields = computed(() => [
+  { key: 'status', label: 'Status', options: statusFilters.value.slice(1) },
   ...(isApproved.value ? [{ key: 'category', label: 'Category', options: uniq(source.value, r => r.category) }] : []),
   { key: 'type', label: 'Type', options: uniq(source.value, r => r.type) },
   { key: 'approver', label: 'Approver', options: uniq(source.value, r => r.approver) },
@@ -104,7 +101,7 @@ const filterFields = computed(() => [
 const rows = computed(() => {
   const f = extra.value
   return source.value.filter(r =>
-    (status.value === 'All' || r.status === status.value) &&
+    (!f.status || r.status === f.status) &&
     (!f.category || r.category === f.category) &&
     (!f.type || r.type === f.type) &&
     (!f.approver || r.approver === f.approver) &&
