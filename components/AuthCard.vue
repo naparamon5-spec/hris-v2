@@ -1,5 +1,5 @@
 <template>
-  <section class="hero">
+  <section class="hero" :class="{ slim }">
     <HrisLogo light :size="44" />
     <div class="copy">
       <span class="eyebrow">#OneArdent</span>
@@ -20,6 +20,8 @@
 </template>
 
 <script setup>
+// slim: on phones show only the logo in the banner (keeps short pages scroll-free).
+defineProps({ slim: Boolean })
 const values = ['Partnership', 'Service', 'Learning', 'Trust', 'Scale']
 const year = new Date().getFullYear()
 </script>
@@ -54,6 +56,8 @@ const year = new Date().getFullYear()
 .form :deep(.alt) { display: block; text-align: center; margin-top: 1.25rem; font-size: .85rem; font-weight: 600; }
 .legal { color: var(--muted); font-size: .72rem; }
 @media (max-width: 860px) {
+  .hero.slim { padding: 1rem 1.25rem; }
+  .hero.slim .copy { display: none; }
   .hero { padding: 1.75rem 1.25rem; gap: 1rem; }
   .float, .hero ul, .hero p { display: none; }
   .hero h1 { font-size: 1.6rem; }
