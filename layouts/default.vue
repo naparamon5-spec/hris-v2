@@ -436,9 +436,9 @@ header {
 main {
   padding: 1.5rem 2rem 2.5rem;
 }
+/* Content starts right after the sidebar and uses the full width (no centered gap). */
 .wrap {
-  max-width: 1280px;
-  margin: 0 auto;
+  width: 100%;
 }
 .menu {
   display: none;
