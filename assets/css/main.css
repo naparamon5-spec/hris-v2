@@ -126,7 +126,7 @@ table.table { width: 100%; border-collapse: separate; border-spacing: 0; font-si
 .back { align-self: flex-start; display: inline-flex; align-items: center; gap: .3rem; font-size: .82rem; font-weight: 600; margin-bottom: .6rem; padding: .3rem .7rem .3rem .5rem; border-radius: 999px; background: #fff; border: 1px solid var(--border); }
 .back:hover { border-color: var(--ardent-gray); }
 /* Content after a Back link is indented, so it doesn't line up under the button. */
-.back ~ * { margin-left: 1rem; }
+.back ~ * { margin-left: 2rem; }
 
 .tabs { display: inline-flex; gap: .25rem; padding: .3rem; background: #fff; border: 1px solid var(--border); border-radius: 999px; margin-bottom: 1.25rem; overflow-x: auto; max-width: 100%; }
 .tabs button { background: none; border: 0; padding: .5rem 1.1rem; border-radius: 999px; font: 600 .85rem 'Montserrat', sans-serif; color: var(--muted); cursor: pointer; white-space: nowrap; transition: all .15s; }
@@ -141,7 +141,7 @@ table.table { width: 100%; border-collapse: separate; border-spacing: 0; font-si
 @media (max-width: 640px) {
   .page-head { align-items: flex-start; margin-bottom: 1rem; }
   .page-head h1 { font-size: 1.4rem; }
-  .back ~ * { margin-left: .5rem; }
+  .back ~ * { margin-left: 1rem; }
   .page-head > .btn, .page-head > div:last-child:not(:first-child) { width: 100%; }
   .page-head > div:last-child:not(:first-child) { display: flex; gap: .5rem; }
   .page-head > div:last-child:not(:first-child) .btn { flex: 1; }
