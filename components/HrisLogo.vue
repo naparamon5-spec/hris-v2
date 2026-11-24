@@ -10,7 +10,7 @@
 </template>
 
 <script setup>
-defineProps({ light: Boolean, sub: { type: String, default: 'Ardent Networks, Inc.' }, size: { type: Number, default: 40 } })
+defineProps({ light: Boolean, sub: { type: String, default: 'Human Resource Information System' }, size: { type: Number, default: 40 } })
 </script>
 
 <style scoped>
