@@ -73,7 +73,8 @@ const goToday = () => { year.value = now.getFullYear(); month.value = now.getMon
 .cal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
 .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: .3rem; }
 .wd { text-align: center; font-size: .72rem; font-weight: 700; color: var(--muted); padding-bottom: .3rem; }
-.day { aspect-ratio: 1; border: 1px solid transparent; background: #fafafa; border-radius: 10px; font: 600 .88rem Montserrat, sans-serif; color: var(--text); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+/* Height follows the screen (not the width) so a 6-week month still fits without page scroll. */
+.day { height: clamp(40px, calc((100vh - 400px) / 6), 96px); border: 1px solid transparent; background: #fafafa; border-radius: 10px; font: 600 .88rem Montserrat, sans-serif; color: var(--text); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
 .day:hover { border-color: var(--ardent-gray); }
 .day.today { color: var(--ardent-red); }
 .day.sel { background: var(--ardent-red); color: #fff; }
