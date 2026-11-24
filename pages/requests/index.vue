@@ -43,7 +43,7 @@ const groups = computed(() => [
 <style scoped>
 .group .section-title { margin-top: 0; }
 .group + .group { margin-top: 1.75rem; }
-.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: .9rem; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: .9rem; }
 .tile {
   position: relative; display: flex; flex-direction: column; gap: .3rem;
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
