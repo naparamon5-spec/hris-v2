@@ -32,6 +32,12 @@
       <div class="card modal">
         <h2>Download Payslips</h2>
         <input v-model="bq" class="input" type="search" aria-label="Search payslips to download" placeholder="Search period no. or month (e.g. 12, Oct)" style="width:100%;margin-bottom:.75rem">
+        <!-- Select all = every payslip shown by the current search. -->
+        <label class="pick all" :class="{ off: !bulkRows.length }">
+          <input ref="allBox" type="checkbox" :checked="allPicked" :disabled="!bulkRows.length" @change="toggleAllPicked">
+          <b>{{ allPicked ? 'Deselect all' : `Select all (${bulkRows.length})` }}</b>
+          <small v-if="picked.length" class="m sel">{{ picked.length }} selected</small>
+        </label>
         <label v-for="p in bulkRows" :key="p.period" class="pick"><input v-model="picked" type="checkbox" :value="p.period"> Period {{ p.period }} · {{ p.label }}</label>
         <div class="foot">
           <button class="btn btn-ghost" @click="bulk = false">Cancel</button>
@@ -65,6 +71,17 @@ const rows = computed(() => payslips.filter(p =>
 const reset = () => { q.value = ''; half.value = 'all'; month.value = 'All' }
 
 const bulkRows = computed(() => payslips.filter(p => `${p.period} ${p.label}`.toLowerCase().includes(bq.value.toLowerCase())))
+const shownIds = computed(() => bulkRows.value.map(p => p.period))
+const allPicked = computed(() => shownIds.value.length > 0 && shownIds.value.every(id => picked.value.includes(id)))
+const somePicked = computed(() => shownIds.value.some(id => picked.value.includes(id)))
+const toggleAllPicked = () => {
+  picked.value = allPicked.value
+    ? picked.value.filter(id => !shownIds.value.includes(id))
+    : [...new Set([...picked.value, ...shownIds.value])]
+}
+// Checkbox shows "–" when only some of the shown payslips are picked.
+const allBox = ref(null)
+watchEffect(() => { if (allBox.value) allBox.value.indeterminate = somePicked.value && !allPicked.value })
 const download = () => {
   bulk.value = false
   toast.value = `Preparing ${picked.value.length} payslip(s)… (mock)`
@@ -87,5 +104,8 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 6)
 .modal h2 { font-size: 1.2rem; margin-bottom: 1rem; }
 .pick { display: flex; gap: .6rem; align-items: center; padding: .55rem 0; font-size: .9rem; border-bottom: 1px solid var(--border); }
 .pick input { accent-color: var(--ardent-red); }
+.pick.all { position: sticky; top: 0; background: #fff; z-index: 1; cursor: pointer; }
+.pick.all.off { opacity: .5; cursor: default; }
+.pick .sel { margin-left: auto; }
 .foot { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
 </style>
