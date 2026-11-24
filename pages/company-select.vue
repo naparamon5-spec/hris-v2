@@ -10,17 +10,26 @@
 
     <input v-model="q" class="input search" type="search" aria-label="Search companies" placeholder="Search companies…">
 
-    <div class="grid-co" role="list">
+    <!-- Tapping a row only selects it; Continue does the switch (avoids accidental switches). -->
+    <div class="grid-co" role="radiogroup" aria-label="Companies">
       <button
-        v-for="c in list" :key="c" type="button" role="listitem" class="co"
-        :class="{ on: c === company }" :aria-current="c === company ? 'true' : undefined"
-        @click="pick(c)"
+        v-for="c in list" :key="c" type="button" role="radio" class="co"
+        :class="{ on: c === chosen }" :aria-checked="c === chosen"
+        @click="chosen = c" @dblclick="chosen = c; go()"
       >
         <span class="co-logo"><ArdentLogo :company="c" /></span>
         <span class="co-name">{{ c }}</span>
         <span v-if="c === company" class="cur">Current</span>
+        <span class="tick" aria-hidden="true"><AppIcon v-if="c === chosen" name="check" :size="14" /></span>
       </button>
       <p v-if="!list.length" class="empty">No company matches "{{ q }}".</p>
+    </div>
+
+    <div class="footer-bar">
+      <button type="button" class="btn btn-primary continue" :disabled="!chosen" @click="go">
+        {{ chosen === company ? 'Continue' : `Continue to ${chosen}` }}
+        <AppIcon name="chevron" :size="16" />
+      </button>
     </div>
   </AuthCard>
 </template>
@@ -29,7 +38,8 @@
 definePageMeta({ layout: 'auth' })
 const { companies } = useMockData()
 const company = useState('company', () => companies[0])
-const pick = (c) => { company.value = c; navigateTo('/') }
+const chosen = ref(company.value)
+const go = () => { if (!chosen.value) return; company.value = chosen.value; navigateTo('/') }
 const q = ref('')
 const list = computed(() => companies.filter(c => c.toLowerCase().includes(q.value.trim().toLowerCase())))
 </script>
@@ -54,6 +64,11 @@ const list = computed(() => companies.filter(c => c.toLowerCase().includes(q.val
 .co-logo :deep(.chip img) { max-width: 100px; }
 .co-logo :deep(.mono) { width: 40px; height: 40px; font-size: .85rem; border-radius: 10px; }
 .co-name { flex: 1; font-size: .98rem; font-weight: 600; }
-.cur { font-size: .68rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ardent-red); }
+.cur { font-size: .66rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: #f0f1f3; padding: .2rem .5rem; border-radius: 99px; }
+.tick { width: 22px; height: 22px; flex-shrink: 0; border-radius: 50%; border: 2px solid var(--ardent-gray); display: grid; place-items: center; color: #fff; transition: all .15s; }
+.co.on .tick { background: var(--ardent-red); border-color: var(--ardent-red); }
+.footer-bar { position: sticky; bottom: 0; padding: .9rem 0 .25rem; margin-top: .4rem; background: linear-gradient(transparent, #fff 35%); }
+.continue { width: 100%; padding: .9rem; font-size: .95rem; }
+.continue :deep(svg) { margin-left: .1rem; }
 @media (max-width: 860px) { .back-link { padding-top: .3rem; } }
 </style>
