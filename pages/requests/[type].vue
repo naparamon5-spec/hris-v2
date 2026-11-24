@@ -48,9 +48,15 @@
 
 const route = useRoute()
 const type = computed(() => route.params.type)
-const isApproved = computed(() => type.value === 'approved')
+// Same split as hris_mobile: "records" = LOA / Call Approval / Manual Arrival-Departure /
+// Overtime; "requests" = Other Requests (COE, EPP items, ...).
+const approvedLists = {
+  approved: { title: 'Approved Records', desc: 'Approved leave, call approval, manual arrival/departure and overtime.', keys: ['leave-of-absence', 'call-approval', 'manual-arrival-departure', 'overtime'] },
+  'approved-requests': { title: 'Approved Requests', desc: 'Approved other requests (COE, EPP items and more).', keys: ['other-requests'] }
+}
+const isApproved = computed(() => type.value in approvedLists)
 const meta = computed(() => isApproved.value
-  ? { title: 'Approved Records', desc: 'All your approved requests across categories.', subtypes: [] }
+  ? { ...approvedLists[type.value], subtypes: [] }
   : requestTypes[type.value])
 
 // Unknown request type (e.g. /requests/foo): show the 404 page instead of a blank screen.
@@ -73,7 +79,7 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
 
 const source = computed(() => {
   if (isApproved.value) {
-    return Object.keys(requests.value).flatMap(k =>
+    return meta.value.keys.flatMap(k =>
       requests.value[k].filter(r => r.status === 'Approved').map(r => ({ ...r, category: requestTypes[k].title })))
   }
   return requests.value[type.value] ?? []

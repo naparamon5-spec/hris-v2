@@ -33,7 +33,8 @@ const groups = computed(() => [
       { to: '/leave-hours', title: 'Leave Hours', desc: 'VL/SL balances and approved leave.', icon: 'hourglass', count: 0 },
       { to: '/timesheet', title: 'Timesheet', desc: 'Daily time in/out per cut-off.', icon: 'table', count: 0 },
       { to: '/payroll', title: 'Payslip', desc: 'View and download payslips.', icon: 'wallet', count: 0 },
-      { to: '/requests/approved', title: 'Approved Records', desc: 'All your approved requests.', icon: 'check', count: 0 }
+      { to: '/requests/approved', title: 'Approved Records', desc: 'Approved leave, call approval, MAD and overtime.', icon: 'check', count: 0 },
+      { to: '/requests/approved-requests', title: 'Approved Requests', desc: 'Approved COE, EPP items and other requests.', icon: 'doc', count: 0 }
     ]
   }
 ])
