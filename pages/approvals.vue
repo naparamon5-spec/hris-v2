@@ -21,7 +21,11 @@
       <div
         v-for="t in pageRows" :key="t.id" class="card task"
         :class="{ done: t.status !== 'For Approval', picked: selected.includes(t.id) }"
-        @click="t.status === 'For Approval' && selected.length && toggle(t.id, $event)"
+        :role="t.status === 'For Approval' ? 'checkbox' : undefined"
+        :aria-checked="t.status === 'For Approval' ? selected.includes(t.id) : undefined"
+        :tabindex="t.status === 'For Approval' ? 0 : undefined"
+        @click="t.status === 'For Approval' && toggle(t.id, $event)"
+        @keydown.space.self.prevent="t.status === 'For Approval' && toggle(t.id, $event)"
       >
         <input v-if="t.status === 'For Approval'" v-model="selected" type="checkbox" :value="t.id" :aria-label="`Select ${t.name}`" @click.stop>
         <span v-else style="width:16px" />
@@ -77,9 +81,9 @@ const allBox = ref(null)
 watchEffect(() => {
   if (allBox.value) allBox.value.indeterminate = selected.value.length > 0 && !allChecked.value
 })
-// While selecting, clicking a card (not its buttons) toggles it.
+// Clicking anywhere on a pending card (not its buttons) checks / unchecks it.
 const toggle = (id, e) => {
-  if (e.target.closest('button')) return
+  if (e.target.closest('button, a, input')) return
   selected.value = selected.value.includes(id) ? selected.value.filter(x => x !== id) : [...selected.value, id]
 }
 const toggleAll = () => {
@@ -123,7 +127,9 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 .all input { accent-color: var(--ardent-red); width: 16px; height: 16px; }
 .task { transition: border-color .15s, background .15s, box-shadow .15s; }
 .task.picked { border-color: var(--ardent-red); background: #fff7f8; box-shadow: var(--ring); }
-.selecting .task:not(.done) { cursor: pointer; }
+.task:not(.done) { cursor: pointer; user-select: none; }
+.task:not(.done):hover:not(.picked) { border-color: var(--ardent-gray, #d7d7d7); background: #fcfcfd; }
+.task:focus-visible { outline: none; box-shadow: var(--ring); }
 .selecting .btns { display: none; }
 .bar-space { margin-bottom: 4.5rem; }
 .action-bar {
