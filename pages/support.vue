@@ -15,7 +15,7 @@
     <form class="card ticket" @submit.prevent="send">
       <div class="two">
         <div class="field"><label for="sp-cat">Category</label>
-          <select id="sp-cat" v-model="cat" class="input"><option>Account &amp; login</option><option>Leave &amp; requests</option><option>Timesheet</option><option>Payroll &amp; payslip</option><option>Other</option></select></div>
+          <AppSelect id="sp-cat" v-model="cat" :options="['Account & login', 'Leave & requests', 'Timesheet', 'Payroll & payslip', 'Other']" full /></div>
         <div class="field"><label for="sp-subject">Subject</label><input id="sp-subject" v-model="subject" class="input" placeholder="Short summary" required></div>
       </div>
       <div class="field"><label for="sp-details">Details</label><textarea id="sp-details" v-model="body" class="input" placeholder="Describe the issue…" required /></div>

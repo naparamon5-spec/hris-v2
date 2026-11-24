@@ -3,9 +3,7 @@
     <NuxtLink to="/requests" class="back">‹ Requests</NuxtLink>
     <div class="page-head">
       <div><h1>Timesheet</h1><p>Select a cut-off period to view your daily time records.</p></div>
-      <select v-model="year" class="input year" aria-label="Year">
-        <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
-      </select>
+      <AppSelect v-model="year" :options="years" aria-label="Year" class="year" />
     </div>
 
     <!-- One row of periods (newest on the left). Slide it with the arrows, the mouse

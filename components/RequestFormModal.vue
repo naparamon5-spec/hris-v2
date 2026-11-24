@@ -4,10 +4,8 @@
       <h2>{{ title }}</h2>
       <div class="field">
         <label for="rf-type">{{ kind === 'other-requests' ? 'Request Type' : kind === 'leave-of-absence' ? 'Leave Type' : 'Type' }}</label>
-        <select id="rf-type" v-model="f.type" class="input" required>
-          <option value="" disabled>Select…</option>
-          <option v-for="s in subtypes" :key="s">{{ s }}</option>
-        </select>
+        <AppSelect id="rf-type" v-model="f.type" :options="subtypes" placeholder="Select…" full />
+        <small v-if="typeErr && !f.type" class="err">Please choose one.</small>
       </div>
       <div class="field">
         <label for="rf-date">{{ kind === 'call-approval' ? 'Call Approval Date' : 'Date' }}</label>
@@ -72,13 +70,15 @@ const f = reactive({
   type: r?.type ?? '', date: r ? toIsoDate(r.date) : '',
   from: to24(r?.from), to: to24(r?.to), hours: r?.hours ?? 0, reason: r?.reason ?? '', customer: r?.customer ?? ''
 })
-const submit = () => emit('save', {
+const typeErr = ref(false)
+const submit = () => (!f.type && props.subtypes.length ? (typeErr.value = true) : emit('save', {
   type: f.type, reason: f.reason.trim(), ...(isCa.value ? { customer: f.customer.trim() } : {}), hours: f.hours, from: to12(f.from), to: to12(f.to),
   date: new Date(f.date + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-})
+}))
 </script>
 
 <style scoped>
+.err { color: var(--ardent-red); font-size: .75rem; }
 .count { display: block; text-align: right; font-size: .72rem; margin-top: .2rem; }
 .overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; place-items: center; z-index: 50; padding: 1rem; }
 .modal { width: 100%; max-width: 480px; max-height: 92vh; overflow: auto; padding: 1.5rem; }

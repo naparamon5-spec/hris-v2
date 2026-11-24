@@ -7,10 +7,8 @@
 
     <div class="toolbar">
       <input v-model="q" class="input" type="search" aria-label="Search payslips" placeholder="Search period no. or month (e.g. 22, Oct)">
-      <select v-model="year" class="input sel" aria-label="Year"><option v-for="y in years" :key="y">{{ y }}</option></select>
-      <select v-model="half" class="input sel" aria-label="Cut-off">
-        <option value="all">All cut-offs</option><option value="1">1st half (1–15)</option><option value="2">2nd half (16–end)</option>
-      </select>
+      <AppSelect v-model="year" :options="years" aria-label="Year" class="dd" />
+      <AppSelect v-model="half" :options="halves" aria-label="Cut-off" class="dd" />
     </div>
     <div class="chips months">
       <button class="chip" :class="{ on: month === 'All' }" @click="month = 'All'">All months</button>
@@ -60,6 +58,7 @@ const toast = ref('')
 const q = ref('')
 const year = ref('2026')
 const half = ref('all')
+const halves = [{ value: 'all', label: 'All cut-offs' }, { value: '1', label: '1st half (1–15)' }, { value: '2', label: '2nd half (16–end)' }]
 const month = ref('All')
 const years = [...new Set(payslips.map(p => p.payDate.slice(-4)))]
 const months = [...new Set(payslips.map(p => p.payDate.slice(0, 3)))].reverse()
@@ -92,10 +91,10 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 6)
 </script>
 
 <style scoped>
-.sel { flex: 0 0 auto; width: auto; min-width: 0; padding-left: 1rem; background-image: none; }
+.dd { flex: 0 0 auto; }
 .months { margin-bottom: .25rem; }
 .count { display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 .4rem; margin-left: .35rem; border-radius: 99px; background: #e7eef2; color: var(--ardent-navy); font-size: .68rem; letter-spacing: 0; }
-@media (max-width: 640px) { .sel { flex: 1; } }
+@media (max-width: 640px) { .dd { flex: 1; } }
 .row { display: flex; align-items: center; gap: 1rem; padding: .9rem 0; border-bottom: 1px solid var(--border); color: inherit; }
 .row:last-child { border-bottom: 0; }
 .row div { display: flex; flex-direction: column; flex: 1; }

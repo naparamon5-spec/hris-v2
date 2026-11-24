@@ -13,9 +13,7 @@
           <button type="button" class="eye" :aria-label="show ? 'Hide password' : 'Show password'" @click="show = !show">{{ show ? 'Hide' : 'Show' }}</button>
         </div></div>
       <div class="field"><label for="co">Company</label>
-        <select id="co" v-model="company" class="input">
-          <option v-for="c in companies" :key="c">{{ c }}</option>
-        </select></div>
+        <AppSelect id="co" v-model="company" :options="companies" full /></div>
 
       <div class="row">
         <label class="check"><input type="checkbox"> Remember me</label>

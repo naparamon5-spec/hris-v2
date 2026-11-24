@@ -20,10 +20,7 @@
         </template>
         <template v-else>
           <label class="fm-label" :for="id(f.key)">{{ f.label }}</label>
-          <select :id="id(f.key)" class="input" :value="draft[f.key] || ''" @change="set(f.key, $event.target.value)">
-            <option value="">All</option>
-            <option v-for="o in f.options" :key="o" :value="o">{{ o }}</option>
-          </select>
+          <AppSelect :id="id(f.key)" :model-value="draft[f.key] || ''" :options="[{ value: '', label: 'All' }, ...f.options]" full @update:model-value="set(f.key, $event)" />
         </template>
       </div>
       <div class="fm-foot">
@@ -65,7 +62,8 @@ const id = (k) => `fm-${uid}-${k}`
 
 // Close when clicking outside.
 const root = ref(null)
-const onDoc = (e) => { if (open.value && root.value && !root.value.contains(e.target)) open.value = false }
+// Clicks inside a dropdown list (teleported to <body>) count as inside the menu.
+const onDoc = (e) => { if (open.value && root.value && !root.value.contains(e.target) && !e.target.closest?.('.as-list')) open.value = false }
 onMounted(() => document.addEventListener('mousedown', onDoc))
 onBeforeUnmount(() => document.removeEventListener('mousedown', onDoc))
 </script>
