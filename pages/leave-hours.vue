@@ -77,7 +77,7 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 .hrs em { font-style: normal; font-size: .8rem; font-weight: 600; color: var(--muted); }
 .hrs .used { text-transform: none; letter-spacing: 0; font-weight: 500; }
 .hrs.main { border-color: rgba(198,50,76,.25); }
-.note { display: flex; align-items: center; gap: .4rem; font-size: .8rem; margin: .75rem 0 1.25rem; }
+.note { display: flex; align-items: center; gap: .4rem; font-size: .8rem; margin-top: .75rem; margin-bottom: 1.25rem; }
 .list { padding: .5rem; }
 .lh { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .6rem; padding: .6rem .8rem .7rem; }
 .lh h3 { font-size: 1rem; }
