@@ -246,11 +246,10 @@ header {
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 2rem;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: saturate(180%) blur(14px);
-  border-bottom: 1px solid rgba(236, 237, 240, 0.8);
-  position: sticky;
-  top: 0;
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  /* Scrolls away with the page content (not pinned). z-index keeps the avatar menu above content. */
+  position: relative;
   z-index: 10;
 }
 .search {
