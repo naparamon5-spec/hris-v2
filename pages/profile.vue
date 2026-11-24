@@ -1,7 +1,16 @@
 <template>
   <div>
     <div class="card head">
-      <span class="avatar">{{ user.initials }}</span>
+      <div class="photo">
+        <button type="button" class="avatar" aria-label="Change profile photo" @click="pickPhoto">
+          <img v-if="photo" :src="photo" alt="">
+          <template v-else>{{ user.initials }}</template>
+          <span class="cam" aria-hidden="true"><AppIcon name="camera" :size="16" /></span>
+        </button>
+        <input ref="fileBox" type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" tabindex="-1" aria-hidden="true" @change="onFile">
+        <button type="button" class="link sm" @click="pickPhoto">{{ photo ? 'Change photo' : 'Upload photo' }}</button>
+        <button v-if="photo" type="button" class="link sm muted" @click="removePhoto">Remove</button>
+      </div>
       <div class="who">
         <h1>{{ user.name }}</h1>
         <p class="m">{{ user.role }} · {{ user.department }} · {{ user.id }}</p>
@@ -38,7 +47,8 @@
     </div>
 
     <div v-else class="card" style="padding:.25rem 1.25rem">
-      <div class="set">
+      <!-- Clicking anywhere on the row toggles 2FA (same confirm as the switch). -->
+      <div class="set" @click="!$event.target.closest('.switch') && toggle2fa()">
         <span class="icon-tile"><AppIcon name="shield" /></span>
         <div><b>Two-Factor Auth (2FA)</b><small class="m">{{ twofa ? '2FA Enabled' : 'Add an extra layer of security' }}</small></div>
         <label class="switch"><input :checked="twofa" type="checkbox" role="switch" aria-label="Two-factor authentication" @click.prevent="toggle2fa"><i /></label>
@@ -48,11 +58,12 @@
         <div><b>Biometric Sign-in</b><small class="m">Available on the mobile app</small></div>
         <span class="badge badge-gray">Not Enabled</span>
       </div>
-      <div class="set">
+      <!-- Whole row opens Change Password, not just the button. -->
+      <NuxtLink to="/change-password" class="set">
         <span class="icon-tile"><AppIcon name="shield" /></span>
         <div><b>Change Password</b><small class="m">Update your account password</small></div>
-        <NuxtLink to="/change-password" class="btn btn-ghost btn-sm">Change</NuxtLink>
-      </div>
+        <span class="btn btn-ghost btn-sm" aria-hidden="true">Change</span>
+      </NuxtLink>
       <button type="button" class="set logout" @click="logOut">
         <span class="icon-tile"><AppIcon name="logout" /></span><div><b>Log out</b></div>
       </button>
@@ -69,6 +80,7 @@
         </div>
       </div>
     </div>
+    <PhotoCropModal v-if="cropSrc" :src="cropSrc" @close="cropSrc = ''" @save="savePhoto" />
     <Toast :msg="toast" />
   </div>
 </template>
@@ -91,6 +103,28 @@ const saveBio = () => {
   bio.value = draft.value.trim()
   editing.value = false
   flash('Bio Updated')
+}
+// ---- Profile photo upload (same flow as hris_mobile edit_profile_photo.dart) ----
+// No hris_server endpoint yet, so the photo is kept in this browser (header uses it too).
+const { photo, setPhoto } = useProfilePhoto()
+const fileBox = ref(null)
+const cropSrc = ref('')
+const pickPhoto = () => fileBox.value?.click()
+const onFile = (e) => {
+  const f = e.target.files?.[0]
+  e.target.value = '' // allow picking the same file again
+  if (!f) return
+  if (!/^image\/(png|jpeg|webp)$/.test(f.type)) return flash('Please choose a JPG, PNG or WebP image')
+  if (f.size > 5 * 1024 * 1024) return flash('Image is too large (max 5 MB)')
+  const r = new FileReader()
+  r.onload = () => { cropSrc.value = r.result }
+  r.readAsDataURL(f)
+}
+const savePhoto = (dataUrl) => { setPhoto(dataUrl); cropSrc.value = ''; flash('Photo Updated') }
+const removePhoto = async () => {
+  if (await confirm({ title: 'Remove profile photo?', message: 'Your initials will be shown instead.', confirmText: 'Remove', tone: 'danger', icon: 'user' })) {
+    setPhoto(''); flash('Photo Removed')
+  }
 }
 const twofa = ref(false)
 const { confirm } = useConfirm()
@@ -120,7 +154,14 @@ const contact = [['Email', user.email], ['Mobile', user.phone]]
 
 <style scoped>
 .head { display: flex; gap: 1.5rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
-.avatar { width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, var(--ardent-red), var(--ardent-coral)); color: #fff; display: grid; place-items: center; font-size: 1.8rem; font-weight: 800; }
+.avatar { width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, var(--ardent-red), var(--ardent-coral)); color: #fff; display: grid; place-items: center; font-size: 1.8rem; font-weight: 800; position: relative; border: 0; padding: 0; cursor: pointer; font-family: inherit; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.photo { display: flex; flex-direction: column; align-items: center; gap: .2rem; }
+.cam { position: absolute; right: 0; bottom: 0; width: 30px; height: 30px; border-radius: 50%; background: var(--ardent-navy); color: #fff; display: grid; place-items: center; border: 3px solid #fff; }
+.avatar:hover .cam, .avatar:focus-visible .cam { background: var(--ardent-red); }
+.avatar:focus-visible { outline: none; box-shadow: var(--ring); }
+.link.sm { font-size: .75rem; }
+.link.muted { color: var(--muted); }
 .who { flex: 1; min-width: 220px; }
 .who h1 { font-size: 1.5rem; }
 .who p { margin: .2rem 0; }
@@ -137,6 +178,8 @@ const contact = [['Email', user.email], ['Mobile', user.phone]]
 .upload { border: 2px dashed var(--ardent-gray); box-shadow: none; display: flex; align-items: center; justify-content: center; gap: .5rem; font: 600 .9rem Montserrat, sans-serif; color: var(--muted); cursor: pointer; min-height: 90px; }
 .set { width: 100%; background: none; border-left: 0; border-right: 0; border-top: 0; font: inherit; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid var(--border); color: inherit; }
 .set:last-child { border-bottom: 0; }
+a.set { text-decoration: none; }
+.set:hover b { color: var(--ardent-red); }
 .set div { flex: 1; display: flex; flex-direction: column; }
 .logout b { color: var(--ardent-red); }
 .switch input { display: none; }

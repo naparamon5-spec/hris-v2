@@ -55,7 +55,7 @@
             :aria-expanded="menu"
             @click="menu = !menu"
           >
-            <span class="avatar">{{ user.initials }}</span>
+            <span class="avatar"><img v-if="photo" :src="photo" alt="">{{ photo ? '' : user.initials }}</span>
           </button>
           <Transition name="pop">
             <div v-if="menu" class="menu-pop" role="menu">
@@ -110,6 +110,8 @@ const signOut = async () => {
   if (ok) navigateTo('/login')
 }
 const { user, notifications, companies } = useMockData()
+// Profile photo chosen on the Profile page (no server endpoint yet — kept in app state).
+const { photo } = useProfilePhoto()
 const company = useState('company', () => companies[0])
 const unread = computed(() => notifications.value.filter(n => n.unread).length)
 const nav = [
@@ -456,6 +458,8 @@ header {
   font-size: 0.75rem;
   flex-shrink: 0;
 }
+.avatar { overflow: hidden; }
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
 .avatar.sm {
   width: 32px;
   height: 32px;
