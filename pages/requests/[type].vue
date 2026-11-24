@@ -8,8 +8,8 @@
 
     <div class="toolbar">
       <input v-model="q" class="input" type="search" aria-label="Search requests" placeholder="Search by No., Type, Approver…">
-      <div v-if="!isApproved" class="chips">
-        <button v-for="s in filters" :key="s" class="chip" :class="{ on: status === s }" @click="status = s">{{ s }}</button>
+      <div class="chips">
+        <button v-for="s in statusFilters" :key="s" class="chip" :class="{ on: status === s }" @click="status = s">{{ s }}</button>
       </div>
     </div>
 
@@ -51,8 +51,8 @@ const type = computed(() => route.params.type)
 // Same split as hris_mobile: "records" = LOA / Call Approval / Manual Arrival-Departure /
 // Overtime; "requests" = Other Requests (COE, EPP items, ...).
 const approvedLists = {
-  approved: { title: 'Approved Records', desc: 'Approved leave, call approval, manual arrival/departure and overtime.', keys: ['leave-of-absence', 'call-approval', 'manual-arrival-departure', 'overtime'] },
-  'approved-requests': { title: 'Approved Requests', desc: 'Approved other requests (COE, EPP items and more).', keys: ['other-requests'] }
+  approved: { title: 'Approved Records', desc: 'Decided leave, call approval, manual arrival/departure and overtime.', keys: ['leave-of-absence', 'call-approval', 'manual-arrival-departure', 'overtime'] },
+  'approved-requests': { title: 'Approved Requests', desc: 'Decided other requests (COE, EPP items and more).', keys: ['other-requests'] }
 }
 const isApproved = computed(() => type.value in approvedLists)
 const meta = computed(() => isApproved.value
@@ -67,7 +67,13 @@ if (!meta.value) {
 const { requests, badge } = useMockData()
 const q = ref('')
 const filters = ['All', 'For Approval', 'Approved', 'Disapproved', 'Cancelled']
+// Approved Records / Approved Requests = decided history (hris_server
+// GET /auth/approvals?scope=history returns approved, disapproved and cancelled).
+const decided = ['Approved', 'Disapproved', 'Cancelled']
+const statusFilters = computed(() => (isApproved.value ? ['All', ...decided] : filters))
 const status = ref('All')
+// Switching list (e.g. Approved Records -> Approved Requests) starts unfiltered.
+watch(type, () => { status.value = 'All'; q.value = '' })
 const toast = ref('')
 let toastTimer
 const flash = (m) => {
@@ -80,7 +86,7 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
 const source = computed(() => {
   if (isApproved.value) {
     return meta.value.keys.flatMap(k =>
-      requests.value[k].filter(r => r.status === 'Approved').map(r => ({ ...r, category: requestTypes[k].title })))
+      requests.value[k].filter(r => decided.includes(r.status)).map(r => ({ ...r, category: requestTypes[k].title })))
   }
   return requests.value[type.value] ?? []
 })
