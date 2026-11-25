@@ -120,7 +120,7 @@ const navGroups = [
     items: [
       { to: '/requests', label: 'Requests', icon: 'requests' },
       { to: '/leave-hours', label: 'Leave Hours', icon: 'hourglass' },
-      { to: '/payroll', label: 'Payroll', icon: 'wallet', also: ['/timesheet'] }
+      { to: '/payroll', label: 'Payslip', icon: 'wallet', also: ['/timesheet'] }
     ]
   },
   {
