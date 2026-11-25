@@ -39,7 +39,7 @@ list has a working endpoint in the sections below.
 | 4 | Manager on Profile → Employment (`profile.vue`) | not returned by `/auth/profile` | data exists in `vw_emp_list_with_approver` |
 | 5 | Certificate upload (`profile.vue`) | list only (`/auth/profile/certificates`); mobile just picks a file and says HR finalizes on the web portal | |
 | 6 | Profile photo upload | mobile crops and keeps it on the phone only (`edit_profile_photo.dart`); no server endpoint | site shows initials |
-| 7 | Recent activity feed (Home) | no activity endpoint | can borrow `/auth/notifications` for now |
+| 7 | Recent activity feed (Home) | no activity endpoint | ✅ done — Home shows the 4 newest of `/auth/notifications` (same list as the bell) |
 | 8 | "N pending" counts on Requests tiles (`requests/index.vue`) | no summary endpoint | can count from each `/auth/requests/:type` list |
 | 9 | Bulk approve / disapprove (`approvals.vue` select-all bar) | only one-at-a-time `/auth/requests/:type/:id/approve` | can loop per item |
 | 9b | Bulk cancel (`requests/[type].vue` select-all bar) | only one-at-a-time `/auth/requests/:type/:id/cancel` | can loop per item |
@@ -76,6 +76,7 @@ notifications, leave balance/hours, timesheet, pay calendar.
 | **Dialogs** never close on an outside click; each has an ✕ (same as Cancel) and Esc. | None. | — |
 | **Responsive + browser zoom:** works from 320px phones to zoomed-in desktops; the sidebar scrolls on short screens. | None. | — |
 | Timesheet period card keeps "Period N · CURRENT" on one line. | None. | — |
+| **Home → Recent activity** now shows the 4 newest notifications (same list as the bell); click marks read and opens the item. The separate mock list is gone. | Uses `GET /auth/notifications` — no activity endpoint needed (G6 closed). | §6, §13 |
 
 ---
 
@@ -601,7 +602,7 @@ phone-only (fingerprint/Face ID) — remove the Biometric switch from the websit
 | Vacation & Sick credits | `GET /auth/leaves/balance` | `buckets.find(b => b.type === 'Vacation Leave').remaining` (days), same for `Sick Leave` |
 | Pending approvals hero card | `GET /auth/approvals/access` | `pending + pendingRequests + pendingWitness`; hide when `!isApprover && !isWitness` |
 | Next payday (optional) | `GET /auth/pay-calendar/next` | `{ configured, next{ pay_year, pay_period, pay_date, cutoff_from, cutoff_to, days_to_payday }, current{…} }` |
-| Recent activity | **no endpoint** | use `/auth/notifications` (first 4) — §13, or add one — §15 |
+| Recent activity | `GET /auth/notifications` (no separate activity endpoint) | the 4 newest (same list as the bell, §13): icon by `kind`, bold + red dot when `unread`, `title`, `body`, `time`. Click = `POST /auth/notifications/:id/read`, then open the request (`request_type` → site route, §13) or `/notifications`. "N new" = `unread` |
 
 `/auth/leaves/balance` →
 ```json
@@ -1046,7 +1047,7 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | G3 | Edit Bio | **UI only — no server field.** In `hris_mobile/lib/screens/profile_screen.dart` `_editBio` only does `setState(() => _bio = …)`; nothing is saved, so it's blank again after restarting the app | Keep the same UI-only behaviour as mobile, **or** add `PUT /auth/profile/bio { bio }` (≤ 200) + a bio column so it persists for both apps |
 | G4 | Manager on profile | not returned | add `manager` (from `vw_emp_list_with_approver.department_approver`) to `GET /auth/profile` |
 | G5 | Upload certificate | **No upload API.** Mobile (`profile_screen.dart _upload`) only picks a file and shows "Certificate uploads are finalized by HR on the web portal" | Same as mobile: show that message (or link to the HR portal). An upload API would be `POST /auth/profile/certificates/:cert_no` → `vex_emp_cert` + file share |
-| G6 | Recent activity (Home) | none | `GET /auth/activity?limit=5` — or reuse notifications (no backend work) |
+| G6 | Recent activity (Home) | ✅ **solved without a new endpoint** — reuses `GET /auth/notifications` | none needed. (A dedicated `GET /auth/activity` would only matter if Home should also list things that never notify, e.g. drafts) |
 | G7 | Pending pills on Requests | none | `GET /auth/requests/summary` → `{ loa: 1, … }` — or count client-side |
 | G8 | Bulk approve/disapprove | one-by-one only | `POST /auth/approvals/bulk { items:[{type,id}], action }` — or loop client-side |
 | G9 | Payslip PDF download | ✅ **supported** — built client-side from `GET /auth/payslips/:id` (see §9.2) | no server change |
@@ -1086,7 +1087,7 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | 13 | `components/ArdentLogo.vue` | `companies`, `companyLogo()` | tenant `id` → `/logos/<id>.png`; current = `user.company` |
 | 14 | `index.vue` | `user`, `leaveCredits` | `/auth/me`, `/auth/leaves/balance` buckets |
 | 15 | `index.vue` | `approvals.length` | `/auth/approvals/access` totals |
-| 16 | `index.vue` | `recentActivity` | `/auth/notifications` (or G6) |
+| 16 | `index.vue` | Recent activity = 4 newest of mock `notifications` | `/auth/notifications` (shared with the bell; mark read on click) |
 | 17 | `composables/useMockData.js` → `requestTypes` | subtypes, keys | add `apiType`; LOA types from §7.4; drop MAD/OT subtypes; Other Requests = 6 codes, Versatech only |
 | 18 | `requests/index.vue` | pending counts | count per list (or G7); hide Other Requests unless `user.tenant === 'versahrs'` |
 | 19 | `requests/[type].vue` | list, create, edit, cancel, reverse, numbering, date, approver | §7.2–7.4 + draft/send flow + new status chips |

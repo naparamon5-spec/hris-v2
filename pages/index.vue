@@ -37,13 +37,15 @@
         </div>
       </div>
       <div>
-        <h3 class="section-title">Recent activity</h3>
+        <h3 class="section-title">Recent activity <span v-if="unreadCount" class="new">{{ unreadCount }} new</span></h3>
         <div class="card feed">
-          <div v-for="a in recentActivity" :key="a.meta" class="act">
-            <span class="dot" :class="'d-' + badge(a.status)" />
-            <div><b>{{ a.title }}</b><small class="m">{{ a.meta }}</small></div>
-            <small class="m when">{{ a.when }}</small>
-          </div>
+          <!-- Latest notifications (same list as the bell). Click: mark read, open where it points. -->
+          <NuxtLink v-for="n in recent" :key="n.id" :to="linkFor(n)" class="act" :class="{ unread: n.unread }" @click="n.unread = false">
+            <span class="ic"><AppIcon :name="kindIcon[n.kind] || 'bell'" :size="16" /></span>
+            <div><b>{{ n.title }}</b><small class="m">{{ n.body }}</small></div>
+            <small class="m when">{{ n.when }}</small>
+          </NuxtLink>
+          <p v-if="!recent.length" class="empty">No activity yet</p>
           <NuxtLink to="/notifications" class="all">View all activity <AppIcon name="chevron" :size="14" /></NuxtLink>
         </div>
       </div>
@@ -52,7 +54,15 @@
 </template>
 
 <script setup>
-const { user, leaveCredits, recentActivity, badge } = useMockData()
+const { user, leaveCredits, notifications } = useMockData()
+// Recent activity = the 4 newest notifications (live: GET /auth/notifications — no separate
+// activity endpoint exists; same source the mobile app's notification list uses).
+const recent = computed(() => newestFirst(notifications.value, n => n.at, n => n.id).slice(0, 4))
+const unreadCount = computed(() => notifications.value.filter(n => n.unread).length)
+const kindIcon = { Requests: 'requests', Approvals: 'check', Payroll: 'wallet', Advisory: 'bell' }
+// Where an item opens. Live: use request_type (+ request_id) from the notification (BACKEND.md §13).
+const kindLink = { Requests: '/requests', Approvals: '/approvals', Payroll: '/payroll' }
+const linkFor = (n) => kindLink[n.kind] || '/notifications'
 const { canApprove, pending } = useApprovals()
 // Home shows only Vacation and Sick Leave; the full list is on Leave Hours.
 const credits = leaveCredits.slice(0, 2)
@@ -112,12 +122,20 @@ const quick = {
 .add { color: var(--muted); flex-shrink: 0; transition: color .15s, transform .15s; }
 .action:hover .add { color: var(--ardent-red); transform: rotate(90deg); }
 .feed { padding: .4rem 1.25rem .9rem; }
-.act { display: flex; align-items: center; gap: .85rem; padding: .85rem 0; border-bottom: 1px dashed var(--border); }
+.act { position: relative; display: flex; align-items: center; gap: .85rem; padding: .75rem .5rem; margin: 0 -.5rem; border-bottom: 1px dashed var(--border); border-radius: 10px; color: inherit; transition: background .12s; }
+.act:hover { background: #fafbfc; }
 .act div { flex: 1; display: flex; flex-direction: column; min-width: 0; font-size: .88rem; }
+.act div small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .act small { font-size: .76rem; }
+.act b { font-weight: 600; }
+.act.unread b { font-weight: 700; }
+/* Unread: red dot on the icon */
+.act.unread .ic::after { content: ''; position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border-radius: 50%; background: var(--ardent-red); border: 2px solid #fff; }
+.ic { position: relative; width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: #f4f5f7; color: var(--muted); }
+.act.unread .ic { background: #fdecef; color: var(--ardent-red); }
 .when { white-space: nowrap; }
-.dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 0 4px #f4f5f7; }
-.d-ok { background: #2e9d6a; } .d-warn { background: #f0a030; } .d-red { background: var(--ardent-red); } .d-navy, .d-gray { background: var(--muted); }
+.new { margin-left: .4rem; padding: .1rem .45rem; border-radius: 999px; background: #fdecef; color: var(--ardent-red); font-size: .64rem; letter-spacing: .04em; }
+.feed .empty { padding: 1.5rem 0; }
 .all { display: inline-flex; align-items: center; gap: .2rem; margin-top: .8rem; font-size: .8rem; font-weight: 700; }
 @media (max-width: 600px) { .hero { padding: 1.4rem 1.2rem; } .hero-card { min-width: 0; width: 100%; } }
 </style>

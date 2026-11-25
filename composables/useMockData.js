@@ -81,13 +81,6 @@ export const useMockData = () => {
     'other-requests': makeRecords('other-requests', 'OR')
   }))
 
-  const recentActivity = [
-    { title: 'Overtime approved', meta: 'OT-2026-0140 • by Ramon Napa', when: '2h ago', status: 'Approved' },
-    { title: 'Leave of Absence filed', meta: 'LOA-2026-0139 • Vacation Leave', when: 'Yesterday', status: 'For Approval' },
-    { title: 'Payslip released', meta: 'Period 22 • Nov 1–15', when: 'Nov 15', status: 'Approved' },
-    { title: 'Call Approval disapproved', meta: 'CA-2026-0137 • Site Visit', when: 'Nov 12', status: 'Disapproved' }
-  ]
-
   const approvals = [
     { id: 1, name: 'Maria Santos', empId: 'AN-0012', app: 'Overtime', no: 'OT-2026-0211', date: 'Nov 21, 2026', hours: 3, detail: 'Regular OT • 06:00 PM – 09:00 PM', reason: 'Release deployment for client go-live', status: 'For Approval' },
     { id: 2, name: 'Jose Reyes', empId: 'AN-0034', app: 'Leave of Absence', no: 'LOA-2026-0310', date: 'Nov 25, 2026', hours: 8, detail: 'Sick Leave • Whole day', reason: 'Fever and check-up', status: 'For Approval' },
@@ -260,7 +253,7 @@ export const useMockData = () => {
   const peso = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   return {
-    user, leaveCredits, leaveHours, requests, recentActivity, approvals, approvalAccess, payslips, timesheetPeriods, timesheetFor,
+    user, leaveCredits, leaveHours, requests, approvals, approvalAccess, payslips, timesheetPeriods, timesheetFor,
     directory, whosOut, notifications, certificates, companies, companyLogo, badge, peso
   }
 }
