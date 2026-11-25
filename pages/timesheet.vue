@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="page-head">
-      <div><h1>Payroll</h1><p>Your daily time records per cut-off.</p></div>
+      <div><h1>Timesheet</h1><p>Your daily time records per cut-off.</p></div>
       <div class="head-actions">
         <AppSelect v-model="year" :options="years" aria-label="Year" class="year" />
         <PayrollTabs />

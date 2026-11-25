@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="page-head">
-      <div><h1>Payroll</h1><p>Your payslips per cut-off.</p></div>
+      <div><h1>Payslips</h1><p>Your payslips per cut-off.</p></div>
       <div class="head-actions">
         <button class="btn btn-ghost" @click="bulk = true"><AppIcon name="download" /> Download Payslips</button>
         <PayrollTabs />

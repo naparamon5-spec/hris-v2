@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="page-head">
-      <div><h1>Approvals</h1><p>{{ tabInfo.desc }}</p></div>
+      <div><h1>{{ tabInfo.title }}</h1><p>{{ tabInfo.desc }}</p></div>
       <div class="tabs" role="tablist" aria-label="Approvals">
         <button
           v-for="t in tabs" :key="t.key" type="button" role="tab" :aria-selected="tab === t.key"
@@ -83,9 +83,9 @@ if (!canApprove) navigateTo('/', { replace: true })
 const route = useRoute()
 const router = useRouter()
 const tabs = computed(() => [
-  { key: 'pending', label: 'Pending', count: pending.value.length, desc: 'Requests from your team waiting for your decision.' },
-  { key: 'records', label: 'Approved Records', desc: 'Leave, call approval, manual arrival/departure and overtime you approved or disapproved.' },
-  ...(access.approvesRequests ? [{ key: 'requests', label: 'Approved Requests', desc: 'Other requests (COE, EPP items and more) you approved or disapproved.' }] : [])
+  { key: 'pending', label: 'Pending', title: 'Pending Approvals', count: pending.value.length, desc: 'Requests from your team waiting for your decision.' },
+  { key: 'records', label: 'Approved Records', title: 'Approved Records', desc: 'Leave, call approval, manual arrival/departure and overtime you approved or disapproved.' },
+  ...(access.approvesRequests ? [{ key: 'requests', label: 'Approved Requests', title: 'Approved Requests', desc: 'Other requests (COE, EPP items and more) you approved or disapproved.' }] : [])
 ])
 const tab = computed(() => (tabs.value.some(t => t.key === route.query.tab) ? route.query.tab : 'pending'))
 const tabInfo = computed(() => tabs.value.find(t => t.key === tab.value))
