@@ -1,7 +1,7 @@
 <template>
   <div class="as" :class="{ open, full, disabled }">
     <button
-      :id="id" ref="btn" type="button" class="as-btn"
+      :id="uid" ref="btn" type="button" class="as-btn"
       role="combobox" aria-haspopup="listbox" :aria-expanded="open" :aria-controls="listId"
       :aria-label="ariaLabel || undefined" :disabled="disabled"
       @click="toggle" @keydown="onKey"
@@ -12,7 +12,7 @@
 
     <Teleport to="body">
       <ul
-        v-if="open" :id="listId" ref="list" class="as-list" role="listbox" :aria-labelledby="id"
+        v-if="open" :id="listId" ref="list" class="as-list" role="listbox" :aria-labelledby="uid"
         :style="pos" tabindex="-1" @keydown="onKey"
       >
         <li
@@ -37,7 +37,7 @@ const props = defineProps({
   modelValue: { type: [String, Number, Boolean, null], default: '' },
   options: { type: Array, default: () => [] },
   placeholder: { type: String, default: 'Select…' },
-  id: { type: String, default: () => `as-${Math.random().toString(36).slice(2, 8)}` },
+  id: { type: String, default: '' },
   ariaLabel: { type: String, default: '' },
   full: { type: Boolean, default: false },
   disabled: { type: Boolean, default: false }
@@ -46,7 +46,10 @@ const emit = defineEmits(['update:modelValue', 'change'])
 
 const opts = computed(() => props.options.map(o => (o !== null && typeof o === 'object' ? o : { value: o, label: String(o) })))
 const current = computed(() => opts.value.find(o => o.value === props.modelValue))
-const listId = computed(() => `${props.id}-list`)
+// useId gives the same id on the server and in the browser (no hydration mismatch).
+const autoId = useId()
+const uid = computed(() => props.id || `as-${autoId}`)
+const listId = computed(() => `${uid.value}-list`)
 
 const open = ref(false)
 const active = ref(-1)

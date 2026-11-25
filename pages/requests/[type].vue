@@ -13,19 +13,19 @@
 
     <div class="card table-wrap" style="padding:.5rem">
       <table class="table stack">
-        <thead><tr><th>No.</th><th v-if="isApproved">Category</th><th>Type</th><th>Date</th><th>Hours</th><th>{{ reasonLabel }}</th><th>Approver</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <thead><tr><th>No.</th><th v-if="isApproved">Category</th><th>Type</th><th>Date</th><th>Hours</th><th>{{ reasonLabel }}</th><th>{{ whoLabel }}</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>
           <tr v-for="r in pageRows" :key="r.no">
-            <td data-label="No."><b>{{ r.no }}</b><br><small class="m">Filed {{ r.dateFiled }}</small></td>
+            <td data-label="No."><b>{{ r.no }}</b><template v-if="r.dateFiled"><br><small class="m">Filed {{ r.dateFiled }}</small></template></td>
             <td v-if="isApproved" data-label="Category">{{ r.category }}</td>
             <td data-label="Type">{{ r.type }}</td>
-            <td data-label="Date"><span>{{ r.date }}<br><small class="m">{{ r.from }} – {{ r.to }}</small></span></td>
+            <td data-label="Date"><span>{{ r.date }}<template v-if="r.from"><br><small class="m">{{ r.from }} – {{ r.to }}</small></template></span></td>
             <td data-label="Hours">{{ r.hours }}</td>
             <td :data-label="reasonLabel" class="why">
               <span :title="r.reason">{{ r.reason || '—' }}</span>
               <small v-if="r.customer" class="m">{{ r.customer }}</small>
             </td>
-            <td data-label="Approver">{{ r.approver }}</td>
+            <td :data-label="whoLabel">{{ r.who }}<template v-if="r.empId"><br><small class="m">{{ r.empId }}</small></template></td>
             <td data-label="Status"><span class="badge" :class="'badge-' + badge(r.status)">{{ r.status }}</span></td>
             <td class="acts">
               <template v-if="!isApproved">
@@ -53,10 +53,12 @@ const type = computed(() => route.params.type)
 // Same split as hris_mobile: "records" = LOA / Call Approval / Manual Arrival-Departure /
 // Overtime; "requests" = Other Requests (COE, EPP items, ...).
 const approvedLists = {
-  approved: { title: 'Approved Records', desc: 'Decided leave, call approval, manual arrival/departure and overtime.', keys: ['leave-of-absence', 'call-approval', 'manual-arrival-departure', 'overtime'] },
-  'approved-requests': { title: 'Approved Requests', desc: 'Decided other requests (COE, EPP items and more).', keys: ['other-requests'] }
+  approved: { title: 'Approved Records', desc: 'Leave, call approval, manual arrival/departure and overtime you approved or disapproved.', keys: ['leave-of-absence', 'call-approval', 'manual-arrival-departure', 'overtime'] },
+  'approved-requests': { title: 'Approved Requests', desc: 'Other requests (COE, EPP items and more) you approved or disapproved.', keys: ['other-requests'] }
 }
 const isApproved = computed(() => type.value in approvedLists)
+// Own requests show who approves them; the approver's history shows whose request it was.
+const whoLabel = computed(() => (isApproved.value ? 'Employee' : 'Approver'))
 // Same wording as hris_mobile: Call Approval shows Purpose (+ customer), the rest Reason.
 const reasonLabel = computed(() => (type.value === 'call-approval' ? 'Purpose' : isApproved.value ? 'Reason / Purpose' : 'Reason'))
 const meta = computed(() => isApproved.value
@@ -68,7 +70,9 @@ if (!meta.value) {
   throw createError({ statusCode: 404, statusMessage: 'Request type not found', fatal: true })
 }
 
-const { requests, badge } = useMockData()
+const { requests, approvals, badge } = useMockData()
+// Shared with the Approvals page, so approving there moves the item here.
+const approvalItems = useState('mock-approvals', () => approvals.map(a => ({ ...a })))
 const q = ref('')
 const filters = ['All', 'For Approval', 'Approved', 'Posted', 'Disapproved', 'Cancelled']
 // Approved Records / Approved Requests = decided history (hris_server
@@ -90,19 +94,25 @@ onBeforeUnmount(() => clearTimeout(toastTimer))
 
 const source = computed(() => {
   if (isApproved.value) {
-    return meta.value.keys.flatMap(k =>
-      requests.value[k].filter(r => decided.includes(r.status)).map(r => ({ ...r, category: requestTypes[k].title })))
+    // Requests this user decided as an approver (same list Approvals hands off to).
+    const cats = meta.value.keys.map(k => requestTypes[k].title)
+    return approvalItems.value
+      .filter(a => decided.includes(a.status) && cats.includes(a.app))
+      .map(a => ({
+        no: a.no, category: a.app, type: a.detail.split(' • ')[0], date: a.date, hours: a.hours,
+        reason: a.reason, customer: a.customer, status: a.status, who: a.name, empId: a.empId
+      }))
   }
-  return requests.value[type.value] ?? []
+  return (requests.value[type.value] ?? []).map(r => ({ ...r, who: r.approver }))
 })
 // Filters menu: status, category (approved lists), type, approver, request date and filed date.
 const filterFields = computed(() => [
   { key: 'status', label: 'Status', options: statusFilters.value.slice(1) },
   ...(isApproved.value ? [{ key: 'category', label: 'Category', options: uniq(source.value, r => r.category) }] : []),
   { key: 'type', label: 'Type', options: uniq(source.value, r => r.type) },
-  { key: 'approver', label: 'Approver', options: uniq(source.value, r => r.approver) },
+  { key: 'approver', label: whoLabel.value, options: uniq(source.value, r => r.who) },
   { key: 'date', label: 'Request date', type: 'date-range' },
-  { key: 'filed', label: 'Date filed', type: 'date-range' }
+  ...(isApproved.value ? [] : [{ key: 'filed', label: 'Date filed', type: 'date-range' }])
 ])
 const rows = computed(() => {
   const f = extra.value
@@ -110,10 +120,10 @@ const rows = computed(() => {
     (!f.status || r.status === f.status) &&
     (!f.category || r.category === f.category) &&
     (!f.type || r.type === f.type) &&
-    (!f.approver || r.approver === f.approver) &&
+    (!f.approver || r.who === f.approver) &&
     inDateRange(r.date, f.dateFrom, f.dateTo) &&
     inDateRange(r.dateFiled, f.filedFrom, f.filedTo) &&
-    `${r.no} ${r.type} ${r.approver} ${r.reason || ''} ${r.customer || ''}`.toLowerCase().includes(q.value.toLowerCase()))
+    `${r.no} ${r.type} ${r.who} ${r.empId || ''} ${r.reason || ''} ${r.customer || ''}`.toLowerCase().includes(q.value.toLowerCase()))
 })
 
 const formOpen = ref(false)

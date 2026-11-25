@@ -107,7 +107,17 @@ export const useMockData = () => {
     { id: 3, name: 'Liza Garcia', empId: 'AN-0078', app: 'Call Approval', no: 'CA-2026-0098', date: 'Nov 20, 2026', hours: 4, detail: 'Client Call • BGC', reason: 'Quarterly business review', customer: 'BGC Tower 3', status: 'For Approval' },
     { id: 4, name: 'Mark Bautista', empId: 'AN-0067', app: 'Manual Arrival/Departure', no: 'MAD-2026-0044', date: 'Nov 19, 2026', hours: 0, detail: 'Manual Arrival • 08:47 AM', reason: 'Biometric scanner was offline', status: 'For Approval' },
     { id: 5, name: 'Paolo Mendoza', empId: 'AN-0090', app: 'Overtime', no: 'OT-2026-0207', date: 'Nov 18, 2026', hours: 2.5, detail: 'Rest Day OT • 09:00 AM – 11:30 AM', reason: 'Weekend server migration', status: 'For Approval' },
-    { id: 6, name: 'Ana Villanueva', empId: 'AN-0051', app: 'Other Requests', no: 'OR-2026-0019', date: 'Nov 17, 2026', hours: 0, detail: 'Certificate of Employment', reason: 'Bank loan requirement', status: 'For Approval' }
+    { id: 6, name: 'Ana Villanueva', empId: 'AN-0051', app: 'Other Requests', no: 'OR-2026-0019', date: 'Nov 17, 2026', hours: 0, detail: 'Certificate of Employment', reason: 'Bank loan requirement', status: 'For Approval' },
+    // Already decided by this approver (GET /auth/approvals?scope=history). They show on
+    // Approved Records (LOA/CA/MAD/OT) and Approved Requests (Other Requests), not on Approvals.
+    { id: 7, name: 'Maria Santos', empId: 'AN-0012', app: 'Overtime', no: 'OT-2026-0198', date: 'Nov 14, 2026', hours: 2, detail: 'Regular OT • 06:00 PM – 08:00 PM', reason: 'Month-end report', status: 'Approved' },
+    { id: 8, name: 'Jose Reyes', empId: 'AN-0034', app: 'Leave of Absence', no: 'LOA-2026-0297', date: 'Nov 12, 2026', hours: 8, detail: 'Vacation Leave • Whole day', reason: 'Family matter', status: 'Posted' },
+    { id: 9, name: 'Liza Garcia', empId: 'AN-0078', app: 'Call Approval', no: 'CA-2026-0091', date: 'Nov 11, 2026', hours: 3, detail: 'Client Call • Makati', reason: 'Network assessment', customer: 'Ayala Tower One', status: 'Approved' },
+    { id: 10, name: 'Mark Bautista', empId: 'AN-0067', app: 'Manual Arrival/Departure', no: 'MAD-2026-0039', date: 'Nov 10, 2026', hours: 0, detail: 'Manual Departure • 06:12 PM', reason: 'Forgot to time out', status: 'Disapproved' },
+    { id: 11, name: 'Paolo Mendoza', empId: 'AN-0090', app: 'Leave of Absence', no: 'LOA-2026-0288', date: 'Nov 7, 2026', hours: 8, detail: 'Sick Leave • Whole day', reason: 'Flu', status: 'Posted' },
+    { id: 12, name: 'Ana Villanueva', empId: 'AN-0051', app: 'Overtime', no: 'OT-2026-0181', date: 'Nov 5, 2026', hours: 4, detail: 'Rest Day OT • 09:00 AM – 01:00 PM', reason: 'Data center move', status: 'Cancelled' },
+    { id: 13, name: 'Liza Garcia', empId: 'AN-0078', app: 'Other Requests', no: 'OR-2026-0016', date: 'Nov 8, 2026', hours: 0, detail: 'Certificate of Employment', reason: 'Visa application', status: 'Approved' },
+    { id: 14, name: 'Jose Reyes', empId: 'AN-0034', app: 'Other Requests', no: 'OR-2026-0012', date: 'Oct 29, 2026', hours: 0, detail: 'EPP Item', reason: 'Laptop purchase plan', status: 'Disapproved' }
   ]
 
   const payslips = Array.from({ length: 8 }, (_, i) => {

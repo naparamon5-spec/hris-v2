@@ -706,8 +706,10 @@ Rows use the approval shape (§8.2) — `category` is already included. Show the
 
 ### 8.2 List — `GET /auth/approvals?scope=pending|history&module=records|requests|witness`
 
-Tabs on the page: **Records** (`module=records`), **Requests** (`module=requests`), **Witness**
-(`module=witness`, pending only); each with Pending / History (`scope`).
+The Approvals page shows **pending only** (`scope=pending`) for `module=records`, `requests`
+and `witness`. Decided items are not shown here: `scope=history` feeds **Approved Records**
+(`module=records`) and **Approved Requests** (`module=requests`) on `requests/[type].vue`,
+with an **Employee** column (the person who filed) instead of Approver.
 
 Row shape:
 ```json

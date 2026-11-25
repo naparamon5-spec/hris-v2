@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="page-head"><div><h1>Approvals</h1><p>Review requests filed by your team.</p></div></div>
+    <div class="page-head"><div><h1>Approvals</h1><p>Requests from your team waiting for your decision. Decided ones move to Approved Records / Approved Requests.</p></div></div>
 
     <div class="toolbar">
       <input v-model="q" class="input" type="search" aria-label="Search approvals" placeholder="Search by name, ID, type, date…">
@@ -40,7 +40,7 @@
         </div>
         <span v-else class="badge" :class="'badge-' + badge(t.status)">{{ t.status }}</span>
       </div>
-      <p v-if="!rows.length" class="empty">Nothing here</p>
+      <p v-if="!rows.length" class="empty">No requests waiting for your approval</p>
     </div>
     <Pager v-model:page="page" :pages="pages" :total="total" :size="size" :class="{ 'bar-space': selected.length }" />
 
@@ -65,19 +65,20 @@ const items = useState('mock-approvals', () => approvals.map(a => ({ ...a })))
 const q = ref('')
 const selected = ref([])
 const toast = ref('')
-// Filters menu: category, status, employee and request date.
-const extra = ref({ category: '', status: '', employee: '', dateFrom: '', dateTo: '' })
+// Only pending items live here (GET /auth/approvals?scope=pending). Once approved or
+// disapproved they leave this list and show on Approved Records / Approved Requests.
+// Filters menu: category, employee and request date.
+const extra = ref({ category: '', employee: '', dateFrom: '', dateTo: '' })
 const filterFields = computed(() => [
   { key: 'category', label: 'Category', options: ['Leave of Absence', 'Overtime', 'Call Approval', 'Manual Arrival/Departure', 'Other Requests'] },
-  { key: 'status', label: 'Status', options: ['For Approval', 'Approved', 'Disapproved'] },
-  { key: 'employee', label: 'Employee', options: uniq(items.value, t => t.name) },
+  { key: 'employee', label: 'Employee', options: uniq(pending.value, t => t.name) },
   { key: 'date', label: 'Request date', type: 'date-range' }
 ])
+const pending = computed(() => items.value.filter(t => t.status === 'For Approval'))
 const rows = computed(() => {
   const f = extra.value
-  return items.value.filter(t =>
+  return pending.value.filter(t =>
     (!f.category || t.app === f.category) &&
-    (!f.status || t.status === f.status) &&
     (!f.employee || t.name === f.employee) &&
     inDateRange(t.date, f.dateFrom, f.dateTo) &&
     `${t.name} ${t.empId} ${t.app} ${t.date} ${t.no} ${t.reason || ''}`.toLowerCase().includes(q.value.toLowerCase()))
@@ -119,7 +120,9 @@ const act = async (ids, s) => {
   })
   if (!ok) return
   items.value.forEach(t => { if (ids.includes(t.id)) t.status = s })
-  toast.value = `${s} ${n} record${n === 1 ? '' : 's'}`
+  const where = ids.every(id => items.value.find(t => t.id === id)?.app === 'Other Requests') ? 'Approved Requests'
+    : ids.some(id => items.value.find(t => t.id === id)?.app === 'Other Requests') ? 'Approved Records / Requests' : 'Approved Records'
+  toast.value = `${s} ${n} record${n === 1 ? '' : 's'} · moved to ${where}`
   selected.value = selected.value.filter(id => !ids.includes(id))
   setTimeout(() => (toast.value = ''), 2200)
 }
