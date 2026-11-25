@@ -3,6 +3,7 @@
   <Teleport to="body">
   <div class="overlay">
     <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="pc-title" @keydown.esc="$emit('close')">
+      <DialogClose @click="$emit('close')" />
       <h3 id="pc-title">Edit profile photo</h3>
       <p class="m sub">Drag to position, use the slider to zoom.</p>
 
@@ -89,8 +90,8 @@ const save = () => {
 
 <style scoped>
 .overlay { position: fixed; inset: 0; z-index: 60; background: rgba(15, 23, 33, .55); display: grid; grid-template-columns: minmax(0, 1fr); overflow-y: auto; overscroll-behavior: contain; place-items: center; padding: 1rem; }
-.modal { width: 100%; max-width: 380px; padding: 1.4rem; display: flex; flex-direction: column; align-items: center; gap: .9rem; }
-.modal h3 { align-self: flex-start; font-size: 1.1rem; }
+.modal { position: relative; width: 100%; max-width: 380px; padding: 1.4rem; display: flex; flex-direction: column; align-items: center; gap: .9rem; }
+.modal h3 { align-self: flex-start; padding-right: 2.25rem; font-size: 1.1rem; }
 .sub { align-self: flex-start; font-size: .82rem; margin-top: -.6rem; }
 .stage { position: relative; width: 260px; height: 260px; border-radius: 16px; overflow: hidden; background: #111; cursor: grab; touch-action: none; user-select: none; }
 .stage.grabbing { cursor: grabbing; }

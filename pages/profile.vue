@@ -73,6 +73,7 @@
     <Teleport to="body">
     <div v-if="editing" class="overlay" @keydown.esc="editing = false">
       <div class="card modal">
+        <DialogClose @click="editing = false" />
         <h2>Edit Bio</h2>
         <textarea ref="bioBox" v-model="draft" class="input" aria-label="Bio" style="width:100%" maxlength="200" placeholder="Write a short bio about yourself…" />
         <small class="m">{{ draft.length }}/200</small>
@@ -191,7 +192,7 @@ a.set { text-decoration: none; }
 .switch input:checked + i { background: var(--ardent-red); }
 .switch input:checked + i::after { left: 21px; }
 .overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; grid-template-columns: minmax(0, 1fr); overflow-y: auto; overscroll-behavior: contain; place-items: center; z-index: 50; padding: 1rem; }
-.modal { width: 100%; max-width: 460px; }
-.modal h2 { font-size: 1.2rem; margin-bottom: 1rem; }
+.modal { position: relative; width: 100%; max-width: 460px; }
+.modal h2 { padding-right: 2.25rem; font-size: 1.2rem; margin-bottom: 1rem; }
 .foot { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
 </style>

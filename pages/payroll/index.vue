@@ -30,6 +30,7 @@
     <Teleport to="body">
     <div v-if="bulk" class="overlay">
       <div class="card modal">
+        <DialogClose @click="bulk = false" />
         <h2>Download Payslips</h2>
         <input v-model="bq" class="input" type="search" aria-label="Search payslips to download" placeholder="Search period no. or month (e.g. 12, Oct)" style="width:100%;margin-bottom:.75rem">
         <!-- Select all = every payslip shown by the current search. -->
@@ -119,8 +120,8 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 .row:last-child { border-bottom: 0; }
 .row div { display: flex; flex-direction: column; flex: 1; }
 .overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; grid-template-columns: minmax(0, 1fr); overflow-y: auto; overscroll-behavior: contain; place-items: center; z-index: 50; padding: 1rem; }
-.modal { width: 100%; max-width: 440px; max-height: 90vh; overflow: auto; }
-.modal h2 { font-size: 1.2rem; margin-bottom: 1rem; }
+.modal { position: relative; width: 100%; max-width: 440px; max-height: 90vh; overflow: auto; }
+.modal h2 { padding-right: 2.25rem; font-size: 1.2rem; margin-bottom: 1rem; }
 .pick { display: flex; gap: .6rem; align-items: center; padding: .55rem 0; font-size: .9rem; border-bottom: 1px solid var(--border); }
 .pick input { accent-color: var(--ardent-red); }
 .pick.all { position: sticky; top: 0; background: #fff; z-index: 1; cursor: pointer; }

@@ -2,6 +2,7 @@
   <Transition name="cd">
     <div v-if="dialog" class="cd-overlay">
       <div class="cd" role="alertdialog" aria-modal="true" aria-labelledby="cd-title" aria-describedby="cd-msg">
+        <DialogClose @click="close(false)" />
         <span class="cd-icon" :class="dialog.tone"><AppIcon :name="dialog.icon" :size="22" /></span>
         <h2 id="cd-title">{{ dialog.title }}</h2>
         <p v-if="dialog.message" id="cd-msg">{{ dialog.message }}</p>
@@ -30,7 +31,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 <style scoped>
 .cd-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(19,51,65,.5); backdrop-filter: blur(4px); display: grid; grid-template-columns: minmax(0, 1fr); overflow-y: auto; overscroll-behavior: contain; place-items: center; padding: 1rem; }
-.cd { width: 100%; max-width: 400px; background: #fff; border-radius: 20px; padding: 1.75rem 1.5rem 1.4rem; text-align: center; box-shadow: var(--shadow-lg); }
+.cd { position: relative; width: 100%; max-width: 400px; background: #fff; border-radius: 20px; padding: 1.75rem 1.5rem 1.4rem; text-align: center; box-shadow: var(--shadow-lg); }
 .cd-icon { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 1rem; background: #fdecef; color: var(--ardent-red); }
 .cd-icon.primary { background: #e8f6ef; color: #18794e; }
 .cd h2 { font-size: 1.15rem; }

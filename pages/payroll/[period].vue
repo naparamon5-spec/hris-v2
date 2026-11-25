@@ -49,6 +49,7 @@
     <Teleport to="body">
     <div v-if="askPw" class="pw-overlay">
       <form class="pw-card" role="dialog" aria-modal="true" aria-labelledby="pw-title" @submit.prevent="checkPw" @keydown.esc="cancelPw">
+        <DialogClose @click="cancelPw" />
         <span class="pw-icon"><AppIcon name="shield" :size="22" /></span>
         <h2 id="pw-title">Confirm your password</h2>
         <p class="m">Payslips contain salary details. Enter your password to view <b class="pw-period">Period {{ slip.period }} · {{ slip.label }}</b>.</p>
@@ -115,7 +116,7 @@ const cancelPw = () => { askPw.value = false; if (!unlocked.value) navigateTo('/
 .locked { display: flex; align-items: center; gap: 1rem; max-width: 820px; }
 .locked div { flex: 1; display: flex; flex-direction: column; }
 .pw-overlay { position: fixed; inset: 0; margin: 0; z-index: 100; background: rgba(19,51,65,.55); backdrop-filter: blur(6px); display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; padding: 1rem; overflow-y: auto; }
-.pw-card { width: 100%; max-width: 400px; overflow-wrap: anywhere; background: #fff; border-radius: 20px; padding: 1.75rem 1.5rem 1.4rem; text-align: center; box-shadow: var(--shadow-lg); }
+.pw-card { position: relative; width: 100%; max-width: 400px; overflow-wrap: anywhere; background: #fff; border-radius: 20px; padding: 1.75rem 1.5rem 1.4rem; text-align: center; box-shadow: var(--shadow-lg); }
 .pw-card h2 { font-size: 1.15rem; }
 .pw-card > p { margin: .5rem 0 1.25rem; font-size: .88rem; line-height: 1.5; }
 .pw-card .field { text-align: left; margin-bottom: .5rem; }
