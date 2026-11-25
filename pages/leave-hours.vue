@@ -35,7 +35,9 @@ const cards = computed(() => [
 
 <style scoped>
 .section-title { margin-top: 0; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .9rem; }
+.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .9rem; }
+@media (max-width: 1100px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .cards { grid-template-columns: 1fr; } }
 .hrs { display: flex; align-items: center; gap: .85rem; padding: 1rem 1.1rem; }
 .hrs > div { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
 .hrs small { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }

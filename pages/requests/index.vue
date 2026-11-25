@@ -27,8 +27,7 @@ const fileable = computed(() => keys.map(k => ({
 </script>
 
 <style scoped>
-.cards { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: .9rem; --cols: 5; }
-@media (max-width: 1200px) { .cards { --cols: 3; } }
+.cards { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); gap: .9rem; --cols: 3; }
 @media (max-width: 860px) { .cards { --cols: 2; } }
 @media (max-width: 480px) { .cards { --cols: 1; } }
 .tile {
