@@ -433,7 +433,12 @@ refresh token, clear both cookies and `useState('user')`, `navigateTo('/login')`
 
 ---
 
-## 4. Companies — login dropdown, header switcher, `company-select.vue`, `ArdentLogo.vue`
+## 4. Companies — `company-select.vue` (sign-in step 1), `login.vue`, header switch, `ArdentLogo.vue`
+
+Flow: **/company-select** (pick company) → **/login** (shows "Signing in to <company>" + Change)
+→ OTP → app. The token carries one tenant, so the header company button signs out
+(`POST /auth/logout`) and returns to /company-select. The last company is remembered in
+localStorage (`hris.company`), so returning users land on /login directly.
 
 `GET /public/tenants` →
 
@@ -985,13 +990,13 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | 3 | `layouts/default.vue` | Sign out only navigates | `POST /auth/logout` + clear cookies |
 | 4 | `layouts/default.vue`, `composables/useApprovals.js` | `approvalAccess` mock | hide Approvals unless `approvals/access` says approver/witness. Nav: Home, Requests, Leave Hours, Who's Out, Approvals, Payroll (Payslips + Timesheet tabs), Directory |
 | 5 | `components/HeaderSearch.vue` | searches mock `directory`, `requests`, `payslips`, approvals | same lists from the API (G16) |
-| 6 | `login.vue` | `companies`, fake sign-in, any OTP | `/public/tenants`, `/public/login` (+ `otp` re-post) |
+| 6 | `login.vue` | fake sign-in, any OTP; company comes from step 1 | `/public/login { tenant, ... }` with the chosen company's tenant id (+ `otp` re-post) |
 | 7 | `login.vue` | Authentik button | remove (G1) |
 | 8 | `forgot-password.vue` | "(Mock — no email is sent.)" | `/public/forgot-password { identifier, tenant }` |
 | 9 | `reset-password.vue` | only compares fields | `/public/reset-password { token, tenant, new_password, confirm_password }` |
 | 10 | `change-password.vue` | only compares fields | `/auth/profile/change-password` |
 | 11 | `examination.vue` | "(Mock — nothing was sent.)" | G17 or remove |
-| 12 | `company-select.vue` | `companies`, local state | `/public/tenants`; Continue → logout + `/login?company=` (or G2) |
+| 12 | `company-select.vue`, `composables/useCompany.js` | `companies`, remembered company (localStorage `hris.company`) | `/public/tenants`. Sign-in step 1 → `/login`; header "Switch company" = `POST /auth/logout` then this page (until G2) |
 | 13 | `components/ArdentLogo.vue` | `companies`, `companyLogo()` | tenant `id` → `/logos/<id>.png`; current = `user.company` |
 | 14 | `index.vue` | `user`, `leaveCredits` | `/auth/me`, `/auth/leaves/balance` buckets |
 | 15 | `index.vue` | `approvals.length` | `/auth/approvals/access` totals |

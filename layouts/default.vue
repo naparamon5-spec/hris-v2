@@ -35,10 +35,10 @@
       <header :class="{ hidden: hideHeader }">
         <button class="menu" aria-label="Menu" @click="open = !open">☰</button>
         <HeaderSearch />
-        <NuxtLink to="/company-select" class="company" title="Switch company"
+        <button type="button" class="company" title="Switch company" @click="switchCompany"
           ><AppIcon name="people" :size="15" /><span>{{ company }}</span
           ><AppIcon name="chevron" :size="13"
-        /></NuxtLink>
+        /></button>
         <NuxtLink to="/notifications" class="bell" aria-label="Notifications"
           ><AppIcon name="bell" :size="20" /><i v-if="unread">{{
             unread
@@ -109,6 +109,16 @@ const { user, notifications, companies } = useMockData()
 // Profile photo chosen on the Profile page (no server endpoint yet — kept in app state).
 const { photo } = useProfilePhoto()
 const company = useState('company', () => companies[0])
+// The company is part of the sign-in (tenant in the token), so switching = sign out, pick
+// another company, sign in again.
+const switchCompany = async () => {
+  const ok = await confirm({
+    title: 'Switch company?',
+    message: `You'll be signed out of ${company.value}, then you can pick another company and sign in.`,
+    confirmText: 'Sign out & switch', tone: 'primary', icon: 'people'
+  })
+  if (ok) navigateTo('/company-select')
+}
 const unread = computed(() => notifications.value.filter(n => n.unread).length)
 // Approvals (Pending / Approved Records / Approved Requests) only shows for approvers.
 const { canApprove } = useApprovals()
@@ -300,6 +310,9 @@ header {
 }
 .company {
   margin-left: auto;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
   display: flex;
   align-items: center;
   gap: 0.45rem;

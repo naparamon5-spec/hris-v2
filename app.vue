@@ -13,7 +13,7 @@ const PAGES = {
   '/reset-password': 'Reset Password',
   '/change-password': 'Change Password',
   '/examination': 'For Examination',
-  '/company-select': 'Switch Company',
+  '/company-select': 'Select Company',
   '/requests': 'Requests',
   '/whos-out': "Who's Out",
   '/approvals': 'Approvals',

@@ -2,10 +2,10 @@
   <AuthCard slim>
     <div class="head">
       <div>
-        <h2>Switch company</h2>
-        <p class="sub">Choose which company account to open.</p>
+        <span class="step">Step 1 of 2</span>
+        <h2>Select your company</h2>
+        <p class="sub">Choose the company you work for, then sign in.</p>
       </div>
-      <NuxtLink to="/" class="back-link">‹ Back</NuxtLink>
     </div>
 
     <input v-model="q" class="input search" type="search" aria-label="Search companies" placeholder="Search companies…">
@@ -18,7 +18,7 @@
         @click="chosen = c" @dblclick="chosen = c; go()"
       >
         <span class="co-logo"><ArdentLogo :company="c" /></span>
-        <span class="co-name">{{ c }}<small v-if="c === company" class="cur">Current company</small></span>
+        <span class="co-name">{{ c }}<small v-if="chosenBefore && c === company" class="cur">Last used</small></span>
         <span class="tick" aria-hidden="true"><AppIcon v-if="c === chosen" name="check" :size="14" /></span>
       </button>
       <p v-if="!list.length" class="empty">No company matches "{{ q }}".</p>
@@ -26,7 +26,7 @@
 
     <div class="footer-bar">
       <button type="button" class="btn btn-primary continue" :disabled="!chosen" @click="go">
-        {{ chosen === company ? 'Continue' : `Continue to ${chosen}` }}
+        Continue to sign in
         <AppIcon name="chevron" :size="16" />
       </button>
     </div>
@@ -35,15 +35,22 @@
 
 <script setup>
 definePageMeta({ layout: 'auth' })
-const { companies } = useMockData()
-const company = useState('company', () => companies[0])
-const chosen = ref(company.value)
-const go = () => { if (!chosen.value) return; company.value = chosen.value; navigateTo('/') }
+// Sign-in step 1: pick the company (tenant), then /login. Also where "Switch company"
+// lands after signing out.
+const { companies, company, load, choose } = useCompany()
+const chosen = ref('')
+const chosenBefore = ref(false)
+onMounted(() => {
+  chosenBefore.value = load()
+  if (chosenBefore.value) chosen.value = company.value
+})
+const go = () => { if (!chosen.value) return; choose(chosen.value); navigateTo('/login') }
 const q = ref('')
 const list = computed(() => companies.filter(c => c.toLowerCase().includes(q.value.trim().toLowerCase())))
 </script>
 
 <style scoped>
+.step { display: block; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ardent-red); font-weight: 700; margin-bottom: .3rem; }
 .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
 .head :deep(.sub), .head .sub { margin-bottom: .8rem !important; }
 .back-link { font-size: .82rem; font-weight: 600; white-space: nowrap; padding-top: .45rem; }

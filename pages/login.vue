@@ -5,6 +5,13 @@
       <h2>Welcome back!</h2>
       <p class="sub">Sign in to continue to HRIS.</p>
 
+      <!-- Company was picked on step 1 (/company-select). -->
+      <div class="co-pick">
+        <span class="co-logo"><ArdentLogo :company="company" /></span>
+        <div class="co-txt"><small>Signing in to</small><b>{{ company }}</b></div>
+        <NuxtLink to="/company-select" class="co-change">Change</NuxtLink>
+      </div>
+
       <div class="field"><label for="emp">Employee ID</label>
         <input id="emp" v-model="empId" class="input" placeholder="Enter Employee ID" autocomplete="username" required></div>
       <div class="field"><label for="pw">Password</label>
@@ -12,8 +19,6 @@
           <input id="pw" class="input" :type="show ? 'text' : 'password'" placeholder="Enter password" autocomplete="current-password" required>
           <button type="button" class="eye" :aria-label="show ? 'Hide password' : 'Show password'" @click="show = !show">{{ show ? 'Hide' : 'Show' }}</button>
         </div></div>
-      <div class="field"><label for="co">Company</label>
-        <AppSelect id="co" v-model="company" :options="companies" full /></div>
 
       <div class="row">
         <label class="check"><input type="checkbox"> Remember me</label>
@@ -41,8 +46,9 @@
 
 <script setup>
 definePageMeta({ layout: 'auth' })
-const { companies } = useMockData()
-const company = useState('company', () => companies[0])
+// Step 2 of sign-in. No company chosen yet (first visit) → step 1 first.
+const { company, load } = useCompany()
+onMounted(() => { if (!load()) navigateTo('/company-select', { replace: true }) })
 const empId = ref('')
 const show = ref(false)
 const step = ref('login')
@@ -50,6 +56,16 @@ const signIn = () => { step.value = 'otp' }
 </script>
 
 <style scoped>
+.co-pick { display: flex; align-items: center; gap: .75rem; padding: .55rem .6rem .55rem .55rem; margin: 0 0 1rem; border: 1px solid var(--border); border-radius: 14px; background: #fbfbfc; }
+.co-logo { width: 84px; height: 30px; flex: none; display: flex; justify-content: center; }
+.co-logo :deep(.chip) { height: 30px; }
+.co-logo :deep(.chip img) { max-width: 80px; }
+.co-logo :deep(.mono) { width: 30px; height: 30px; font-size: .8rem; border-radius: 9px; }
+.co-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.co-txt small { font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.co-txt b { font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.co-change { font-size: .8rem; font-weight: 700; padding: .35rem .7rem; border-radius: 999px; border: 1px solid var(--border); background: #fff; flex: none; }
+.co-change:hover { border-color: var(--ardent-red); }
 .eyebrow { display: block; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ardent-red); font-weight: 700; margin-bottom: .4rem; }
 .row { display: flex; justify-content: space-between; align-items: center; gap: .5rem; font-size: .8rem; margin-bottom: 1.25rem; }
 .check { display: flex; gap: .4rem; align-items: center; color: var(--muted); }
