@@ -60,7 +60,7 @@ const list = computed(() => companies.filter(c => c.toLowerCase().includes(q.val
 /* Roomy rows; the list scrolls inside its own box so the page never scrolls. */
 .grid-co {
   display: flex; flex-direction: column; gap: .55rem;
-  max-height: min(330px, calc(100vh - 360px)); min-height: 200px; overflow-y: auto; overscroll-behavior: contain;
+  max-height: min(468px, calc(100vh - 360px)); min-height: 200px; overflow-y: auto; overscroll-behavior: contain;
   padding: 4px 6px 4px 4px; margin: 0 -6px 0 -4px; /* room for the focus ring */
   scrollbar-width: thin; scrollbar-color: #d5dae0 transparent;
 }
