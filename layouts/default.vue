@@ -107,7 +107,7 @@ const { confirm } = useConfirm()
 const signOut = async () => {
   menu.value = false
   const ok = await confirm({ title: 'Sign out?', message: 'You will need to sign in again to use HRIS.', confirmText: 'Sign out', tone: 'danger', icon: 'logout' })
-  if (ok) navigateTo('/login')
+  if (ok) { useSession().signOut(); navigateTo('/login') }
 }
 const { user, notifications, companies } = useMockData()
 // Profile photo chosen on the Profile page (no server endpoint yet — kept in app state).
@@ -121,7 +121,7 @@ const switchCompany = async () => {
     message: `You'll be signed out of ${company.value}, then you can pick another company and sign in.`,
     confirmText: 'Sign out & switch', tone: 'primary', icon: 'people'
   })
-  if (ok) navigateTo('/company-select')
+  if (ok) { useSession().signOut(); navigateTo('/company-select') }
 }
 const unread = computed(() => notifications.value.filter(n => n.unread).length)
 // Approvals (Pending / Approved Records / Approved Requests) only shows for approvers.

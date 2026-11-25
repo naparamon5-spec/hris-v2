@@ -42,8 +42,8 @@ list has a working endpoint in the sections below.
 | 10 | Payslip password checked by the server | `/auth/verify-password` exists, but `/auth/payslips/:id` doesn't require it | gate is client-side only (same as mobile) |
 | 11 | Timesheet "Late" column (`timesheet.vue`) | `/auth/timesheets/:id` has no late-minutes field | |
 | 12 | Directory email & local number (`directory.vue`) | `/auth/directory` returns id, name, role, department, status only | |
-| 13 | Support — submit a ticket, contacts, FAQ (`support.vue`) | no API; Support is the v1 web page `https://hris.ardentnetworks.com.ph/support` | link to it for now |
-| 14 | Privacy policy content (`privacy-policy.vue`) | no API; v1 web page `https://hris.ardentnetworks.com.ph/privacy-policy` | link to it for now |
+| 13 | Support — contacts, requirements, FAQ, reporting a problem (`support.vue`) | no API; static content (same text as `https://hris.ardentnetworks.com.ph/support`) | ✅ done — public full page at `/support` |
+| 14 | Privacy policy content (`privacy-policy.vue`) | no API; static content (same text as `https://hris.ardentnetworks.com.ph/privacy-policy`) | ✅ done — public full page at `/privacy-policy` |
 | 15 | Header global search (`components/HeaderSearch.vue`) | no search endpoint | works client-side over lists the site already loads (see G16) |
 | 16 | For examination — applicant exam link (`examination.vue`) | nothing | |
 | 17 | Leave-type / request-subtype list for the forms (`RequestFormModal.vue`) | no endpoint; server accepts a fixed list (§7.4) | hard-code the server's list in the site |
@@ -973,8 +973,8 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | G11 | Payslip password enforced by server | client-side only | `verify-password` returns a 5-min `payslip_token`; `/auth/payslips/:id` requires it |
 | G12 | Timesheet "Late" minutes | not in `ts_timesheet` select | add `late_mins` to `/auth/timesheets/:id` if the table has it |
 | G13 | Directory email / local no. | not returned | add `email`, `local` to `/auth/directory` |
-| G14 | Support page | ✅ **exists as a web page, not an API.** Mobile opens `https://hris.ardentnetworks.com.ph/support` (`profile_screen.dart _supportUrl`) | Link the sidebar "Support" to that page, or copy its content into `support.vue` as static content. No ticket API exists, so the site's ticket form must go or send by `mailto:` |
-| G15 | Privacy policy | ✅ **exists as a web page.** Mobile opens `https://hris.ardentnetworks.com.ph/privacy-policy` | Link to it, or copy the real text into `privacy-policy.vue` |
+| G14 | Support page | ✅ **exists as a web page, not an API.** Mobile opens `https://hris.ardentnetworks.com.ph/support` (`profile_screen.dart _supportUrl`) | ✅ Done: content copied into `support.vue`; mock ticket form removed (issues go by `mailto:`). `/support` is **public** (no sign-in, own full-page layout `layouts/doc.vue`), linked from the sign-in pages' footer and the sidebar |
+| G15 | Privacy policy | ✅ **exists as a web page.** Mobile opens `https://hris.ardentnetworks.com.ph/privacy-policy` | ✅ Done: real text in `privacy-policy.vue`. `/privacy-policy` is **public** (no sign-in, full page), linked from the sign-in pages and the sidebar |
 | G16 | Header global search | **client-side** (no endpoint, not in mobile) | `HeaderSearch.vue` searches pages/actions (static), `/auth/directory`, `/auth/requests/:type`, `/auth/payslips`, `/auth/approvals?scope=pending` (approvers). Fetch on first open, cache. Results link to lists with `?q=` (Directory, request lists, Approvals) or `/payroll?download=1`. A later `GET /auth/search?q=` can replace the matching without UI changes |
 | G17 | For examination (applicant link) | none | `POST /public/examination/request-link { email }` — or remove the link |
 | G18 | Biometric switch on website | phone-only | remove from the site |
@@ -1018,8 +1018,8 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | 31 | `profile.vue` | `certificates`, "File Selected (mock)" | `/auth/profile/certificates`; upload shows "finalized by HR on the web portal" like mobile (G5) |
 | 32 | `profile.vue` | bio | same as mobile: UI-only, starts empty ("No bio yet"); persistent only if G3 endpoint is added |
 | 33 | `profile.vue` | 2FA switch, Biometric switch, Log out | `/auth/2fa/*` flow; remove Biometric; `/auth/logout` |
-| 34 | `support.vue` | contacts, FAQ, "Ticket submitted (mock)" | link to `https://hris.ardentnetworks.com.ph/support` or its static content; drop the mock ticket submit (G14) |
-| 35 | `privacy-policy.vue` | placeholder text | link to `https://hris.ardentnetworks.com.ph/privacy-policy` or copy its text (G15) |
+| 34 | `support.vue` | ✅ static content, no mock left | keep **public**: when adding a sign-in route guard, exclude `/support` (G14) |
+| 35 | `privacy-policy.vue` | ✅ static content, no mock left | keep **public**: exclude `/privacy-policy` from the sign-in route guard (G15) |
 | 36 | `composables/useMockData.js` | everything | delete the file; move `badge` (updated for §2.2), `peso`, and `requestTypes` (title/desc/icon/apiType) to `utils/format.js` |
 
 **Final check** — both should come back empty / `False`:

@@ -15,7 +15,11 @@
   </section>
   <section class="panel">
     <div class="form"><slot /></div>
-    <small class="legal">© {{ year }} Ardent Networks, Inc. · Privacy Policy</small>
+    <small class="legal">
+      © {{ year }} Ardent Networks, Inc. ·
+      <NuxtLink to="/support">Support</NuxtLink> ·
+      <NuxtLink to="/privacy-policy">Privacy Policy</NuxtLink>
+    </small>
   </section>
 </template>
 
@@ -54,7 +58,9 @@ const year = new Date().getFullYear()
 .form :deep(.sub) { color: var(--muted); margin: .3rem 0 1.6rem; font-size: .9rem; }
 .form :deep(.full) { width: 100%; padding: .85rem; }
 .form :deep(.alt) { display: block; text-align: center; margin-top: 1.25rem; font-size: .85rem; font-weight: 600; }
-.legal { color: var(--muted); font-size: .72rem; }
+.legal { color: var(--muted); font-size: .72rem; text-align: center; }
+.legal a { color: var(--muted); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.legal a:hover { color: var(--ardent-red); }
 @media (max-width: 860px) {
   .hero.slim { padding: 1rem 1.25rem; }
   .hero.slim .copy { display: none; }

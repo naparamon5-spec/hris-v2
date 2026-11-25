@@ -32,7 +32,7 @@
       <NuxtLink to="/examination" class="exam"><AppIcon name="doc" :size="15" /> For examination?</NuxtLink>
     </form>
 
-    <form v-else @submit.prevent="navigateTo('/')">
+    <form v-else @submit.prevent="finish">
       <span class="eyebrow">Two-factor authentication</span>
       <h2>Verify it's you</h2>
       <p class="sub">Enter the 6-digit code from your authenticator app. (Any code works in this mock.)</p>
@@ -53,6 +53,8 @@ const empId = ref('')
 const show = ref(false)
 const step = ref('login')
 const signIn = () => { step.value = 'otp' }
+const session = useSession()
+const finish = () => { session.signIn(); navigateTo('/') }
 // Code field takes digits only: letters and symbols are dropped as you type or paste.
 const otp = ref('')
 const onOtp = (e) => {

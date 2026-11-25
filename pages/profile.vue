@@ -142,7 +142,7 @@ const toggle2fa = async () => {
   flash(turningOn ? '2FA Enabled' : '2FA Disabled')
 }
 const logOut = async () => {
-  if (await confirm({ title: 'Log out?', message: 'You will need to sign in again to use HRIS.', confirmText: 'Log out', tone: 'danger', icon: 'logout' })) navigateTo('/login')
+  if (await confirm({ title: 'Log out?', message: 'You will need to sign in again to use HRIS.', confirmText: 'Log out', tone: 'danger', icon: 'logout' })) { useSession().signOut(); navigateTo('/login') }
 }
 const toast = ref('')
 let toastTimer
