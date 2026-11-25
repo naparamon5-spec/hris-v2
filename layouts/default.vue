@@ -9,10 +9,14 @@
             v-for="n in g.items"
             :key="n.to"
             :to="n.to"
-            :class="{ active: isActive(n.to) }"
+            :external="n.external"
+            :target="n.external ? '_blank' : undefined"
+            :rel="n.external ? 'noopener' : undefined"
+            :class="{ active: !n.external && isActive(n.to) }"
             @click="open = false"
           >
             <span class="ico"><AppIcon :name="n.icon" /></span>{{ n.label }}
+            <template v-if="n.external"><AppIcon name="external" :size="13" class="ext" /><span class="sr-only">(opens in a new tab)</span></template>
           </NuxtLink>
         </template>
       </nav>
@@ -140,7 +144,9 @@ const navGroups = [
       { to: '/directory', label: 'Directory', icon: 'people' }
     ]
   },
-  canApprove && { title: 'Approver', items: [{ to: '/approvals', label: 'Approvals', icon: 'check' }] }
+  canApprove && { title: 'Approver', items: [{ to: '/approvals', label: 'Approvals', icon: 'check' }] },
+  // Other Ardent apps (open in a new tab).
+  { title: 'Apps', items: [{ to: 'https://ticket.ardentnetworks.com.ph/login', label: 'Ticket', icon: 'ticket', external: true }] }
 ].filter(Boolean)
 const nav = navGroups.flatMap(g => g.items)
 const footNav = [
@@ -231,6 +237,13 @@ nav a {
   transition:
     background 0.15s,
     color 0.15s;
+}
+nav a .ext {
+  margin-left: auto;
+  opacity: 0.5;
+}
+nav a:hover .ext {
+  opacity: 0.9;
 }
 nav a:hover {
   background: rgba(255, 255, 255, 0.06);
