@@ -2,17 +2,19 @@
   <div class="shell">
     <aside :class="{ open }">
       <HrisLogo light class="brand" />
-      <span class="nav-label">Menu</span>
-      <nav>
-        <NuxtLink
-          v-for="n in nav"
-          :key="n.to"
-          :to="n.to"
-          :class="{ active: isActive(n.to) }"
-          @click="open = false"
-        >
-          <span class="ico"><AppIcon :name="n.icon" /></span>{{ n.label }}
-        </NuxtLink>
+      <nav aria-label="Main">
+        <template v-for="g in navGroups" :key="g.title">
+          <span class="nav-label">{{ g.title }}</span>
+          <NuxtLink
+            v-for="n in g.items"
+            :key="n.to"
+            :to="n.to"
+            :class="{ active: isActive(n.to) }"
+            @click="open = false"
+          >
+            <span class="ico"><AppIcon :name="n.icon" /></span>{{ n.label }}
+          </NuxtLink>
+        </template>
       </nav>
       <div class="foot">
         <NuxtLink
@@ -116,15 +118,27 @@ const company = useState('company', () => companies[0])
 const unread = computed(() => notifications.value.filter(n => n.unread).length)
 // Approvals (Pending / Approved Records / Approved Requests) only shows for approvers.
 const { canApprove } = useApprovals()
-const nav = [
-  { to: '/', label: 'Home', icon: 'home' },
-  { to: '/requests', label: 'Requests', icon: 'requests' },
-  { to: '/leave-hours', label: 'Leave Hours', icon: 'hourglass' },
-  { to: '/whos-out', label: "Who's Out", icon: 'calendar' },
-  canApprove && { to: '/approvals', label: 'Approvals', icon: 'check' },
-  { to: '/payroll', label: 'Payroll', icon: 'wallet', also: ['/timesheet'] },
-  { to: '/directory', label: 'Directory', icon: 'people' }
+// Sidebar sections (like v1's MENU / RECORD-REQUEST / APPS headings).
+const navGroups = [
+  { title: 'Menu', items: [{ to: '/', label: 'Home', icon: 'home' }] },
+  {
+    title: 'My records',
+    items: [
+      { to: '/requests', label: 'Requests', icon: 'requests' },
+      { to: '/leave-hours', label: 'Leave Hours', icon: 'hourglass' },
+      { to: '/payroll', label: 'Payroll', icon: 'wallet', also: ['/timesheet'] }
+    ]
+  },
+  {
+    title: 'Team',
+    items: [
+      { to: '/whos-out', label: "Who's Out", icon: 'calendar' },
+      { to: '/directory', label: 'Directory', icon: 'people' }
+    ]
+  },
+  canApprove && { title: 'Approver', items: [{ to: '/approvals', label: 'Approvals', icon: 'check' }] }
 ].filter(Boolean)
+const nav = navGroups.flatMap(g => g.items)
 const footNav = [
   { to: '/support', label: 'Support', icon: 'bell' },
   { to: '/privacy-policy', label: 'Privacy Policy', icon: 'shield' }
@@ -176,6 +190,12 @@ aside::after {
   color: rgba(255, 255, 255, 0.38);
   padding: 0 0.8rem 0.5rem;
   font-weight: 700;
+}
+nav .nav-label {
+  padding-bottom: 0.3rem;
+}
+nav .nav-label:not(:first-child) {
+  margin-top: 0.9rem;
 }
 nav {
   display: flex;
