@@ -13,7 +13,11 @@ below was read from the server source:
 > `hris_server/API.md` is **out of date** (it still mentions a seed store and
 > `/approvals/:id/approve`). Trust this file and the controllers, not `API.md`.
 
+Last updated **2026-11-25** (site commit `316be2e`). What changed in the site since the last
+revision, and what it means for the backend, is in **§0.2**.
+
 Sections:
+0. Parked list · 0.1 Endpoint map · 0.2 Recent site changes ·
 1. Connection setup · 2. Conventions · 3. Auth · 4. Companies · 5. Profile & security ·
 6. Home · 7. Requests · 8. Approvals · 9. Payroll & timesheet · 10. Leave hours ·
 11. Who's Out · 12. Directory · 13. Notifications · 14. Endpoints the site does not use ·
@@ -49,11 +53,29 @@ list has a working endpoint in the sections below.
 | 17 | Leave-type / request-subtype list for the forms (`RequestFormModal.vue`) | no endpoint; server accepts a fixed list (§7.4) | hard-code the server's list in the site |
 | 18 | Real-time notifications on the web | only phone push (FCM); no web push / SSE | poll `/auth/notifications` |
 | 19 | Biometric sign-in on the website | phone-only endpoints | not applicable to web |
+| 20 | Ticket (sidebar → Apps) | separate system, not HRIS — plain link to `https://ticket.ardentnetworks.com.ph/login` (new tab) | no API needed (G19) |
 
 **Not gaps (already covered, for reference):** payslip PDF and bulk PDF download (built in the
 browser from `/auth/payslips/:id`, like mobile — §9.2), 2FA, change/forgot/reset password,
 requests CRUD + send/cancel/reverse, approvals + OT hours, Who's Out, directory list,
 notifications, leave balance/hours, timesheet, pay calendar.
+
+---
+
+## 0.2 Recent site changes (2026-11-25) — backend impact
+
+| Change in the site | Backend impact | See |
+|---|---|---|
+| **Lists always newest first.** Approvals, Approved Records/Requests, my request lists, Payslips (+ download picker) and Notifications re-sort on the client (`newestFirst()` in `composables/useListFilters.js`), whatever order the API returns. Timesheet days stay in calendar order. | Every row needs a sortable date. Approvals: the server's sort is **wrong** (text compare, G20) — the site's own sort covers it. Notifications: the server sends only `"2h ago"` text — add `created_at` (G21). | §7.2, §8.2, §9.1, §13 |
+| **Payslips: Month filter** (all 12 months, each with its payslip count) beside Year and Cut-off; the month chips are gone. | Client-side over `pay_date`. `GET /auth/payslips` returns only the **last 24** (≈ 12 months), so older years/months show empty (G22). | §9.1 |
+| **Support & Privacy Policy are public full pages** (`layouts/doc.vue`, no sidebar), linked from every sign-in page footer and from the sidebar. Real text, no mock. | None (static). Keep `/support` and `/privacy-policy` out of the sign-in guard. | §1.6, G14, G15 |
+| **Signed-in state** (`composables/useSession.js`, mock cookie `hris.session`): set after the 2FA step; cleared on Sign out, Profile → Log out and Switch company. The public pages' top bar uses it ("Back to HRIS" vs "Sign in"). | Replace the mock cookie with the real tokens; keep the names `signedIn / signIn / signOut`. | §1.5, §3.2 |
+| **Sign-in is two steps** with a step indicator (① Company → ② Sign in). The company list scrolls (about 6 visible); the last-used company is remembered and scrolled into view. | Unchanged: `GET /public/tenants`, `tenant` in `POST /public/login`. | §4 |
+| **2FA code field: digits only**, 6 max, paste-safe, `autocomplete="one-time-code"`. | Send `otp` as a 6-digit string. | §3.1 |
+| **Sidebar sections:** *My records* (Home, Requests, Leave Hours, Payslip) · *Team* (Who's Out, Directory) · *Approver* (Approvals — approvers only) · *Apps* (Ticket — external). | Approver section from `GET /auth/approvals/access`; Ticket is a plain link. | §8.1, G19 |
+| **Dialogs** never close on an outside click; each has an ✕ (same as Cancel) and Esc. | None. | — |
+| **Responsive + browser zoom:** works from 320px phones to zoomed-in desktops; the sidebar scrolls on short screens. | None. | — |
+| Timesheet period card keeps "Period N · CURRENT" on one line. | None. | — |
 
 ---
 
@@ -251,37 +273,58 @@ export const useApi = () => {
 > only set when `checked` (Remember me) is true, so it won't reach the API from another domain.
 > The server also accepts the token in the body or an `x-refresh-token` header (`AuthController.refresh`).
 
-### 1.5 `composables/useSession.js` (new — replaces mock `user`, `companies`, `useState('company')`)
+### 1.5 `composables/useSession.js` (exists as a mock — extend it; also replaces mock `user`, `companies`, `useState('company')`)
+
+The site already has `useSession()` with `signedIn`, `signIn()` and `signOut()`, backed by a mock
+cookie `hris.session` (set after the 2FA step; read by `layouts/doc.vue` to show "Back to HRIS"
+or "Sign in"). Keep those names so the callers (`login.vue`, `layouts/default.vue`,
+`profile.vue`, `layouts/doc.vue`) don't change, and back them with the real tokens:
 
 ```js
 export const useSession = () => {
   const api = useApi()
-  const user = useState('user', () => null)          // token user, see §3.1
-  const profile = useState('profile', () => null)    // GET /auth/profile, see §5.1
-  const access = useState('approverAccess', () => null) // GET /auth/approvals/access, see §8.1
+  const access = useCookie('hris_access', { sameSite: 'lax' })
+  const refresh = useCookie('hris_refresh', { sameSite: 'lax', maxAge: 60 * 60 * 24 * 7 })
+  const user = useState('user', () => null)               // token user, see §3.1
+  const profile = useState('profile', () => null)         // GET /auth/profile, see §5.1
+  const approver = useState('approverAccess', () => null) // GET /auth/approvals/access, see §8.1
 
+  const signedIn = computed(() => !!access.value)
+  // login.vue passes the POST /public/login response (replaces the mock cookie).
+  const signIn = (r) => { access.value = r.accessToken; refresh.value = r.refreshToken; user.value = r.user }
+  const signOut = async () => {
+    try { if (refresh.value) await api('/auth/logout', { method: 'POST', body: { refreshToken: refresh.value } }) } catch {}
+    access.value = null; refresh.value = null; user.value = null; profile.value = null; approver.value = null
+  }
   const load = async () => {
     const [me, prof, acc] = await Promise.all([
       api('/auth/me'), api('/auth/profile').catch(() => null), api('/auth/approvals/access').catch(() => null)
     ])
-    user.value = me; profile.value = prof; access.value = acc
+    user.value = me; profile.value = prof; approver.value = acc
   }
-  return { user, profile, access, load }
+  return { signedIn, signIn, signOut, user, profile, access: approver, load }
 }
 ```
+
+Remove the mock `hris.session` cookie once this is in.
 
 ### 1.6 `middleware/auth.global.js` (new)
 
 ```js
-const PUBLIC = ['/login', '/forgot-password', '/reset-password', '/examination']
+// Sign-in pages, plus the two public info pages (open to anyone, like the mobile app's URLs).
+const PUBLIC = ['/company-select', '/login', '/forgot-password', '/reset-password', '/examination']
+const OPEN = ['/support', '/privacy-policy'] // public AND reachable while signed in
 export default defineNuxtRouteMiddleware(async (to) => {
+  if (OPEN.includes(to.path)) return
   const token = useCookie('hris_access')
   if (!token.value) return PUBLIC.includes(to.path) ? undefined : navigateTo('/login')
-  if (to.path === '/login') return navigateTo('/')
+  if (to.path === '/login' || to.path === '/company-select') return navigateTo('/')
   const { user, load } = useSession()
   if (!user.value) await load()
 })
 ```
+
+`/login` itself sends users to `/company-select` when no company is remembered (`useCompany().load()`).
 
 ### 1.7 Page pattern
 
@@ -400,7 +443,11 @@ Responses:
 
 Site changes (`login.vue`):
 - Keep the password in memory between the two steps (the OTP step re-posts it).
-- On success store `accessToken` → cookie `hris_access`, `refreshToken` → `hris_refresh`, then `navigateTo('/')`.
+- `tenant` = the company picked on step 1 (`useCompany().company` → its tenant id, §4).
+- The OTP field already takes digits only (6 max; letters and spaces are dropped as you type or
+  paste) — send it as the string `otp`.
+- On success call `useSession().signIn(response)` (stores `accessToken` → `hris_access` and
+  `refreshToken` → `hris_refresh`; today `finish()` sets the mock cookie), then `navigateTo('/')`.
 - Remove "(Any code works in this mock.)".
 - **"Sign in with Authentik" has no server endpoint** — see §15.
 
@@ -412,8 +459,11 @@ Site changes (`login.vue`):
 | POST | `/public/refresh` | `{ refreshToken, rotate: true }` (or cookie / `x-refresh-token`) | `{ accessToken, user, refreshToken? }` (new `refreshToken` when `rotate`) |
 | POST | `/auth/logout` | `{ refreshToken }` | `{ message: "Logged out" }` — revokes that session |
 
-Sign out (header menu + Profile → Settings → Log out): `POST /auth/logout` with the stored
-refresh token, clear both cookies and `useState('user')`, `navigateTo('/login')`.
+Sign out happens in three places, and all of them already call `useSession().signOut()` (mock
+today): header avatar menu → Sign out, Profile → Log out, and header **Switch company** (which
+then goes to `/company-select`). The live `signOut()` = `POST /auth/logout` with the stored refresh
+token, then clear both cookies and the session state (§1.5), then `navigateTo('/login')` (or
+`/company-select`).
 
 ### 3.3 Forgot / reset / change password
 
@@ -435,10 +485,13 @@ refresh token, clear both cookies and `useState('user')`, `navigateTo('/login')`
 
 ## 4. Companies — `company-select.vue` (sign-in step 1), `login.vue`, header switch, `ArdentLogo.vue`
 
-Flow: **/company-select** (pick company) → **/login** (shows "Signing in to <company>" + Change)
-→ OTP → app. The token carries one tenant, so the header company button signs out
-(`POST /auth/logout`) and returns to /company-select. The last company is remembered in
-localStorage (`hris.company`), so returning users land on /login directly.
+Flow: **/company-select** (step ① — pick company) → **/login** (step ② — shows "Signing in to
+<company>" + Change) → OTP → app. Both pages show the step indicator (`components/AuthSteps.vue`);
+step ① links back once it is done. The token carries one tenant, so the header company button asks
+"Switch company?", signs out (`POST /auth/logout`) and returns to /company-select. The last
+company is remembered in localStorage (`hris.company`): returning users land on /login directly,
+and on /company-select it is tagged "Last used" and scrolled into view. The company list has a
+search box and scrolls (about 6 rows visible).
 
 `GET /public/tenants` →
 
@@ -457,8 +510,10 @@ overland, rmd, test` (`ez_touch` is hidden — `active: false`).
 - `companies` changes from a string list to objects → compare by `id`, show `name`.
 
 **Switching company = signing in to that company.** A token belongs to one tenant and there is
-no switch endpoint. `company-select.vue` → Continue should: sign out (`/auth/logout`) and go to
-`/login?company=<id>` with the company preselected. (Or add a switch endpoint — §15.)
+no switch endpoint, so the site already does: header "Switch company" → confirm →
+`signOut()` → `/company-select` → Continue → `/login` with that company. (Or add a switch
+endpoint — G2.) Once `/public/tenants` is used, store the tenant **id** (not the name) in
+`hris.company`.
 
 The current company for the header is `user.company` (name) / `user.tenant` (db key).
 
@@ -575,7 +630,7 @@ Add `apiType` to each entry in `requestTypes` and use it for every call.
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| GET | `/auth/requests/:type` | my records → `{ data, total }`, newest first |
+| GET | `/auth/requests/:type` | my records → `{ data, total }` (server order: the request's own date — `loa_date`, `ca_date`, `mad_date`, `overtime_date` DESC; Other by `request_no` DESC) |
 | GET | `/auth/requests/:type/:id` | one record with full detail (for Edit) |
 | POST | `/auth/requests/:type` | create → **saved as draft (`Active`)** → `201 { message, data }` |
 | PUT | `/auth/requests/:type/:id` | edit — **only while `Active`** (`400 "Only active status can be modified"`) |
@@ -592,6 +647,12 @@ Action rules (`RequestsController.action`):
 | `approve` / `disapprove` | For Approval (MAD also FWA) | approver only |
 
 Wrong state → `409 "Cannot <action> a record that is <status>."`
+
+**Order shown on the site:** the list is re-sorted on the client by **date filed**
+(`date_applied`), newest first, then by request no.
+(`newestFirst(rows, r => r.dateFiled, r => r.no)`), so it can differ from the server's order
+(request date). `date_applied` is `longDate` ("November 21, 2026") or `""` (MAD/OT `legacyDate`
+with no date); both parse, and empty dates sort last.
 
 **This changes the site's flow**: Create saves a draft → the row shows `Active` with
 **Send for approval**, **Edit**, **Cancel** buttons. `For Approval` rows show **Resend** only
@@ -754,6 +815,13 @@ export const toApproval = (a) => ({
 ```
 (`id` must combine type + id: numbers repeat across types.)
 
+**Order.** The site sorts every Approvals tab newest first by request date (`txn_date`), then
+`no` — `newestFirst(rows, t => t.date, t => t.no)` in `approvals.vue` and `ApprovalHistory.vue`.
+Don't rely on the server's order: `ApprovalsController` sorts with
+`out.sort((a, b) => (b.date_applied > a.date_applied ? 1 : -1))` **after** `date_applied` has
+been turned into text ("November 21, 2026"), so the comparison is alphabetical (e.g.
+"November 9" comes before "November 21", and months sort by name). See G20.
+
 ### 8.3 Decide
 
 | Method | Endpoint | Body |
@@ -788,8 +856,17 @@ export const toApproval = (a) => ({
 - Adapter: `period` (site "Period N") = `Number(id.split('-')[1])`; `label` = format `period`
   ("Nov 1 – 15"); `payDate` = format `pay_date` ("Nov 15, 2026"); year = `id.split('-')[0]`;
   cut-off = day of the start date ≤ 15 → 1st half.
-- Year filter: distinct years from the list (or `GET /auth/pay-periods?type=payslip`).
-- Bulk download: **no endpoint** (§15).
+- Filters (all client-side): **Year** (distinct years from the list, or
+  `GET /auth/pay-periods?type=payslip`), **Month** (all 12 months; each option shows how many
+  payslips that month has in the chosen year, from `pay_date`), **Cut-off** (1st / 2nd half), and
+  a text search (period no. or month).
+- Order: newest first by `pay_date`, then period no. (the server already returns
+  `pay_year DESC, pay_period DESC`).
+- **Only the last 24 payslips come back** (`.limit(24)` in `PayrollController.list`) ≈ 12 months
+  of semi-monthly pay, so older years/months show "No payslips match". Raise the limit or add
+  `?year=` (G22).
+- Bulk download: ✅ supported client-side — password, then `GET /auth/payslips/:id` per pick,
+  merged into one PDF (§9.2). The picker lists newest first.
 
 ### 9.2 Payslip detail — `payroll/[period].vue`
 
@@ -932,7 +1009,11 @@ Search and department filter run on the server (debounce the search box 300 ms).
   "icon": "notifications", "unread": true, "kind": "decision", "request_type": "overtime", "request_id": "140" }
 ```
 
-Site reads `when` → map from `time`. Clicking an item: mark read, then go to
+Site reads `when` → map from `time`. The server orders by `created_at DESC` but sends only the
+relative text (`time: relativeTime(created_at)`), while the site sorts notifications newest first
+on `at` (a timestamp; the mock has one). Add `created_at` (ISO) to `shapeRow` in
+`utils/notify.js` and map it to `at` (G21). Until then map `at: null`: the sort then falls back to
+`id` descending, which matches insert order. Clicking an item: mark read, then go to
 `/requests/<site route for request_type>` when `request_type` is set
 (`loa → leave-of-absence`, `manual-ad → manual-arrival-departure`, `other → other-requests`).
 Poll the bell every 60 s (no push for web; `/auth/fcm-token*` is phones only).
@@ -978,6 +1059,10 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | G16 | Header global search | **client-side** (no endpoint, not in mobile) | `HeaderSearch.vue` searches pages/actions (static), `/auth/directory`, `/auth/requests/:type`, `/auth/payslips`, `/auth/approvals?scope=pending` (approvers). Fetch on first open, cache. Results link to lists with `?q=` (Directory, request lists, Approvals) or `/payroll?download=1`. A later `GET /auth/search?q=` can replace the matching without UI changes |
 | G17 | For examination (applicant link) | none | `POST /public/examination/request-link { email }` — or remove the link |
 | G18 | Biometric switch on website | phone-only | remove from the site |
+| G19 | Ticket (sidebar → Apps) | not HRIS — external ticket system | none: plain link `https://ticket.ardentnetworks.com.ph/login`, `target="_blank"` (`layouts/default.vue` → `navGroups` "Apps") |
+| G20 | Approvals list order | **bug:** `ApprovalsController` sorts formatted `date_applied` text (alphabetical) | sort on the raw date before formatting (keep a sort key, or `ORDER BY` in SQL). The site already re-sorts by `txn_date`, so this matters for other clients (mobile) |
+| G21 | Notifications newest first by time | only `time: "2h ago"` is returned | add `created_at` (ISO) to `shapeRow` in `utils/notify.js`; the site maps it to `at` |
+| G22 | Payslip Year/Month filters beyond 12 months | `GET /auth/payslips` is capped at 24 rows | `GET /auth/payslips?year=2025` (or a higher limit); the Year list can come from `GET /auth/pay-periods?type=payslip` |
 
 ---
 
@@ -987,8 +1072,9 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 |---|---|---|---|
 | 1 | `layouts/default.vue` | `user`, `companies`, `useState('company')` | `useSession()` → `/auth/me`, `/auth/profile`; company = `user.company` |
 | 2 | `layouts/default.vue` | bell count from mock | `/auth/notifications` → `unread` (poll 60 s) |
-| 3 | `layouts/default.vue` | Sign out only navigates | `POST /auth/logout` + clear cookies |
-| 4 | `layouts/default.vue`, `composables/useApprovals.js` | `approvalAccess` mock | hide Approvals unless `approvals/access` says approver/witness. Nav: Home, Requests, Leave Hours, Who's Out, Approvals, Payroll (Payslips + Timesheet tabs), Directory |
+| 3 | `layouts/default.vue`, `profile.vue` | Sign out / Log out / Switch company call the mock `useSession().signOut()` (clears cookie `hris.session`) | live `signOut()` = `POST /auth/logout` + clear the token cookies (§1.5, §3.2) |
+| 3b | `composables/useSession.js`, `login.vue`, `layouts/doc.vue` | mock cookie `hris.session` set by `finish()` after the OTP | `signIn(loginResponse)` stores `hris_access` / `hris_refresh`; `signedIn` = has an access token (§1.5) |
+| 4 | `layouts/default.vue`, `composables/useApprovals.js` | `approvalAccess` mock | hide the *Approver* section unless `approvals/access` says approver/witness. Sidebar: *My records* (Home, Requests, Leave Hours, Payslip → Payslips + Timesheet tabs) · *Team* (Who's Out, Directory) · *Approver* (Approvals) · *Apps* (Ticket, external — no API) |
 | 5 | `components/HeaderSearch.vue` | searches mock `directory`, `requests`, `payslips`, approvals | same lists from the API (G16) |
 | 6 | `login.vue` | fake sign-in, any OTP; company comes from step 1 | `/public/login { tenant, ... }` with the chosen company's tenant id (+ `otp` re-post) |
 | 7 | `login.vue` | Authentik button | remove (G1) |
@@ -1007,19 +1093,19 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | 20 | `components/ApprovalHistory.vue` | Approved Records / Approved Requests tabs | `/auth/approvals?scope=history&module=records|requests` |
 | 21 | `components/RequestFormModal.vue` | one generic form | per-type forms of §7.4 (LOA dates, CA rows, MAD/OT times ≤ 75-char reason, Other per code) |
 | 22 | `approvals.vue`, `composables/useApprovals.js` | `approvals`, `approvalAccess`, `useState('mock-approvals')`, local decisions, OT hours | `/auth/approvals/access` (nav + tabs), §8.2 pending list, per-item approve/disapprove, OT `{hours, minutes}` |
-| 23 | `payroll/index.vue` | `payslips`, year list, "(mock)" bulk download | `/auth/payslips` + adapter; bulk = password → fetch each `/auth/payslips/:id` → one PDF (§9.2) |
+| 23 | `payroll/index.vue` | `payslips`, year list, month counts, "(mock)" bulk download | `/auth/payslips` + adapter (Year / Month / Cut-off filters stay client-side; G22 for > 12 months); bulk = password → fetch each `/auth/payslips/:id` → one PDF (§9.2) |
 | 24 | `payroll/[period].vue` | 6-char password, fake delay, mock slip, "(mock)" download | `/auth/verify-password`, `/auth/payslips/:id`; Download = browser-built PDF (§9.2) |
 | 25 | `leave-hours.vue` | `leaveHours` | `/auth/leaves/hours` (balance cards only) |
 | 26 | `timesheet.vue` | `timesheet`, generated periods, year options | `/auth/pay-periods?type=timesheet`, `/auth/timesheets/:year-:code` |
 | 27 | `whos-out.vue` | `whosOut`, 2026 guard | `/hris/whosout?month&year` + `toWhosOut` |
 | 28 | `directory.vue` | `directory` | `/auth/directory?search=` (G13 for contact line) |
-| 29 | `notifications.vue` | `useState('mock-notifications')`, local read | `/auth/notifications`, `/:id/read`, `/read-all` |
+| 29 | `notifications.vue` | `useState('mock-notifications')` (with `at` timestamps), local read | `/auth/notifications`, `/:id/read`, `/read-all`; map `created_at` → `at` (G21) |
 | 30 | `profile.vue` | `user`, Personal tab | `/auth/profile` (+ `/auth/profile/background`, `/auth/profile/mdr`) |
 | 31 | `profile.vue` | `certificates`, "File Selected (mock)" | `/auth/profile/certificates`; upload shows "finalized by HR on the web portal" like mobile (G5) |
 | 32 | `profile.vue` | bio | same as mobile: UI-only, starts empty ("No bio yet"); persistent only if G3 endpoint is added |
 | 33 | `profile.vue` | 2FA switch, Biometric switch, Log out | `/auth/2fa/*` flow; remove Biometric; `/auth/logout` |
-| 34 | `support.vue` | ✅ static content, no mock left | keep **public**: when adding a sign-in route guard, exclude `/support` (G14) |
-| 35 | `privacy-policy.vue` | ✅ static content, no mock left | keep **public**: exclude `/privacy-policy` from the sign-in route guard (G15) |
+| 34 | `support.vue`, `layouts/doc.vue` | ✅ static content, no mock left | keep **public** (`OPEN` list in §1.6) (G14) |
+| 35 | `privacy-policy.vue` | ✅ static content, no mock left | keep **public** (`OPEN` list in §1.6) (G15) |
 | 36 | `composables/useMockData.js` | everything | delete the file; move `badge` (updated for §2.2), `peso`, and `requestTypes` (title/desc/icon/apiType) to `utils/format.js` |
 
 **Final check** — both should come back empty / `False`:
@@ -1037,12 +1123,13 @@ Test-Path composables\useMockData.js
 ## 17. Rollout order
 
 1. Server env: `ENVIRONMENT=DEVELOPMENT` (dev) / `CLIENT_URL` (prod), `RESET_LINK_BASE_URL` → v2 site.
-2. Site: `useApi`, `useSession`, auth middleware, adapters file.
+2. Site: `useApi`, extend `useSession` (§1.5), auth middleware with the `PUBLIC` / `OPEN` lists (§1.6), adapters file.
 3. Login + OTP, tenants, logout, forgot/reset/change password (rows 1, 3, 6, 8–10, 12–13).
 4. Profile + 2FA (rows 30–33).
 5. Requests with draft → send flow and per-type forms (rows 17–21).
 6. Approvals (rows 4, 15, 22).
 7. Payroll, timesheet, leave hours (rows 14, 23–26).
 8. Who's Out, directory, notifications (rows 2, 16, 27–29).
-9. Decide every Gap in §15 (build or remove), support/privacy (rows 5, 7, 11, 34–35).
+9. Decide every Gap in §15 (build or remove). Server quick wins: G20 (approvals sort), G21
+   (`created_at` on notifications), G22 (payslips by year). Rows 5, 7, 11.
 10. Delete `useMockData.js`, run the final check (row 36).
