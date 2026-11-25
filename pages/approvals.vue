@@ -107,11 +107,11 @@ const filterFields = computed(() => [
 ])
 const rows = computed(() => {
   const f = extra.value
-  return pending.value.filter(t =>
+  return newestFirst(pending.value.filter(t =>
     (!f.category || t.app === f.category) &&
     (!f.employee || t.name === f.employee) &&
     inDateRange(t.date, f.dateFrom, f.dateTo) &&
-    `${t.name} ${t.empId} ${t.app} ${t.date} ${t.no} ${t.reason || ''}`.toLowerCase().includes(q.value.toLowerCase()))
+    `${t.name} ${t.empId} ${t.app} ${t.date} ${t.no} ${t.reason || ''}`.toLowerCase().includes(q.value.toLowerCase())), t => t.date, t => t.no)
 })
 const { confirm } = useConfirm()
 

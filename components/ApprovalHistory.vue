@@ -63,13 +63,13 @@ const filterFields = computed(() => [
 const rows = computed(() => {
   const f = extra.value
   const needle = q.value.toLowerCase()
-  return source.value.filter(r =>
+  return newestFirst(source.value.filter(r =>
     (!f.status || r.status === f.status) &&
     (!f.category || r.app === f.category) &&
     (!f.type || r.type === f.type) &&
     (!f.employee || r.name === f.employee) &&
     inDateRange(r.date, f.dateFrom, f.dateTo) &&
-    `${r.no} ${r.name} ${r.empId} ${r.app} ${r.type} ${r.reason || ''} ${r.customer || ''}`.toLowerCase().includes(needle))
+    `${r.no} ${r.name} ${r.empId} ${r.app} ${r.type} ${r.reason || ''} ${r.customer || ''}`.toLowerCase().includes(needle)), r => r.date, r => r.no)
 })
 const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 </script>

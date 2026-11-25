@@ -30,8 +30,8 @@ const tab = ref('All')
 // Filters menu: notification type (server: kind / request_type on each item).
 const extra = ref({ kind: '' })
 const filterFields = [{ key: 'kind', label: 'Type', options: uniq(items, n => n.kind) }]
-const rows = computed(() => items.filter(n =>
-  (tab.value === 'All' || n.unread) && (!extra.value.kind || n.kind === extra.value.kind)))
+const rows = computed(() => newestFirst(items.filter(n =>
+  (tab.value === 'All' || n.unread) && (!extra.value.kind || n.kind === extra.value.kind)), n => n.at, n => n.id))
 const unread = computed(() => items.filter(n => n.unread).length)
 const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 </script>

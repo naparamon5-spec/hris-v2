@@ -21,3 +21,11 @@ export const inDateRange = (value, from, to) => {
 
 export const uniq = (rows, pick) =>
   [...new Set(rows.map(pick).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)))
+
+// Lists always show the latest first, whatever order the server sends.
+// dateOf: row -> date (string like "Nov 21, 2026", ISO, or Date); tieOf: row -> value for
+// same-day rows (e.g. the request no., higher = newer).
+export const newestFirst = (list, dateOf, tieOf = () => 0) => {
+  const t = (r) => { const v = new Date(dateOf(r)).getTime(); return Number.isNaN(v) ? 0 : v }
+  return [...list].sort((a, b) => (t(b) - t(a)) || String(tieOf(b)).localeCompare(String(tieOf(a)), undefined, { numeric: true }))
+}

@@ -82,14 +82,14 @@ const monthOptions = computed(() => [
     return { value: n.slice(0, 3), label: c ? `${n} (${c})` : n }
   })
 ])
-const rows = computed(() => payslips.filter(p =>
+const rows = computed(() => newestFirst(payslips.filter(p =>
   p.payDate.endsWith(year.value) &&
   (month.value === 'All' || p.payDate.startsWith(month.value)) &&
   (half.value === 'all' || (half.value === '1') === p.label.includes(' 1 –')) &&
-  `${p.period} ${p.label} ${p.payDate}`.toLowerCase().includes(q.value.toLowerCase())))
+  `${p.period} ${p.label} ${p.payDate}`.toLowerCase().includes(q.value.toLowerCase())), p => p.payDate, p => p.period))
 const reset = () => { q.value = ''; half.value = 'all'; month.value = 'All' }
 
-const bulkRows = computed(() => payslips.filter(p => `${p.period} ${p.label}`.toLowerCase().includes(bq.value.toLowerCase())))
+const bulkRows = computed(() => newestFirst(payslips.filter(p => `${p.period} ${p.label}`.toLowerCase().includes(bq.value.toLowerCase())), p => p.payDate, p => p.period))
 const shownIds = computed(() => bulkRows.value.map(p => p.period))
 const allPicked = computed(() => shownIds.value.length > 0 && shownIds.value.every(id => picked.value.includes(id)))
 const somePicked = computed(() => shownIds.value.some(id => picked.value.includes(id)))

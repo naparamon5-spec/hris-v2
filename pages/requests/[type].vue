@@ -113,13 +113,13 @@ const filterFields = computed(() => [
 ])
 const rows = computed(() => {
   const f = extra.value
-  return source.value.filter(r =>
+  return newestFirst(source.value.filter(r =>
     (!f.status || r.status === f.status) &&
     (!f.type || r.type === f.type) &&
     (!f.approver || r.approver === f.approver) &&
     inDateRange(r.date, f.dateFrom, f.dateTo) &&
     inDateRange(r.dateFiled, f.filedFrom, f.filedTo) &&
-    `${r.no} ${r.type} ${r.approver} ${r.reason || ''} ${r.customer || ''}`.toLowerCase().includes(q.value.toLowerCase()))
+    `${r.no} ${r.type} ${r.approver} ${r.reason || ''} ${r.customer || ''}`.toLowerCase().includes(q.value.toLowerCase())), r => r.dateFiled, r => r.no)
 })
 
 const formOpen = ref(false)
