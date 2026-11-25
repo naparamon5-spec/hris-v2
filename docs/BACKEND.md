@@ -995,7 +995,7 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | 15 | `index.vue` | `approvals.length` | `/auth/approvals/access` totals |
 | 16 | `index.vue` | `recentActivity` | `/auth/notifications` (or G6) |
 | 17 | `composables/useMockData.js` → `requestTypes` | subtypes, keys | add `apiType`; LOA types from §7.4; drop MAD/OT subtypes; Other Requests = 6 codes, Versatech only |
-| 18 | `requests/index.vue` | pending counts, status totals, recent requests, leave balance card | count/merge each `/auth/requests/:type` list (or G7); balance from `/auth/leaves/hours`; hide Other Requests unless `user.tenant === 'versahrs'` |
+| 18 | `requests/index.vue` | pending counts | count per list (or G7); hide Other Requests unless `user.tenant === 'versahrs'` |
 | 19 | `requests/[type].vue` | list, create, edit, cancel, reverse, numbering, date, approver | §7.2–7.4 + draft/send flow + new status chips |
 | 20 | `components/ApprovalHistory.vue` | Approved Records / Approved Requests tabs | `/auth/approvals?scope=history&module=records|requests` |
 | 21 | `components/RequestFormModal.vue` | one generic form | per-type forms of §7.4 (LOA dates, CA rows, MAD/OT times ≤ 75-char reason, Other per code) |
