@@ -37,7 +37,7 @@
       <h2>Verify it's you</h2>
       <p class="sub">Enter the 6-digit code from your authenticator app. (Any code works in this mock.)</p>
       <div class="field"><label for="otp">Enter 6-Digit Code</label>
-        <input id="otp" class="input otp" inputmode="numeric" maxlength="6" placeholder="000000" required></div>
+        <input id="otp" :value="otp" class="input otp" type="text" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" placeholder="000000" title="6 digits" required @input="onOtp"></div>
       <button class="btn btn-primary full" type="submit">Verify &amp; continue</button>
       <a href="#" class="alt" @click.prevent="step = 'login'">‹ Back to sign in</a>
     </form>
@@ -53,6 +53,12 @@ const empId = ref('')
 const show = ref(false)
 const step = ref('login')
 const signIn = () => { step.value = 'otp' }
+// Code field takes digits only: letters and symbols are dropped as you type or paste.
+const otp = ref('')
+const onOtp = (e) => {
+  otp.value = e.target.value.replace(/\D/g, '').slice(0, 6)
+  e.target.value = otp.value
+}
 </script>
 
 <style scoped>
