@@ -2,7 +2,7 @@
   <AuthCard slim>
     <div class="head">
       <div>
-        <span class="step">Step 1 of 2</span>
+        <AuthSteps :current="1" />
         <h2>Select your company</h2>
         <p class="sub">Choose the company you work for, then sign in.</p>
       </div>
@@ -50,7 +50,6 @@ const list = computed(() => companies.filter(c => c.toLowerCase().includes(q.val
 </script>
 
 <style scoped>
-.step { display: block; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ardent-red); font-weight: 700; margin-bottom: .3rem; }
 .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
 .head :deep(.sub), .head .sub { margin-bottom: .8rem !important; }
 .back-link { font-size: .82rem; font-weight: 600; white-space: nowrap; padding-top: .45rem; }
@@ -59,7 +58,7 @@ const list = computed(() => companies.filter(c => c.toLowerCase().includes(q.val
 /* Rows shrink with the window height so all companies fit without page scroll. */
 .grid-co { display: flex; flex-direction: column; gap: .35rem; }
 .co {
-  display: flex; align-items: center; gap: .85rem; height: clamp(40px, calc((100vh - 395px) / 11), 54px); padding: 0 1rem 0 .5rem;
+  display: flex; align-items: center; gap: .85rem; height: clamp(40px, calc((100vh - 405px) / 11), 54px); padding: 0 1rem 0 .5rem;
   background: #fff; border: 1px solid var(--border); border-radius: 14px;
   cursor: pointer; font: inherit; color: var(--text); text-align: left; transition: border-color .15s, box-shadow .15s;
 }

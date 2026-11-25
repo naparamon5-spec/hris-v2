@@ -1,7 +1,7 @@
 <template>
   <AuthCard>
     <form v-if="step === 'login'" @submit.prevent="signIn">
-      <span class="eyebrow">Human Resource Information System</span>
+      <AuthSteps :current="2" />
       <h2>Welcome back!</h2>
       <p class="sub">Sign in to continue to HRIS.</p>
 
