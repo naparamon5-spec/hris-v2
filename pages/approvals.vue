@@ -172,30 +172,6 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 .task:not(.done):hover:not(.picked) { border-color: var(--ardent-gray, #d7d7d7); background: #fcfcfd; }
 .task:focus-visible { outline: none; box-shadow: var(--ring); }
 .selecting .btns { display: none; }
-/* Only on narrow screens, where the full-width bar would cover the pager. */
-@media (max-width: 860px) { .bar-space { margin-bottom: 4.5rem; } }
-.action-bar {
-  position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%); z-index: 40;
-  display: flex; align-items: center; gap: 1.25rem; padding: .6rem .6rem .6rem 1.2rem;
-  width: max-content; max-width: calc(100vw - 2rem);
-  background: var(--ardent-navy); color: #fff; border-radius: 999px; box-shadow: 0 18px 40px -12px rgba(19,51,65,.6);
-}
-.ab-count { display: flex; align-items: baseline; gap: .35rem; font-size: .85rem; white-space: nowrap; }
-.ab-count b { font-size: 1.1rem; }
-.ab-count span { color: rgba(255,255,255,.7); }
-.ab-btns { display: flex; gap: .4rem; }
-.ab-ghost { background: transparent; color: rgba(255,255,255,.8); }
-.ab-ghost:hover { color: #fff; background: rgba(255,255,255,.08); }
-.ab-dis { background: rgba(255,255,255,.1); color: #fff; }
-.ab-dis:hover { background: rgba(255,255,255,.18); }
-.bar-enter-active, .bar-leave-active { transition: opacity .18s, transform .18s; }
-.bar-enter-from, .bar-leave-to { opacity: 0; transform: translate(-50%, 12px); }
-@media (min-width: 861px) { .action-bar { left: calc(50% + 126px); } }
-@media (max-width: 640px) {
-  .action-bar { left: 1rem; right: 1rem; transform: none; width: auto; border-radius: 18px; flex-wrap: wrap; justify-content: space-between; gap: .5rem; padding: .7rem; }
-  .bar-enter-from, .bar-leave-to { transform: translateY(12px); }
-  .ab-btns { flex: 1 1 100%; } .ab-btns .btn { flex: 1; }
-}
 .why { color: var(--text); }
 .why b { font-weight: 600; color: var(--muted); }
 .list { display: flex; flex-direction: column; gap: .6rem; }

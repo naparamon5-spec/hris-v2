@@ -13,9 +13,24 @@
 
     <div class="card table-wrap" style="padding:.5rem">
       <table class="table stack">
-        <thead><tr><th>No.</th><th>Type</th><th>Date</th><th>Hours</th><th>{{ reasonLabel }}</th><th>Approver</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <thead><tr>
+          <th class="pick">
+            <input
+              ref="allBox" type="checkbox" :checked="allChecked" :disabled="!pickable.length"
+              :aria-label="allChecked ? 'Deselect all' : `Select all pending (${pickable.length})`"
+              :title="pickable.length ? 'Select all pending requests' : 'No pending requests to select'" @change="toggleAll"
+            >
+          </th>
+          <th>No.</th><th>Type</th><th>Date</th><th>Hours</th><th>{{ reasonLabel }}</th><th>Approver</th><th>Status</th><th><span class="sr-only">Actions</span></th>
+        </tr></thead>
         <tbody>
-          <tr v-for="r in pageRows" :key="r.no">
+          <tr
+            v-for="r in pageRows" :key="r.no"
+            :class="{ can: canPick(r), picked: selected.includes(r.no) }" @click="canPick(r) && toggle(r.no, $event)"
+          >
+            <td class="pick">
+              <input v-if="canPick(r)" v-model="selected" type="checkbox" :value="r.no" :aria-label="`Select ${r.no}`" @click.stop>
+            </td>
             <td data-label="No."><b>{{ r.no }}</b><br><small class="m">Filed {{ r.dateFiled }}</small></td>
             <td data-label="Type">{{ r.type }}</td>
             <td data-label="Date"><span>{{ r.date }}<br><small class="m">{{ r.from }} – {{ r.to }}</small></span></td>
@@ -36,7 +51,18 @@
       </table>
       <p v-if="!rows.length" class="empty">No requests found</p>
     </div>
-    <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
+    <Pager v-model:page="page" :pages="pages" :total="total" :size="size" :class="{ 'bar-space': selected.length }" />
+
+    <!-- Bulk actions: tick pending requests (or Select all) and cancel them in one go. -->
+    <Transition name="bar">
+      <div v-if="selected.length" class="action-bar" role="toolbar" aria-label="Bulk actions">
+        <div class="ab-count"><b>{{ selected.length }}</b><span>selected</span></div>
+        <div class="ab-btns">
+          <button class="btn btn-sm ab-ghost" @click="selected = []">Clear</button>
+          <button class="btn btn-sm btn-primary" @click="cancelSelected">Cancel {{ selected.length }}</button>
+        </div>
+      </div>
+    </Transition>
 
     <RequestFormModal v-if="formOpen" :title="(editing ? 'Edit ' : 'New ') + meta.title" :subtypes="meta.subtypes" :record="editing" :kind="type" @close="closeForm" @save="save" />
     <Toast :msg="toast" />
@@ -144,10 +170,53 @@ const openFromQuery = () => {
 onMounted(openFromQuery)
 watch(() => route.query.new, openFromQuery)
 const { page, size, total, pages, pageRows } = usePagination(rows, 7)
+
+// ---- Multi-select: only requests still For Approval can be cancelled ----
+// Live: no bulk endpoint, so loop POST /auth/requests/:type/:id/cancel per item.
+const selected = ref([])
+const canPick = (r) => r.status === 'For Approval'
+const pickable = computed(() => rows.value.filter(canPick).map(r => r.no))
+const allChecked = computed(() => pickable.value.length > 0 && pickable.value.every(no => selected.value.includes(no)))
+const allBox = ref(null)
+watchEffect(() => { if (allBox.value) allBox.value.indeterminate = selected.value.length > 0 && !allChecked.value })
+const toggle = (no, e) => {
+  if (e.target.closest('button, a, input')) return
+  selected.value = selected.value.includes(no) ? selected.value.filter(x => x !== no) : [...selected.value, no]
+}
+// Select all = every pending request in the current search/filter (all pages).
+const toggleAll = () => {
+  selected.value = allChecked.value
+    ? selected.value.filter(no => !pickable.value.includes(no))
+    : [...new Set([...selected.value, ...pickable.value])]
+}
+// Drop picks that are filtered out or no longer pending; start fresh on another type.
+watch(pickable, (ids) => { selected.value = selected.value.filter(no => ids.includes(no)) })
+watch(type, () => { selected.value = [] })
+const cancelSelected = async () => {
+  const n = selected.value.length
+  const ok = await confirm({
+    title: `Cancel ${n === 1 ? 'this request' : `${n} requests`}?`,
+    message: `${n === 1 ? selected.value[0] : `${n} pending ${meta.value.title} requests`} will be cancelled. This can't be undone.`,
+    confirmText: n === 1 ? 'Yes, cancel it' : `Yes, cancel ${n}`,
+    cancelText: 'Keep them',
+    tone: 'danger',
+    icon: 'doc'
+  })
+  if (!ok) return
+  const ids = [...selected.value]
+  source.value.forEach(r => { if (ids.includes(r.no)) r.status = 'Cancelled' })
+  selected.value = []
+  flash(`${n} Record${n === 1 ? '' : 's'} Cancelled`)
+}
 </script>
 
 <style scoped>
 .acts { white-space: nowrap; text-align: right; }
+.pick { width: 1%; padding-right: 0; }
+.pick input { accent-color: var(--ardent-red); width: 16px; height: 16px; cursor: pointer; vertical-align: middle; }
+.pick input:disabled { cursor: default; opacity: .4; }
+tr.can { cursor: pointer; }
+tr.picked td { background: #fff7f8; }
 .why { max-width: 240px; }
 .why span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .why small { display: block; font-size: .74rem; }

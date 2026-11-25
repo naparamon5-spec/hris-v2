@@ -38,6 +38,7 @@ list has a working endpoint in the sections below.
 | 7 | Recent activity feed (Home) | no activity endpoint | can borrow `/auth/notifications` for now |
 | 8 | "N pending" counts on Requests tiles (`requests/index.vue`) | no summary endpoint | can count from each `/auth/requests/:type` list |
 | 9 | Bulk approve / disapprove (`approvals.vue` select-all bar) | only one-at-a-time `/auth/requests/:type/:id/approve` | can loop per item |
+| 9b | Bulk cancel (`requests/[type].vue` select-all bar) | only one-at-a-time `/auth/requests/:type/:id/cancel` | can loop per item |
 | 10 | Payslip password checked by the server | `/auth/verify-password` exists, but `/auth/payslips/:id` doesn't require it | gate is client-side only (same as mobile) |
 | 11 | Timesheet "Late" column (`timesheet.vue`) | `/auth/timesheets/:id` has no late-minutes field | |
 | 12 | Directory email & local number (`directory.vue`) | `/auth/directory` returns id, name, role, department, status only | |
