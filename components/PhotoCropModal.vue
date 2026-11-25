@@ -1,4 +1,6 @@
 <template>
+  <!-- On <body>, so the dim background also covers the sticky header. -->
+  <Teleport to="body">
   <div class="overlay" @mousedown.self="$emit('close')">
     <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="pc-title" @keydown.esc="$emit('close')">
       <h3 id="pc-title">Edit profile photo</h3>
@@ -24,6 +26,7 @@
       </div>
     </div>
   </div>
+  </Teleport>
 </template>
 
 <script setup>

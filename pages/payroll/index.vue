@@ -29,6 +29,8 @@
     </div>
     <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
 
+    <!-- On <body>, so the dim background also covers the sticky header. -->
+    <Teleport to="body">
     <div v-if="bulk" class="overlay" @click.self="bulk = false">
       <div class="card modal">
         <h2>Download Payslips</h2>
@@ -46,6 +48,7 @@
         </div>
       </div>
     </div>
+    </Teleport>
     <Toast :msg="toast" />
   </div>
 </template>

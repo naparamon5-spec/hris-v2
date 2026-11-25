@@ -69,6 +69,8 @@
       </button>
     </div>
 
+    <!-- On <body>, so the dim background also covers the sticky header. -->
+    <Teleport to="body">
     <div v-if="editing" class="overlay" @click.self="editing = false" @keydown.esc="editing = false">
       <div class="card modal">
         <h2>Edit Bio</h2>
@@ -80,6 +82,7 @@
         </div>
       </div>
     </div>
+    </Teleport>
     <PhotoCropModal v-if="cropSrc" :src="cropSrc" @close="cropSrc = ''" @save="savePhoto" />
     <Toast :msg="toast" />
   </div>
