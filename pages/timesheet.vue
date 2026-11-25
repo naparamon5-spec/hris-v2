@@ -165,11 +165,12 @@ const typeBadge = (d) =>
 .track { cursor: grab; user-select: none; }
 .track.dragging { cursor: grabbing; scroll-snap-type: none; }
 .track.dragging .period { pointer-events: none; }
-.period { flex: 0 0 150px; scroll-snap-align: start; display: flex; flex-direction: column; gap: .1rem; text-align: left; cursor: pointer; padding: .7rem .95rem; font-family: inherit; color: inherit; }
-.period b { display: flex; align-items: center; gap: .4rem; font-size: .88rem; }
+.period { flex: 0 0 auto; min-width: 150px; scroll-snap-align: start; display: flex; flex-direction: column; gap: .1rem; text-align: left; cursor: pointer; padding: .7rem .95rem; font-family: inherit; color: inherit; }
+.period b { display: flex; align-items: center; gap: .4rem; font-size: .88rem; white-space: nowrap; }
+.period small { white-space: nowrap; }
 .period small { font-size: .76rem; }
 .period.on { border-color: var(--ardent-red); box-shadow: 0 0 0 2px rgba(198,50,76,.2); }
-.now { font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ardent-red); background: #fde8ea; padding: .1rem .4rem; border-radius: 999px; }
+.now { flex: none; font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ardent-red); background: #fde8ea; padding: .1rem .4rem; border-radius: 999px; }
 .nav { flex: none; width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: #fff; display: grid; place-items: center; cursor: pointer; color: var(--text); }
 .nav:hover:not(:disabled) { border-color: var(--ardent-red); color: var(--ardent-red); }
 .nav:disabled { opacity: .4; cursor: default; }
@@ -187,7 +188,7 @@ const typeBadge = (d) =>
 .off td { color: var(--muted); background: #fafafa; }
 .empty { text-align: center; color: var(--muted); padding: 2rem 0; }
 @media (max-width: 640px) {
-  .period { flex-basis: 132px; }
+  .period { min-width: 132px; }
   .sum { width: 100%; }
   .sum span { flex: 1; align-items: flex-start; }
 }
