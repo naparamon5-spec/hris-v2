@@ -99,7 +99,7 @@ const download = () => {
   picked.value = []
   setTimeout(() => (toast.value = ''), 2200)
 }
-const { page, size, total, pages, pageRows } = usePagination(rows, 6)
+const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 </script>
 
 <style scoped>
@@ -107,7 +107,7 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 6)
 .months { margin-bottom: .25rem; }
 .count { display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 .4rem; margin-left: .35rem; border-radius: 99px; background: #e7eef2; color: var(--ardent-navy); font-size: .68rem; letter-spacing: 0; }
 @media (max-width: 640px) { .dd { flex: 1; } }
-.row { display: flex; align-items: center; gap: 1rem; padding: .9rem 0; border-bottom: 1px solid var(--border); color: inherit; }
+.row { display: flex; align-items: center; gap: 1rem; padding: .85rem 0; border-bottom: 1px solid var(--border); color: inherit; }
 .row:last-child { border-bottom: 0; }
 .row div { display: flex; flex-direction: column; flex: 1; }
 .overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; place-items: center; z-index: 50; padding: 1rem; }

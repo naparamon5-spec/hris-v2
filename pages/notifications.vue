@@ -33,7 +33,7 @@ const filterFields = [{ key: 'kind', label: 'Type', options: uniq(items, n => n.
 const rows = computed(() => items.filter(n =>
   (tab.value === 'All' || n.unread) && (!extra.value.kind || n.kind === extra.value.kind)))
 const unread = computed(() => items.filter(n => n.unread).length)
-const { page, size, total, pages, pageRows } = usePagination(rows, 6)
+const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 </script>
 
 <style scoped>

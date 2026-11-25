@@ -34,7 +34,7 @@ const filtered = computed(() => directory.filter(e =>
   (!extra.value.department || e.department === extra.value.department) &&
   (!extra.value.role || e.role === extra.value.role) &&
   `${e.name} ${e.role} ${e.department}`.toLowerCase().includes(q.value.toLowerCase())))
-const { page, size, total, pages, pageRows } = usePagination(filtered, 8)
+const { page, size, total, pages, pageRows } = usePagination(filtered, 7)
 </script>
 
 <style scoped>

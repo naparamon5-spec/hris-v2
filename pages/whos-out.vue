@@ -60,7 +60,7 @@ const people = computed(() => dayPeople(sel.value))
 const tally = (list) => ({ leave: list.filter(p => p.kind === 'leave').length, call: list.filter(p => p.kind === 'call').length })
 const dayCount = computed(() => tally(people.value))
 
-const { page, size, total, pages, pageRows } = usePagination(people, 5)
+const { page, size, total, pages, pageRows } = usePagination(people, 7)
 watch(sel, () => { page.value = 1 })
 const dayName = computed(() => new Date(year.value, month.value, sel.value).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }))
 const isToday = (d) => year.value === now.getFullYear() && month.value === now.getMonth() && d === now.getDate()

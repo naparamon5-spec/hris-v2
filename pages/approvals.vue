@@ -42,8 +42,7 @@
         <span v-else style="width:16px" />
         <span class="av">{{ t.name.split(' ').map(s => s[0]).join('') }}</span>
         <div class="info">
-          <b>{{ t.name }} <small class="m">{{ t.empId }}</small></b>
-          <small>{{ t.app }} • {{ t.no }}</small>
+          <b>{{ t.name }} <small class="m">{{ t.empId }}</small> <span class="app">{{ t.app }} • {{ t.no }}</span></b>
           <small class="m">{{ t.date }} · {{ t.detail }}<template v-if="t.hours"> · {{ t.hours }} hrs</template></small>
           <small v-if="t.reason" class="why"><b>{{ t.app === 'Call Approval' ? 'Purpose' : 'Reason' }}:</b> {{ t.reason }}<template v-if="t.customer"> · {{ t.customer }}</template></small>
         </div>
@@ -156,13 +155,13 @@ const act = async (ids, s) => {
   selected.value = selected.value.filter(id => !ids.includes(id))
   setTimeout(() => (toast.value = ''), 2200)
 }
-const { page, size, total, pages, pageRows } = usePagination(rows, 5)
+const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 </script>
 
 <style scoped>
 .page-head .tabs { margin-bottom: 0; }
 .tabs .count { margin-left: .45rem; font-size: .7rem; font-weight: 700; padding: .05rem .45rem; border-radius: 999px; background: var(--ardent-red); color: #fff; }
-.select-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .2rem .4rem .7rem 1.3rem; }
+.select-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: 0 .4rem .5rem 1.3rem; }
 .all { display: flex; align-items: center; gap: .9rem; font-size: .85rem; font-weight: 600; cursor: pointer; }
 .all.off { opacity: .5; cursor: default; }
 .all input { accent-color: var(--ardent-red); width: 16px; height: 16px; }
@@ -174,8 +173,11 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 .selecting .btns { display: none; }
 .why { color: var(--text); }
 .why b { font-weight: 600; color: var(--muted); }
-.list { display: flex; flex-direction: column; gap: .6rem; }
-.task { display: flex; align-items: center; gap: .9rem; padding: 1rem 1.25rem; }
+.list { display: flex; flex-direction: column; gap: .5rem; }
+.task { display: flex; align-items: center; gap: .9rem; padding: .6rem 1.25rem; }
+.info .app { font-size: .8rem; font-weight: 500; color: var(--text); margin-left: .35rem; }
+.info > b { font-weight: 700; }
+.info small { line-height: 1.45; }
 .task.done { opacity: .7; }
 .task input { accent-color: var(--ardent-red); width: 16px; height: 16px; }
 .info { flex: 1; display: flex; flex-direction: column; font-size: .88rem; min-width: 0; }
