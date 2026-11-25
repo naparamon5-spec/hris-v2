@@ -42,7 +42,8 @@
         <span v-else style="width:16px" />
         <span class="av">{{ t.name.split(' ').map(s => s[0]).join('') }}</span>
         <div class="info">
-          <b>{{ t.name }} <small class="m">{{ t.empId }}</small> <span class="app">{{ t.app }} • {{ t.no }}</span></b>
+          <b>{{ t.name }} <small class="m">{{ t.empId }}</small></b>
+          <small>{{ t.app }} • {{ t.no }}</small>
           <small class="m">{{ t.date }} · {{ t.detail }}<template v-if="t.hours"> · {{ t.hours }} hrs</template></small>
           <small v-if="t.reason" class="why"><b>{{ t.app === 'Call Approval' ? 'Purpose' : 'Reason' }}:</b> {{ t.reason }}<template v-if="t.customer"> · {{ t.customer }}</template></small>
         </div>
@@ -155,7 +156,7 @@ const act = async (ids, s) => {
   selected.value = selected.value.filter(id => !ids.includes(id))
   setTimeout(() => (toast.value = ''), 2200)
 }
-const { page, size, total, pages, pageRows } = usePagination(rows, 7)
+const { page, size, total, pages, pageRows } = usePagination(rows, 6)
 </script>
 
 <style scoped>
@@ -173,9 +174,8 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 .selecting .btns { display: none; }
 .why { color: var(--text); }
 .why b { font-weight: 600; color: var(--muted); }
-.list { display: flex; flex-direction: column; gap: .5rem; }
-.task { display: flex; align-items: center; gap: .9rem; padding: .6rem 1.25rem; }
-.info .app { font-size: .8rem; font-weight: 500; color: var(--text); margin-left: .35rem; }
+.list { display: flex; flex-direction: column; gap: .4rem; }
+.task { display: flex; align-items: center; gap: .9rem; padding: .7rem 1.25rem; }
 .info > b { font-weight: 700; }
 .info small { line-height: 1.45; }
 .task.done { opacity: .7; }
