@@ -34,15 +34,8 @@ const groups = computed(() => [
       { to: '/timesheet', title: 'Timesheet', desc: 'Daily time in/out per cut-off.', icon: 'table', count: 0 },
       { to: '/payroll', title: 'Payslip', desc: 'View and download payslips.', icon: 'wallet', count: 0 }
     ]
-  },
-  {
-    // Kept apart from Records: these are decided requests (approver history in hris_server).
-    title: 'Approved',
-    items: [
-      { to: '/requests/approved', title: 'Approved Records', desc: 'Decided leave, call approval, MAD and overtime.', icon: 'check', count: 0 },
-      { to: '/requests/approved-requests', title: 'Approved Requests', desc: 'Decided COE, EPP items and other requests.', icon: 'doc', count: 0 }
-    ]
   }
+  // Approved Records / Approved Requests are approver-only: they are tabs on Approvals.
 ])
 </script>
 

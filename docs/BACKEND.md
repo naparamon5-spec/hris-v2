@@ -676,17 +676,19 @@ Site changes (`[type].vue`): delete local numbering, the hard-coded `dateFiled: 
 No summary endpoint. Count from each list: `data.filter(r => r.status === 'For Approval').length`
 (5 calls on page load), or add `/auth/requests/summary` (§15).
 
-### 7.6 Approved Records / Approved Requests tiles
+### 7.6 Approved Records / Approved Requests (tabs on Approvals, not Requests tiles)
 
-In the mobile app these are the **approver's decided history**:
+In the mobile app these are the **approver's decided history**. On the website they are tabs on
+the approver-only Approvals page (§8.2); `/requests/approved` and `/requests/approved-requests`
+just redirect there.
 
 | Tile | Endpoint |
 |---|---|
 | Approved Records (LOA/CA/MAD/OT) | `GET /auth/approvals?scope=history&module=records` |
 | Approved Requests (Other Requests) | `GET /auth/approvals?scope=history&module=requests` (HR managers) |
 
-Rows use the approval shape (§8.2) — `category` is already included. Show these tiles only when
-`approvals/access.isApprover`. (If you instead want *my own* approved filings, filter
+Rows use the approval shape (§8.2) — `category` is already included. Show these tabs only when
+`approvals/access.isApprover` (Approved Requests: only for users who approve Other Requests). (If you instead want *my own* approved filings, filter
 `/auth/requests/:type` by `status === 'Approved'` for each type.)
 
 ---
@@ -706,10 +708,16 @@ Rows use the approval shape (§8.2) — `category` is already included. Show the
 
 ### 8.2 List — `GET /auth/approvals?scope=pending|history&module=records|requests|witness`
 
-The Approvals page shows **pending only** (`scope=pending`) for `module=records`, `requests`
-and `witness`. Decided items are not shown here: `scope=history` feeds **Approved Records**
-(`module=records`) and **Approved Requests** (`module=requests`) on `requests/[type].vue`,
-with an **Employee** column (the person who filed) instead of Approver.
+The Approvals page (approver-only; nav item hidden otherwise) has three tabs, kept in `?tab=`:
+
+| Tab | Call |
+|---|---|
+| **Pending** (default) | `scope=pending` for `module=records`, `requests` and `witness` |
+| **Approved Records** (`?tab=records`) | `scope=history&module=records` |
+| **Approved Requests** (`?tab=requests`) | `scope=history&module=requests` (only for users who approve Other Requests) |
+
+Approving / disapproving on Pending moves the item to the matching history tab. History rows
+show an **Employee** column (who filed) — `components/ApprovalHistory.vue`.
 
 Row shape:
 ```json
@@ -989,9 +997,9 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | 17 | `composables/useMockData.js` → `requestTypes` | subtypes, keys | add `apiType`; LOA types from §7.4; drop MAD/OT subtypes; Other Requests = 6 codes, Versatech only |
 | 18 | `requests/index.vue` | pending counts | count per list (or G7); hide Other Requests unless `user.tenant === 'versahrs'` |
 | 19 | `requests/[type].vue` | list, create, edit, cancel, reverse, numbering, date, approver | §7.2–7.4 + draft/send flow + new status chips |
-| 20 | `requests/[type].vue` | Approved Records / Approved Requests | `/auth/approvals?scope=history&module=records|requests` |
+| 20 | `components/ApprovalHistory.vue` | Approved Records / Approved Requests tabs | `/auth/approvals?scope=history&module=records|requests` |
 | 21 | `components/RequestFormModal.vue` | one generic form | per-type forms of §7.4 (LOA dates, CA rows, MAD/OT times ≤ 75-char reason, Other per code) |
-| 22 | `approvals.vue` | `approvals`, `useState('mock-approvals')`, local decisions, OT hours | §8 list (Records/Requests/Witness tabs), per-item approve/disapprove, OT `{hours, minutes}` |
+| 22 | `approvals.vue`, `composables/useApprovals.js` | `approvals`, `approvalAccess`, `useState('mock-approvals')`, local decisions, OT hours | `/auth/approvals/access` (nav + tabs), §8.2 pending list, per-item approve/disapprove, OT `{hours, minutes}` |
 | 23 | `payroll/index.vue` | `payslips`, year list, "(mock)" bulk download | `/auth/payslips` + adapter; bulk = password → fetch each `/auth/payslips/:id` → one PDF (§9.2) |
 | 24 | `payroll/[period].vue` | 6-char password, fake delay, mock slip, "(mock)" download | `/auth/verify-password`, `/auth/payslips/:id`; Download = browser-built PDF (§9.2) |
 | 25 | `leave-hours.vue` | `leaveHours` | `/auth/leaves/hours` + `/auth/requests/loa` (approved) |

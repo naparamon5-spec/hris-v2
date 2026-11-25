@@ -114,14 +114,16 @@ const { user, notifications, companies } = useMockData()
 const { photo } = useProfilePhoto()
 const company = useState('company', () => companies[0])
 const unread = computed(() => notifications.value.filter(n => n.unread).length)
+// Approvals (Pending / Approved Records / Approved Requests) only shows for approvers.
+const { canApprove } = useApprovals()
 const nav = [
   { to: '/', label: 'Home', icon: 'home' },
   { to: '/requests', label: 'Requests', icon: 'requests' },
   { to: '/whos-out', label: "Who's Out", icon: 'calendar' },
-  { to: '/approvals', label: 'Approvals', icon: 'check' },
+  canApprove && { to: '/approvals', label: 'Approvals', icon: 'check' },
   { to: '/payroll', label: 'Payroll', icon: 'wallet' },
   { to: '/directory', label: 'Directory', icon: 'people' }
-]
+].filter(Boolean)
 const footNav = [
   { to: '/support', label: 'Support', icon: 'bell' },
   { to: '/privacy-policy', label: 'Privacy Policy', icon: 'shield' }

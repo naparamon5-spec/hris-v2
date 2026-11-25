@@ -10,9 +10,9 @@
           <NuxtLink to="/timesheet" class="btn btn-outline-light"><AppIcon name="table" /> My timesheet</NuxtLink>
         </div>
       </div>
-      <NuxtLink to="/approvals" class="hero-card">
+      <NuxtLink v-if="canApprove" to="/approvals" class="hero-card">
         <span class="hc-label">Approvals required</span>
-        <strong>{{ approvals.length }}</strong>
+        <strong>{{ pending.length }}</strong>
         <span class="hc-sub">Requests from your team waiting on you</span>
         <span class="hc-go">Review now <AppIcon name="chevron" :size="14" /></span>
       </NuxtLink>
@@ -52,7 +52,8 @@
 </template>
 
 <script setup>
-const { user, leaveCredits, approvals, recentActivity, badge } = useMockData()
+const { user, leaveCredits, recentActivity, badge } = useMockData()
+const { canApprove, pending } = useApprovals()
 // Home shows only Vacation and Sick Leave; the full list is on Leave Hours.
 const credits = leaveCredits.slice(0, 2)
 const icons = ['calendar', 'shield']

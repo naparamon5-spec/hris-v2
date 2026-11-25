@@ -15,8 +15,6 @@ const PAGES = {
   '/examination': 'For Examination',
   '/company-select': 'Switch Company',
   '/requests': 'Requests',
-  '/requests/approved': 'Approved Records',
-  '/requests/approved-requests': 'Approved Requests',
   '/whos-out': "Who's Out",
   '/approvals': 'Approvals',
   '/payroll': 'Payroll',
@@ -30,6 +28,7 @@ const PAGES = {
 }
 const page = computed(() => {
   const p = route.path.replace(/\/+$/, '') || '/'
+  if (p === '/approvals') return { records: 'Approved Records', requests: 'Approved Requests' }[route.query.tab] || 'Approvals'
   if (PAGES[p]) return PAGES[p]
   if (p.startsWith('/payroll/')) return 'Payslip'
   if (p.startsWith('/requests/')) return requestTypes[route.params.type]?.title || 'Requests'

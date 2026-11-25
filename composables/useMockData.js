@@ -120,6 +120,11 @@ export const useMockData = () => {
     { id: 14, name: 'Jose Reyes', empId: 'AN-0034', app: 'Other Requests', no: 'OR-2026-0012', date: 'Oct 29, 2026', hours: 0, detail: 'EPP Item', reason: 'Laptop purchase plan', status: 'Disapproved' }
   ]
 
+  // Stand-in for GET /auth/approvals/access. Approvals (with Approved Records) shows only
+  // when isApprover or isWitness; the Approved Requests tab only when approvesRequests
+  // (HR managers who decide Other Requests).
+  const approvalAccess = { isApprover: true, approvesRequests: true, isWitness: false }
+
   const payslips = Array.from({ length: 8 }, (_, i) => {
     const half = i % 2 === 0 ? 'Nov 16 – 30' : 'Nov 1 – 15'
     const monthIdx = 10 - Math.floor(i / 2)
@@ -268,7 +273,7 @@ export const useMockData = () => {
   const peso = (n) => '₱' + n.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
   return {
-    user, leaveCredits, leaveHours, requests, recentActivity, approvals, payslips, timesheetPeriods, timesheetFor,
+    user, leaveCredits, leaveHours, requests, recentActivity, approvals, approvalAccess, payslips, timesheetPeriods, timesheetFor,
     directory, whosOut, notifications, certificates, companies, companyLogo, badge, peso
   }
 }

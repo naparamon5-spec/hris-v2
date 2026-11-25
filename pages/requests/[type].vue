@@ -3,7 +3,7 @@
     <NuxtLink to="/requests" class="back">‹ Back</NuxtLink>
     <div class="page-head">
       <div><h1>{{ meta.title }}</h1><p>{{ meta.desc }}</p></div>
-      <button v-if="!isApproved" class="btn btn-primary" @click="openForm()"><AppIcon name="plus" /> Create</button>
+      <button class="btn btn-primary" @click="openForm()"><AppIcon name="plus" /> Create</button>
     </div>
 
     <div class="toolbar">
@@ -13,26 +13,23 @@
 
     <div class="card table-wrap" style="padding:.5rem">
       <table class="table stack">
-        <thead><tr><th>No.</th><th v-if="isApproved">Category</th><th>Type</th><th>Date</th><th>Hours</th><th>{{ reasonLabel }}</th><th>{{ whoLabel }}</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
+        <thead><tr><th>No.</th><th>Type</th><th>Date</th><th>Hours</th><th>{{ reasonLabel }}</th><th>Approver</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
         <tbody>
           <tr v-for="r in pageRows" :key="r.no">
-            <td data-label="No."><b>{{ r.no }}</b><template v-if="r.dateFiled"><br><small class="m">Filed {{ r.dateFiled }}</small></template></td>
-            <td v-if="isApproved" data-label="Category">{{ r.category }}</td>
+            <td data-label="No."><b>{{ r.no }}</b><br><small class="m">Filed {{ r.dateFiled }}</small></td>
             <td data-label="Type">{{ r.type }}</td>
-            <td data-label="Date"><span>{{ r.date }}<template v-if="r.from"><br><small class="m">{{ r.from }} – {{ r.to }}</small></template></span></td>
+            <td data-label="Date"><span>{{ r.date }}<br><small class="m">{{ r.from }} – {{ r.to }}</small></span></td>
             <td data-label="Hours">{{ r.hours }}</td>
             <td :data-label="reasonLabel" class="why">
               <span :title="r.reason">{{ r.reason || '—' }}</span>
               <small v-if="r.customer" class="m">{{ r.customer }}</small>
             </td>
-            <td :data-label="whoLabel">{{ r.who }}<template v-if="r.empId"><br><small class="m">{{ r.empId }}</small></template></td>
+            <td data-label="Approver">{{ r.approver }}</td>
             <td data-label="Status"><span class="badge" :class="'badge-' + badge(r.status)">{{ r.status }}</span></td>
             <td class="acts">
-              <template v-if="!isApproved">
-                <button v-if="r.status === 'For Approval'" class="btn btn-ghost btn-sm" @click="openForm(r)">Edit</button>
-                <button v-if="r.status === 'For Approval'" class="btn btn-danger btn-sm" @click="setStatus(r, 'Cancelled')">Cancel</button>
-                <button v-if="r.status === 'Approved'" class="btn btn-ghost btn-sm" @click="setStatus(r, 'Cancelled')">Reverse</button>
-              </template>
+              <button v-if="r.status === 'For Approval'" class="btn btn-ghost btn-sm" @click="openForm(r)">Edit</button>
+              <button v-if="r.status === 'For Approval'" class="btn btn-danger btn-sm" @click="setStatus(r, 'Cancelled')">Cancel</button>
+              <button v-if="r.status === 'Approved'" class="btn btn-ghost btn-sm" @click="setStatus(r, 'Cancelled')">Reverse</button>
             </td>
           </tr>
         </tbody>
@@ -50,37 +47,22 @@
 
 const route = useRoute()
 const type = computed(() => route.params.type)
-// Same split as hris_mobile: "records" = LOA / Call Approval / Manual Arrival-Departure /
-// Overtime; "requests" = Other Requests (COE, EPP items, ...).
-const approvedLists = {
-  approved: { title: 'Approved Records', desc: 'Leave, call approval, manual arrival/departure and overtime you approved or disapproved.', keys: ['leave-of-absence', 'call-approval', 'manual-arrival-departure', 'overtime'] },
-  'approved-requests': { title: 'Approved Requests', desc: 'Other requests (COE, EPP items and more) you approved or disapproved.', keys: ['other-requests'] }
-}
-const isApproved = computed(() => type.value in approvedLists)
-// Own requests show who approves them; the approver's history shows whose request it was.
-const whoLabel = computed(() => (isApproved.value ? 'Employee' : 'Approver'))
+// The user's own requests of one type. (Approved Records / Approved Requests are approver
+// history and live on the Approvals page.)
 // Same wording as hris_mobile: Call Approval shows Purpose (+ customer), the rest Reason.
-const reasonLabel = computed(() => (type.value === 'call-approval' ? 'Purpose' : isApproved.value ? 'Reason / Purpose' : 'Reason'))
-const meta = computed(() => isApproved.value
-  ? { ...approvedLists[type.value], subtypes: [] }
-  : requestTypes[type.value])
+const reasonLabel = computed(() => (type.value === 'call-approval' ? 'Purpose' : 'Reason'))
+const meta = computed(() => requestTypes[type.value])
 
 // Unknown request type (e.g. /requests/foo): show the 404 page instead of a blank screen.
 if (!meta.value) {
   throw createError({ statusCode: 404, statusMessage: 'Request type not found', fatal: true })
 }
 
-const { requests, approvals, badge } = useMockData()
-// Shared with the Approvals page, so approving there moves the item here.
-const approvalItems = useState('mock-approvals', () => approvals.map(a => ({ ...a })))
+const { requests, badge } = useMockData()
 const q = ref('')
 const filters = ['All', 'For Approval', 'Approved', 'Posted', 'Disapproved', 'Cancelled']
-// Approved Records / Approved Requests = decided history (hris_server
-// GET /auth/approvals?scope=history returns approved, disapproved and cancelled).
-const decided = ['Approved', 'Posted', 'Disapproved', 'Cancelled']
-const statusFilters = computed(() => (isApproved.value ? ['All', ...decided] : filters))
-// Switching list (e.g. Approved Records -> Approved Requests) starts unfiltered.
-const blankExtra = () => ({ status: '', category: '', type: '', approver: '', dateFrom: '', dateTo: '', filedFrom: '', filedTo: '' })
+// Switching request type starts unfiltered.
+const blankExtra = () => ({ status: '', type: '', approver: '', dateFrom: '', dateTo: '', filedFrom: '', filedTo: '' })
 const extra = ref(blankExtra())
 watch(type, () => { q.value = ''; extra.value = blankExtra() })
 const toast = ref('')
@@ -92,38 +74,24 @@ const flash = (m) => {
 }
 onBeforeUnmount(() => clearTimeout(toastTimer))
 
-const source = computed(() => {
-  if (isApproved.value) {
-    // Requests this user decided as an approver (same list Approvals hands off to).
-    const cats = meta.value.keys.map(k => requestTypes[k].title)
-    return approvalItems.value
-      .filter(a => decided.includes(a.status) && cats.includes(a.app))
-      .map(a => ({
-        no: a.no, category: a.app, type: a.detail.split(' • ')[0], date: a.date, hours: a.hours,
-        reason: a.reason, customer: a.customer, status: a.status, who: a.name, empId: a.empId
-      }))
-  }
-  return (requests.value[type.value] ?? []).map(r => ({ ...r, who: r.approver }))
-})
-// Filters menu: status, category (approved lists), type, approver, request date and filed date.
+const source = computed(() => requests.value[type.value] ?? [])
+// Filters menu: status, type, approver, request date and filed date.
 const filterFields = computed(() => [
-  { key: 'status', label: 'Status', options: statusFilters.value.slice(1) },
-  ...(isApproved.value ? [{ key: 'category', label: 'Category', options: uniq(source.value, r => r.category) }] : []),
+  { key: 'status', label: 'Status', options: filters.slice(1) },
   { key: 'type', label: 'Type', options: uniq(source.value, r => r.type) },
-  { key: 'approver', label: whoLabel.value, options: uniq(source.value, r => r.who) },
+  { key: 'approver', label: 'Approver', options: uniq(source.value, r => r.approver) },
   { key: 'date', label: 'Request date', type: 'date-range' },
-  ...(isApproved.value ? [] : [{ key: 'filed', label: 'Date filed', type: 'date-range' }])
+  { key: 'filed', label: 'Date filed', type: 'date-range' }
 ])
 const rows = computed(() => {
   const f = extra.value
   return source.value.filter(r =>
     (!f.status || r.status === f.status) &&
-    (!f.category || r.category === f.category) &&
     (!f.type || r.type === f.type) &&
-    (!f.approver || r.who === f.approver) &&
+    (!f.approver || r.approver === f.approver) &&
     inDateRange(r.date, f.dateFrom, f.dateTo) &&
     inDateRange(r.dateFiled, f.filedFrom, f.filedTo) &&
-    `${r.no} ${r.type} ${r.who} ${r.empId || ''} ${r.reason || ''} ${r.customer || ''}`.toLowerCase().includes(q.value.toLowerCase()))
+    `${r.no} ${r.type} ${r.approver} ${r.reason || ''} ${r.customer || ''}`.toLowerCase().includes(q.value.toLowerCase()))
 })
 
 const formOpen = ref(false)
@@ -167,7 +135,7 @@ const save = (data) => {
 // covers arriving while this page is already open.
 const router = useRouter()
 const openFromQuery = () => {
-  if (!route.query.new || isApproved.value) return
+  if (!route.query.new) return
   openForm()
   router.replace({ query: { ...route.query, new: undefined } })
 }

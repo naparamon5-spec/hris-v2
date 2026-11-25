@@ -1,7 +1,20 @@
 <template>
   <div>
-    <div class="page-head"><div><h1>Approvals</h1><p>Requests from your team waiting for your decision. Decided ones move to Approved Records / Approved Requests.</p></div></div>
+    <div class="page-head">
+      <div><h1>Approvals</h1><p>{{ tabInfo.desc }}</p></div>
+      <div class="tabs" role="tablist" aria-label="Approvals">
+        <button
+          v-for="t in tabs" :key="t.key" type="button" role="tab" :aria-selected="tab === t.key"
+          :class="{ on: tab === t.key }" @click="setTab(t.key)"
+        >
+          {{ t.label }}<span v-if="t.count" class="count">{{ t.count }}</span>
+        </button>
+      </div>
+    </div>
 
+    <ApprovalHistory v-if="tab !== 'pending'" :module="tab" />
+
+    <template v-else>
     <div class="toolbar">
       <input v-model="q" class="input" type="search" aria-label="Search approvals" placeholder="Search by name, ID, type, date…">
       <FilterMenu v-model="extra" :fields="filterFields" />
@@ -43,6 +56,7 @@
       <p v-if="!rows.length" class="empty">No requests waiting for your approval</p>
     </div>
     <Pager v-model:page="page" :pages="pages" :total="total" :size="size" :class="{ 'bar-space': selected.length }" />
+    </template>
 
     <!-- Bulk action bar: stays on screen while anything is selected -->
     <Transition name="bar">
@@ -60,8 +74,23 @@
 </template>
 
 <script setup>
-const { approvals, badge } = useMockData()
-const items = useState('mock-approvals', () => approvals.map(a => ({ ...a })))
+const { badge } = useMockData()
+const { items, access, canApprove, pending } = useApprovals()
+// Approver-only page (the sidebar hides it for everyone else).
+if (!canApprove) navigateTo('/', { replace: true })
+
+// Tabs: Pending | Approved Records | Approved Requests (kept in ?tab= so links and Back work).
+const route = useRoute()
+const router = useRouter()
+const tabs = computed(() => [
+  { key: 'pending', label: 'Pending', count: pending.value.length, desc: 'Requests from your team waiting for your decision.' },
+  { key: 'records', label: 'Approved Records', desc: 'Leave, call approval, manual arrival/departure and overtime you approved or disapproved.' },
+  ...(access.approvesRequests ? [{ key: 'requests', label: 'Approved Requests', desc: 'Other requests (COE, EPP items and more) you approved or disapproved.' }] : [])
+])
+const tab = computed(() => (tabs.value.some(t => t.key === route.query.tab) ? route.query.tab : 'pending'))
+const tabInfo = computed(() => tabs.value.find(t => t.key === tab.value))
+const setTab = (key) => router.replace({ query: key === 'pending' ? {} : { tab: key } })
+watch(tab, () => { selected.value = [] })
 const q = ref('')
 const selected = ref([])
 const toast = ref('')
@@ -74,7 +103,6 @@ const filterFields = computed(() => [
   { key: 'employee', label: 'Employee', options: uniq(pending.value, t => t.name) },
   { key: 'date', label: 'Request date', type: 'date-range' }
 ])
-const pending = computed(() => items.value.filter(t => t.status === 'For Approval'))
 const rows = computed(() => {
   const f = extra.value
   return pending.value.filter(t =>
@@ -122,7 +150,7 @@ const act = async (ids, s) => {
   items.value.forEach(t => { if (ids.includes(t.id)) t.status = s })
   const where = ids.every(id => items.value.find(t => t.id === id)?.app === 'Other Requests') ? 'Approved Requests'
     : ids.some(id => items.value.find(t => t.id === id)?.app === 'Other Requests') ? 'Approved Records / Requests' : 'Approved Records'
-  toast.value = `${s} ${n} record${n === 1 ? '' : 's'} · moved to ${where}`
+  toast.value = `${s} ${n} record${n === 1 ? '' : 's'} · see ${where}`
   selected.value = selected.value.filter(id => !ids.includes(id))
   setTimeout(() => (toast.value = ''), 2200)
 }
@@ -130,6 +158,8 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 </script>
 
 <style scoped>
+.page-head .tabs { margin-bottom: 0; }
+.tabs .count { margin-left: .45rem; font-size: .7rem; font-weight: 700; padding: .05rem .45rem; border-radius: 999px; background: var(--ardent-red); color: #fff; }
 .select-row { display: flex; justify-content: space-between; align-items: center; gap: .75rem; padding: .2rem .4rem .7rem 1.3rem; }
 .all { display: flex; align-items: center; gap: .9rem; font-size: .85rem; font-weight: 600; cursor: pointer; }
 .all.off { opacity: .5; cursor: default; }
