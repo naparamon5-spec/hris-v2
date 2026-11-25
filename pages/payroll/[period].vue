@@ -2,7 +2,10 @@
   <div v-if="slip">
     <NuxtLink to="/payroll" class="back">‹ Back</NuxtLink>
     <div class="page-head">
-      <div><h1>Payslip</h1><p>Period {{ slip.period }} · {{ slip.label }} · Pay date • {{ slip.payDate }}</p></div>
+      <div>
+        <h1 class="ph">Payslip <span class="period-pill">Period {{ slip.period }}</span></h1>
+        <p><b class="cut">{{ slip.label }}</b> · Pay date {{ slip.payDate }}</p>
+      </div>
       <div v-if="unlocked" style="display:flex;gap:.5rem">
         <button class="btn btn-ghost" @click="flash('PNG')"><AppIcon name="download" /> Image (PNG)</button>
         <button class="btn btn-primary" @click="flash('PDF')"><AppIcon name="download" /> PDF</button>
@@ -48,7 +51,7 @@
       <form class="pw-card" role="dialog" aria-modal="true" aria-labelledby="pw-title" @submit.prevent="checkPw" @keydown.esc="cancelPw">
         <span class="pw-icon"><AppIcon name="shield" :size="22" /></span>
         <h2 id="pw-title">Confirm your password</h2>
-        <p class="m">Payslips contain salary details. Enter your password to view Period {{ slip.period }}.</p>
+        <p class="m">Payslips contain salary details. Enter your password to view <b class="pw-period">Period {{ slip.period }} · {{ slip.label }}</b>.</p>
         <div class="field">
           <label for="pw-input" class="sr-only">Password</label>
           <div class="pw-wrap">
@@ -104,6 +107,11 @@ const cancelPw = () => { askPw.value = false; if (!unlocked.value) navigateTo('/
 </script>
 
 <style scoped>
+/* The period is what people check first, so it stands out next to the title. */
+.ph { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
+.period-pill { font-size: .85rem; font-weight: 700; letter-spacing: 0; color: #fff; background: var(--grad-brand); padding: .3rem .8rem; border-radius: 999px; box-shadow: 0 6px 14px -6px rgba(198, 50, 76, .6); }
+.cut { color: var(--text); font-weight: 600; }
+.pw-period { color: var(--ardent-red); white-space: nowrap; }
 .locked { display: flex; align-items: center; gap: 1rem; max-width: 820px; }
 .locked div { flex: 1; display: flex; flex-direction: column; }
 .pw-overlay { position: fixed; inset: 0; margin: 0; z-index: 100; background: rgba(19,51,65,.55); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 1rem; }
