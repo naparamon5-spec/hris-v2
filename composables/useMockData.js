@@ -66,23 +66,10 @@ export const useMockData = () => {
 
   // Leave Hours — same shape as hris_server GET /auth/leaves/hours ("hh:mm" strings;
   // null = leave type not assigned to the employee, so its card is hidden like mobile).
-  // `history` stands in for approved LOAs from GET /auth/requests/loa
-  // (status Approved/Posted) — the server has no separate leave-history endpoint.
   const leaveHours = {
     approved_leave: '16:00', approved_ut: '08:00',
     approved_leave_used: '24:00', approved_ut_used: '08:00',
-    vl_paid: '68:00', sl_paid: '48:00', additional_vl: '08:00', accumulated_leave: '124:00',
-    history: [
-      { no: 'H1188', leave_type: 'Vacation Leave', txn_date: 'November 03, 2026', applied_hours: '8:00', approved_by: 'Ramon Napa', status: 'Approved' },
-      { no: 'H1171', leave_type: 'Approved UT (AM/PM)', txn_date: 'October 30, 2026', applied_hours: '4:00', approved_by: 'Ramon Napa', status: 'Posted' },
-      { no: 'H1150', leave_type: 'Sick Leave', txn_date: 'October 14, 2026', applied_hours: '8:00', approved_by: 'Ramon Napa', status: 'Posted' },
-      { no: 'H1132', leave_type: 'Vacation Leave', txn_date: 'September 22, 2026', applied_hours: '16:00', approved_by: 'Kristine Samonte', status: 'Posted' },
-      { no: 'H1119', leave_type: 'Approved UT (AM/PM)', txn_date: 'September 05, 2026', applied_hours: '4:00', approved_by: 'Ramon Napa', status: 'Posted' },
-      { no: 'H1097', leave_type: 'Approved Leave', txn_date: 'August 08, 2026', applied_hours: '8:00', approved_by: 'Ramon Napa', status: 'Posted' },
-      { no: 'H1063', leave_type: 'Sick Leave', txn_date: 'July 17, 2026', applied_hours: '8:00', approved_by: 'Vincent Cataylo', status: 'Posted' },
-      { no: 'H1041', leave_type: 'Additional VL', txn_date: 'June 26, 2026', applied_hours: '8:00', approved_by: 'Ramon Napa', status: 'Posted' },
-      { no: 'H1020', leave_type: 'Vacation Leave', txn_date: 'May 11, 2026', applied_hours: '24:00', approved_by: 'Ramon Napa', status: 'Posted' }
-    ]
+    vl_paid: '68:00', sl_paid: '48:00', additional_vl: '08:00', accumulated_leave: '124:00'
   }
 
   // Shared state so records created in the UI persist while navigating.

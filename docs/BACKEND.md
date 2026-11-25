@@ -859,7 +859,8 @@ but the site has no clock-in screen — optional Home widget.
 Summary cards: `VL Paid ← vl_paid_hours`, `SL Paid ← sl_paid_hours`, `Additional VL ← additional_vl_hours`,
 `Accumulated Leave ← accumulated_leave_hours`.
 
-The two tables (Approved Leave / Approved UT lists) have no list endpoint here — build them from
+The page shows only these balance cards. The "Approved leave & undertime" table was removed
+(no dedicated endpoint). If it comes back, build it from
 `GET /auth/requests/loa` filtered by `status in (Approved, Posted)` and
 `leave_type === 'Approved UT (AM/PM)'` (UT) vs the rest (leave), using `txn_date`, `leave_type`,
 `applied_hours`. (`GET /auth/leaves?status=Approved` also returns `{ id, type, range, days, status, reason }`.)
@@ -1002,7 +1003,7 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | 22 | `approvals.vue`, `composables/useApprovals.js` | `approvals`, `approvalAccess`, `useState('mock-approvals')`, local decisions, OT hours | `/auth/approvals/access` (nav + tabs), §8.2 pending list, per-item approve/disapprove, OT `{hours, minutes}` |
 | 23 | `payroll/index.vue` | `payslips`, year list, "(mock)" bulk download | `/auth/payslips` + adapter; bulk = password → fetch each `/auth/payslips/:id` → one PDF (§9.2) |
 | 24 | `payroll/[period].vue` | 6-char password, fake delay, mock slip, "(mock)" download | `/auth/verify-password`, `/auth/payslips/:id`; Download = browser-built PDF (§9.2) |
-| 25 | `leave-hours.vue` | `leaveHours` | `/auth/leaves/hours` + `/auth/requests/loa` (approved) |
+| 25 | `leave-hours.vue` | `leaveHours` | `/auth/leaves/hours` (balance cards only) |
 | 26 | `timesheet.vue` | `timesheet`, generated periods, year options | `/auth/pay-periods?type=timesheet`, `/auth/timesheets/:year-:code` |
 | 27 | `whos-out.vue` | `whosOut`, 2026 guard | `/hris/whosout?month&year` + `toWhosOut` |
 | 28 | `directory.vue` | `directory` | `/auth/directory?search=` (G13 for contact line) |

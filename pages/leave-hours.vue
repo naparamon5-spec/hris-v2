@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="page-head"><div><h1>Leave Hours</h1><p>Your remaining leave hours and approved leave.</p></div></div>
+    <div class="page-head"><div><h1>Leave Hours</h1><p>Your remaining leave hours.</p></div></div>
 
     <h3 class="section-title">Remaining leave hours</h3>
     <div class="cards">
@@ -14,38 +14,12 @@
       </div>
     </div>
     <p class="note m"><AppIcon name="clock" :size="14" /> Balances appear once your requests are approved.</p>
-
-    <div class="card list">
-      <div class="lh">
-        <h3>Approved leave &amp; undertime</h3>
-        <div class="chips">
-          <button v-for="f in filters" :key="f" type="button" class="chip" :class="{ on: filter === f }" @click="filter = f">{{ f }}</button>
-        </div>
-      </div>
-      <div class="table-wrap">
-        <table class="table stack">
-          <thead><tr><th>No.</th><th>Date</th><th>Leave type</th><th>Hours</th><th>Approved by</th><th>Status</th></tr></thead>
-          <tbody>
-            <tr v-for="r in pageRows" :key="r.no">
-              <td data-label="No."><b>{{ r.no }}</b></td>
-              <td data-label="Date">{{ r.txn_date }}</td>
-              <td data-label="Leave type">{{ r.leave_type }}</td>
-              <td data-label="Hours">{{ r.applied_hours }}</td>
-              <td data-label="Approved by">{{ r.approved_by || '—' }}</td>
-              <td data-label="Status"><span class="badge" :class="'badge-' + badge(r.status)">{{ r.status }}</span></td>
-            </tr>
-          </tbody>
-        </table>
-        <p v-if="!rows.length" class="empty">No approved leave yet</p>
-      </div>
-    </div>
-    <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
   </div>
 </template>
 
 <script setup>
-// Replace with: api('/auth/leaves/hours') and api('/auth/requests/loa') (status Approved/Posted)
-const { leaveHours: h, badge } = useMockData()
+// Replace with: api('/auth/leaves/hours')
+const { leaveHours: h } = useMockData()
 
 // Same cards and order as hris_mobile leave_hours_screen.dart. Approved Leave / UT always
 // show; the others only when the leave type is assigned (server sends null otherwise).
@@ -57,13 +31,6 @@ const cards = computed(() => [
   h.additional_vl != null && { label: 'Additional VL', value: h.additional_vl, icon: 'plus' },
   h.accumulated_leave != null && { label: 'Accumulated Leave', value: h.accumulated_leave, icon: 'hourglass' }
 ].filter(Boolean))
-
-const filters = ['All', 'Leave', 'Undertime']
-const filter = ref('All')
-const isUt = (r) => r.leave_type === 'Approved UT (AM/PM)'
-const rows = computed(() => h.history.filter(r =>
-  filter.value === 'All' || (filter.value === 'Undertime') === isUt(r)))
-const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 </script>
 
 <style scoped>
@@ -77,8 +44,4 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 5)
 .hrs .used { text-transform: none; letter-spacing: 0; font-weight: 500; }
 .hrs.main { border-color: rgba(198,50,76,.25); }
 .note { display: flex; align-items: center; gap: .4rem; font-size: .8rem; margin-top: .75rem; margin-bottom: 1.25rem; }
-.list { padding: .5rem; }
-.lh { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .6rem; padding: .6rem .8rem .7rem; }
-.lh h3 { font-size: 1rem; }
-.empty { text-align: center; color: var(--muted); padding: 2rem 0; }
 </style>
