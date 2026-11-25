@@ -79,7 +79,7 @@ const faq = [
 
 <style scoped>
 .eyebrow { display: block; font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ardent-red); font-weight: 700; margin-bottom: .35rem; }
-.lede { max-width: 62rem; line-height: 1.6; }
+.lede { max-width: 80rem; line-height: 1.6; }
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 1rem; align-items: start; }
 @media (max-width: 1000px) { .layout { grid-template-columns: minmax(0, 1fr); } }
 .col { display: flex; flex-direction: column; gap: 1rem; }

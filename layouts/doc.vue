@@ -33,7 +33,7 @@ const home = computed(() => (signedIn.value ? '/' : '/login'))
 .doc-nav a:hover { color: var(--text); background: #f4f5f7; }
 .doc-nav a.router-link-active { color: var(--ardent-red); background: #fdecef; }
 .back-btn { flex: none; }
-.doc-main { flex: 1; width: 100%; max-width: 1200px; margin: 0 auto; padding: 1.25rem 2rem 1.25rem; }
+.doc-main { flex: 1; width: 100%; max-width: 1560px; margin: 0 auto; padding: 1.25rem 2rem 1.25rem; }
 .doc-foot { text-align: center; color: var(--muted); font-size: .74rem; padding: 0 1rem 1rem; }
 @media (max-width: 640px) {
   .doc-top { flex-wrap: wrap; gap: .5rem; padding: .6rem 1rem; }
