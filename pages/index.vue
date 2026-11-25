@@ -37,16 +37,23 @@
         </div>
       </div>
       <div>
-        <h3 class="section-title">Recent activity <span v-if="unreadCount" class="new">{{ unreadCount }} new</span></h3>
-        <div class="card feed">
-          <!-- Latest notifications (same list as the bell). Click: mark read, open where it points. -->
-          <NuxtLink v-for="n in recent" :key="n.id" :to="linkFor(n)" class="act" :class="{ unread: n.unread }" @click="n.unread = false">
-            <span class="ic"><AppIcon :name="kindIcon[n.kind] || 'bell'" :size="16" /></span>
-            <div><b>{{ n.title }}</b><small class="m">{{ n.body }}</small></div>
-            <small class="m when">{{ n.when }}</small>
+        <div class="sec-row">
+          <h3 class="section-title">Recent activity</h3>
+          <NuxtLink to="/requests" class="view-all">View all <AppIcon name="chevron" :size="13" /></NuxtLink>
+        </div>
+        <!-- Same as the mobile Home: my 3 latest filings across all request types. -->
+        <div class="recent">
+          <NuxtLink v-for="r in recent" :key="r.app + r.no" :to="r.to" class="rc">
+            <span class="abbr">{{ r.app }}</span>
+            <div class="rc-body">
+              <div class="rc-top"><b>{{ r.no }}</b><span class="badge" :class="'badge-' + badge(r.status)">{{ r.status }}</span></div>
+              <small><span class="m">{{ r.detail }}</span><template v-if="r.date"><span class="sep"> • </span><span class="faint">{{ r.date }}</span></template></small>
+            </div>
           </NuxtLink>
-          <p v-if="!recent.length" class="empty">No activity yet</p>
-          <NuxtLink to="/notifications" class="all">View all activity <AppIcon name="chevron" :size="14" /></NuxtLink>
+          <div v-if="!recent.length" class="rc empty-rc">
+            <span class="abbr gray"><AppIcon name="requests" :size="18" /></span>
+            <b class="m">No recent filings yet</b>
+          </div>
         </div>
       </div>
     </div>
@@ -54,15 +61,28 @@
 </template>
 
 <script setup>
-const { user, leaveCredits, notifications } = useMockData()
-// Recent activity = the 4 newest notifications (live: GET /auth/notifications — no separate
-// activity endpoint exists; same source the mobile app's notification list uses).
-const recent = computed(() => newestFirst(notifications.value, n => n.at, n => n.id).slice(0, 4))
-const unreadCount = computed(() => notifications.value.filter(n => n.unread).length)
-const kindIcon = { Requests: 'requests', Approvals: 'check', Payroll: 'wallet', Advisory: 'bell' }
-// Where an item opens. Live: use request_type (+ request_id) from the notification (BACKEND.md §13).
-const kindLink = { Requests: '/requests', Approvals: '/approvals', Payroll: '/payroll' }
-const linkFor = (n) => kindLink[n.kind] || '/notifications'
+const { user, leaveCredits, requests, badge } = useMockData()
+const { company } = useCompany()
+
+// Recent activity — same as hris_mobile (dashboard_screen.dart _loadRecent): my own filings from
+// every request list, newest first, top 3. LOA sorts by date filed, CA/MAD/OT by request date;
+// Other Requests only for Versatech. Live: GET /auth/requests/:type for each type (BACKEND.md §6).
+const RECENT = [
+  { key: 'leave-of-absence', app: 'LOA', sortBy: 'dateFiled', detail: r => r.type || 'Leave of Absence' },
+  { key: 'call-approval', app: 'CA', sortBy: 'date', detail: () => 'Call Approval' },
+  { key: 'manual-arrival-departure', app: 'MAD', sortBy: 'date', detail: () => 'Manual Arrival/Departure' },
+  { key: 'overtime', app: 'OT', sortBy: 'date', detail: r => (r.hours ? `${r.hours} hrs` : 'Overtime') },
+  { key: 'other-requests', app: 'REQ', sortBy: 'dateFiled', detail: r => r.reason || 'Other Request', only: 'Versatech International' }
+]
+const recent = computed(() => {
+  const rows = RECENT.filter(t => !t.only || company.value === t.only).flatMap(t =>
+    (requests.value[t.key] || []).map(r => ({
+      app: t.app, no: r.no, status: r.status, detail: t.detail(r),
+      date: r.date || r.dateFiled, sort: r[t.sortBy] || r.dateFiled,
+      to: { path: `/requests/${t.key}`, query: { q: r.no } } // opens the list showing that record
+    })))
+  return newestFirst(rows, r => r.sort, r => r.no).slice(0, 3)
+})
 const { canApprove, pending } = useApprovals()
 // Home shows only Vacation and Sick Leave; the full list is on Leave Hours.
 const credits = leaveCredits.slice(0, 2)
@@ -121,21 +141,23 @@ const quick = {
 .action small { font-size: .76rem; color: var(--muted); line-height: 1.4; }
 .add { color: var(--muted); flex-shrink: 0; transition: color .15s, transform .15s; }
 .action:hover .add { color: var(--ardent-red); transform: rotate(90deg); }
-.feed { padding: .4rem 1.25rem .9rem; }
-.act { position: relative; display: flex; align-items: center; gap: .85rem; padding: .75rem .5rem; margin: 0 -.5rem; border-bottom: 1px dashed var(--border); border-radius: 10px; color: inherit; transition: background .12s; }
-.act:hover { background: #fafbfc; }
-.act div { flex: 1; display: flex; flex-direction: column; min-width: 0; font-size: .88rem; }
-.act div small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.act small { font-size: .76rem; }
-.act b { font-weight: 600; }
-.act.unread b { font-weight: 700; }
-/* Unread: red dot on the icon */
-.act.unread .ic::after { content: ''; position: absolute; top: -2px; right: -2px; width: 9px; height: 9px; border-radius: 50%; background: var(--ardent-red); border: 2px solid #fff; }
-.ic { position: relative; width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; display: grid; place-items: center; background: #f4f5f7; color: var(--muted); }
-.act.unread .ic { background: #fdecef; color: var(--ardent-red); }
-.when { white-space: nowrap; }
-.new { margin-left: .4rem; padding: .1rem .45rem; border-radius: 999px; background: #fdecef; color: var(--ardent-red); font-size: .64rem; letter-spacing: .04em; }
-.feed .empty { padding: 1.5rem 0; }
-.all { display: inline-flex; align-items: center; gap: .2rem; margin-top: .8rem; font-size: .8rem; font-weight: 700; }
+/* Recent activity — one card per filing, like the mobile app */
+.sec-row { display: flex; align-items: baseline; justify-content: space-between; gap: .75rem; }
+.view-all { display: inline-flex; align-items: center; gap: .15rem; font-size: .8rem; font-weight: 700; }
+.recent { display: flex; flex-direction: column; gap: .65rem; }
+.rc {
+  display: flex; align-items: center; gap: .85rem; padding: .85rem 1rem; color: inherit;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+  transition: transform .15s, box-shadow .15s;
+}
+a.rc:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.abbr { width: 46px; height: 42px; flex-shrink: 0; display: grid; place-items: center; border-radius: 10px; background: #fbe8eb; color: var(--ardent-red); font-size: .74rem; font-weight: 900; letter-spacing: .02em; }
+.abbr.gray { background: #f1f2f4; color: var(--muted); }
+.rc-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .2rem; }
+.rc-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.rc-top b { font-size: .92rem; font-weight: 800; }
+.rc-top .badge { flex-shrink: 0; }
+.rc-body small { font-size: .78rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sep, .faint { color: #9aa7b3; font-weight: 500; }
 @media (max-width: 600px) { .hero { padding: 1.4rem 1.2rem; } .hero-card { min-width: 0; width: 100%; } }
 </style>
