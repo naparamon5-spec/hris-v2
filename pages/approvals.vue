@@ -83,7 +83,7 @@ if (!canApprove) navigateTo('/', { replace: true })
 const route = useRoute()
 const router = useRouter()
 const tabs = computed(() => [
-  { key: 'pending', label: 'Pending', title: 'Pending Approvals', count: pending.value.length, desc: 'Requests from your team waiting for your decision.' },
+  { key: 'pending', label: 'Pending', title: 'Approvals', count: pending.value.length, desc: 'Requests from your team waiting for your decision.' },
   { key: 'records', label: 'Approved Records', title: 'Approved Records', desc: 'Leave, call approval, manual arrival/departure and overtime you approved or disapproved.' },
   ...(access.approvesRequests ? [{ key: 'requests', label: 'Approved Requests', title: 'Approved Requests', desc: 'Other requests (COE, EPP items and more) you approved or disapproved.' }] : [])
 ])
