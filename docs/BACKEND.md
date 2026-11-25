@@ -43,7 +43,7 @@ list has a working endpoint in the sections below.
 | 12 | Directory email & local number (`directory.vue`) | `/auth/directory` returns id, name, role, department, status only | |
 | 13 | Support — submit a ticket, contacts, FAQ (`support.vue`) | no API; Support is the v1 web page `https://hris.ardentnetworks.com.ph/support` | link to it for now |
 | 14 | Privacy policy content (`privacy-policy.vue`) | no API; v1 web page `https://hris.ardentnetworks.com.ph/privacy-policy` | link to it for now |
-| 15 | Header global search (`layouts/default.vue`) | nothing yet | |
+| 15 | Header global search (`components/HeaderSearch.vue`) | no search endpoint | works client-side over lists the site already loads (see G16) |
 | 16 | For examination — applicant exam link (`examination.vue`) | nothing | |
 | 17 | Leave-type / request-subtype list for the forms (`RequestFormModal.vue`) | no endpoint; server accepts a fixed list (§7.4) | hard-code the server's list in the site |
 | 18 | Real-time notifications on the web | only phone push (FCM); no web push / SSE | poll `/auth/notifications` |
@@ -969,7 +969,7 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | G13 | Directory email / local no. | not returned | add `email`, `local` to `/auth/directory` |
 | G14 | Support page | ✅ **exists as a web page, not an API.** Mobile opens `https://hris.ardentnetworks.com.ph/support` (`profile_screen.dart _supportUrl`) | Link the sidebar "Support" to that page, or copy its content into `support.vue` as static content. No ticket API exists, so the site's ticket form must go or send by `mailto:` |
 | G15 | Privacy policy | ✅ **exists as a web page.** Mobile opens `https://hris.ardentnetworks.com.ph/privacy-policy` | Link to it, or copy the real text into `privacy-policy.vue` |
-| G16 | Header global search | **not yet** (no endpoint, not in mobile) | Later: client-side over `/auth/directory?search=` + my requests, or a new `GET /auth/search?q=`. Until then hide the box or make it search the directory |
+| G16 | Header global search | **client-side** (no endpoint, not in mobile) | `HeaderSearch.vue` searches pages/actions (static), `/auth/directory`, `/auth/requests/:type`, `/auth/payslips`, `/auth/approvals?scope=pending` (approvers). Fetch on first open, cache. Results link to lists with `?q=` (Directory, request lists, Approvals) or `/payroll?download=1`. A later `GET /auth/search?q=` can replace the matching without UI changes |
 | G17 | For examination (applicant link) | none | `POST /public/examination/request-link { email }` — or remove the link |
 | G18 | Biometric switch on website | phone-only | remove from the site |
 
@@ -983,7 +983,7 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | 2 | `layouts/default.vue` | bell count from mock | `/auth/notifications` → `unread` (poll 60 s) |
 | 3 | `layouts/default.vue` | Sign out only navigates | `POST /auth/logout` + clear cookies |
 | 4 | `layouts/default.vue`, `composables/useApprovals.js` | `approvalAccess` mock | hide Approvals unless `approvals/access` says approver/witness. Nav: Home, Requests, Leave Hours, Who's Out, Approvals, Payroll (Payslips + Timesheet tabs), Directory |
-| 5 | `layouts/default.vue` | header search | G16 |
+| 5 | `components/HeaderSearch.vue` | searches mock `directory`, `requests`, `payslips`, approvals | same lists from the API (G16) |
 | 6 | `login.vue` | `companies`, fake sign-in, any OTP | `/public/tenants`, `/public/login` (+ `otp` re-post) |
 | 7 | `login.vue` | Authentik button | remove (G1) |
 | 8 | `forgot-password.vue` | "(Mock — no email is sent.)" | `/public/forgot-password { identifier, tenant }` |

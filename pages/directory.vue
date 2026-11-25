@@ -20,7 +20,10 @@
 
 <script setup>
 const { directory } = useMockData()
-const q = ref('')
+const route = useRoute()
+const q = ref(String(route.query.q || ''))
+// Header search links here with ?q=<name>.
+watch(() => route.query.q, v => { if (v) q.value = String(v) })
 // Filters menu: department and position (server: GET /auth/directory?department=).
 const extra = ref({ department: '', role: '' })
 const filterFields = [

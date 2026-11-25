@@ -34,13 +34,7 @@
     <div class="main">
       <header :class="{ hidden: hideHeader }">
         <button class="menu" aria-label="Menu" @click="open = !open">☰</button>
-        <label class="search"
-          ><AppIcon name="search" :size="16" /><input
-            type="search"
-            aria-label="Search requests and people"
-            placeholder="Search requests, people…"
-          /><kbd>/</kbd></label
-        >
+        <HeaderSearch />
         <NuxtLink to="/company-select" class="company" title="Switch company"
           ><AppIcon name="people" :size="15" /><span>{{ company }}</span
           ><AppIcon name="chevron" :size="13"
@@ -304,45 +298,6 @@ header {
   transition: transform 0.25s ease, box-shadow 0.2s;
   z-index: 10;
 }
-.search {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  max-width: 400px;
-  flex: 1;
-  padding: 0.55rem 0.6rem 0.55rem 1rem;
-  border-radius: 999px;
-  background: #f1f2f5;
-  color: var(--muted);
-  border: 1px solid transparent;
-  transition: all 0.15s;
-}
-.search:focus-within {
-  background: #fff;
-  border-color: var(--ardent-red);
-  box-shadow: var(--ring);
-}
-.search input {
-  flex: 1;
-  border: 0;
-  background: none;
-  outline: none;
-  font:
-    500 0.88rem Montserrat,
-    sans-serif;
-  color: var(--text);
-  min-width: 0;
-}
-.search kbd {
-  font:
-    600 0.7rem Montserrat,
-    sans-serif;
-  color: var(--muted);
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 0.1rem 0.45rem;
-}
 .company {
   margin-left: auto;
   display: flex;
@@ -544,14 +499,6 @@ main {
     padding: 0.6rem 0.75rem;
     gap: 0.5rem;
   }
-  .search {
-    min-width: 0;
-    padding: 0.5rem 0.75rem;
-  }
-  .search input {
-    width: 100%;
-    font-size: 0.85rem;
-  }
   .company {
     padding: 0;
     width: 38px;
@@ -574,7 +521,6 @@ main {
     flex-shrink: 0;
     padding: 0 0.25rem;
   }
-  .search kbd,
   .company span {
     display: none;
   }

@@ -65,6 +65,8 @@ const filters = ['All', 'For Approval', 'Approved', 'Posted', 'Disapproved', 'Ca
 const blankExtra = () => ({ status: '', type: '', approver: '', dateFrom: '', dateTo: '', filedFrom: '', filedTo: '' })
 const extra = ref(blankExtra())
 watch(type, () => { q.value = ''; extra.value = blankExtra() })
+// Header search links here with ?q=<request no.>.
+watch(() => route.query.q, v => { if (v) q.value = String(v) }, { immediate: true })
 const toast = ref('')
 let toastTimer
 const flash = (m) => {

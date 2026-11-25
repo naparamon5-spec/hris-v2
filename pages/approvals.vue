@@ -91,7 +91,9 @@ const tab = computed(() => (tabs.value.some(t => t.key === route.query.tab) ? ro
 const tabInfo = computed(() => tabs.value.find(t => t.key === tab.value))
 const setTab = (key) => router.replace({ query: key === 'pending' ? {} : { tab: key } })
 watch(tab, () => { selected.value = [] })
-const q = ref('')
+// Header search links here with ?q=<request no.>.
+const q = ref(String(route.query.q || ''))
+watch(() => route.query.q, v => { if (v) q.value = String(v) })
 const selected = ref([])
 const toast = ref('')
 // Only pending items live here (GET /auth/approvals?scope=pending). Once approved or

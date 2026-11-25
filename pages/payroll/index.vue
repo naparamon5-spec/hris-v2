@@ -53,6 +53,15 @@
 <script setup>
 const { payslips } = useMockData()
 const bulk = ref(false)
+// Header search "Download Payslips" links here with ?download=1: open the picker, then drop the query.
+const route = useRoute()
+const openBulkFromQuery = () => {
+  if (!route.query.download) return
+  bulk.value = true
+  navigateTo({ query: { ...route.query, download: undefined } }, { replace: true })
+}
+onMounted(openBulkFromQuery)
+watch(() => route.query.download, openBulkFromQuery)
 const bq = ref('')
 const picked = ref([])
 const toast = ref('')
