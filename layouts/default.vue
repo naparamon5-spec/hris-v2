@@ -128,10 +128,10 @@ const unread = computed(() => notifications.value.filter(n => n.unread).length)
 const { canApprove } = useApprovals()
 // Sidebar sections (like v1's MENU / RECORD-REQUEST / APPS headings).
 const navGroups = [
-  { title: 'Menu', items: [{ to: '/', label: 'Home', icon: 'home' }] },
   {
     title: 'My records',
     items: [
+      { to: '/', label: 'Home', icon: 'home' },
       { to: '/requests', label: 'Requests', icon: 'requests' },
       { to: '/leave-hours', label: 'Leave Hours', icon: 'hourglass' },
       { to: '/payroll', label: 'Payslip', icon: 'wallet', also: ['/timesheet'] }
