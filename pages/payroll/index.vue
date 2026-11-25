@@ -11,11 +11,8 @@
     <div class="toolbar">
       <input v-model="q" class="input" type="search" aria-label="Search payslips" placeholder="Search period no. or month (e.g. 22, Oct)">
       <AppSelect v-model="year" :options="years" aria-label="Year" class="dd" />
+      <AppSelect v-model="month" :options="monthOptions" aria-label="Month" class="dd dd-month" />
       <AppSelect v-model="half" :options="halves" aria-label="Cut-off" class="dd" />
-    </div>
-    <div class="chips months">
-      <button class="chip" :class="{ on: month === 'All' }" @click="month = 'All'">All months</button>
-      <button v-for="m in months" :key="m" class="chip" :class="{ on: month === m }" @click="month = m">{{ m }}</button>
     </div>
 
     <h3 class="section-title">Payslip history <span class="count">{{ rows.length }}</span></h3>
@@ -76,7 +73,15 @@ const half = ref('all')
 const halves = [{ value: 'all', label: 'All cut-offs' }, { value: '1', label: '1st half (1–15)' }, { value: '2', label: '2nd half (16–end)' }]
 const month = ref('All')
 const years = [...new Set(payslips.map(p => p.payDate.slice(-4)))]
-const months = [...new Set(payslips.map(p => p.payDate.slice(0, 3)))].reverse()
+// All 12 months, each with how many payslips it has in the chosen year.
+const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const monthOptions = computed(() => [
+  { value: 'All', label: 'All months' },
+  ...monthNames.map(n => {
+    const c = payslips.filter(p => p.payDate.endsWith(year.value) && p.payDate.startsWith(n.slice(0, 3))).length
+    return { value: n.slice(0, 3), label: c ? `${n} (${c})` : n }
+  })
+])
 const rows = computed(() => payslips.filter(p =>
   p.payDate.endsWith(year.value) &&
   (month.value === 'All' || p.payDate.startsWith(month.value)) &&
@@ -107,9 +112,9 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 
 <style scoped>
 .dd { flex: 0 0 auto; }
-.months { margin-bottom: .25rem; }
+.dd-month { min-width: 11rem; }
 .count { display: inline-grid; place-items: center; min-width: 22px; height: 20px; padding: 0 .4rem; margin-left: .35rem; border-radius: 99px; background: #e7eef2; color: var(--ardent-navy); font-size: .68rem; letter-spacing: 0; }
-@media (max-width: 640px) { .dd { flex: 1; } }
+@media (max-width: 640px) { .dd { flex: 1 1 calc(50% - .4rem); } .dd-month { min-width: 0; } }
 .row { display: flex; align-items: center; gap: 1rem; padding: .85rem 0; border-bottom: 1px solid var(--border); color: inherit; }
 .row:last-child { border-bottom: 0; }
 .row div { display: flex; flex-direction: column; flex: 1; }
