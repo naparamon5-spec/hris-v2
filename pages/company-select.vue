@@ -43,6 +43,8 @@ const chosenBefore = ref(false)
 onMounted(() => {
   chosenBefore.value = load()
   if (chosenBefore.value) chosen.value = company.value
+  // Bring the remembered company into view if it sits below the fold of the list.
+  nextTick(() => document.querySelector('.grid-co .co.on')?.scrollIntoView({ block: 'nearest' }))
 })
 const go = () => { if (!chosen.value) return; choose(chosen.value); navigateTo('/login') }
 const q = ref('')
@@ -55,10 +57,17 @@ const list = computed(() => companies.filter(c => c.toLowerCase().includes(q.val
 .back-link { font-size: .82rem; font-weight: 600; white-space: nowrap; padding-top: .45rem; }
 .search { width: 100%; margin-bottom: .6rem; padding-left: 2.6rem; background: #fbfbfc url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2364788a' stroke-width='2' stroke-linecap='round' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E") no-repeat 1rem center; }
 .empty { padding: 1.5rem 0; }
-/* Rows shrink with the window height so all companies fit without page scroll. */
-.grid-co { display: flex; flex-direction: column; gap: .35rem; }
+/* Roomy rows; the list scrolls inside its own box so the page never scrolls. */
+.grid-co {
+  display: flex; flex-direction: column; gap: .55rem;
+  max-height: calc(100vh - 360px); min-height: 200px; overflow-y: auto; overscroll-behavior: contain;
+  padding: 4px 6px 4px 4px; margin: 0 -6px 0 -4px; /* room for the focus ring */
+  scrollbar-width: thin; scrollbar-color: #d5dae0 transparent;
+}
+.grid-co::-webkit-scrollbar { width: 6px; }
+.grid-co::-webkit-scrollbar-thumb { background: #d5dae0; border-radius: 6px; }
 .co {
-  display: flex; align-items: center; gap: .85rem; height: clamp(40px, calc((100vh - 405px) / 11), 54px); padding: 0 1rem 0 .5rem;
+  display: flex; align-items: center; gap: .85rem; flex-shrink: 0; height: 62px; padding: 0 1rem 0 .5rem;
   background: #fff; border: 1px solid var(--border); border-radius: 14px;
   cursor: pointer; font: inherit; color: var(--text); text-align: left; transition: border-color .15s, box-shadow .15s;
 }
@@ -76,5 +85,5 @@ const list = computed(() => companies.filter(c => c.toLowerCase().includes(q.val
 .footer-bar { position: sticky; bottom: 0; padding: .7rem 0 0; margin-top: .2rem; background: linear-gradient(transparent, #fff 35%); }
 .continue { width: 100%; padding: .8rem; font-size: .95rem; }
 .continue :deep(svg) { margin-left: .1rem; }
-@media (max-width: 860px) { .back-link { padding-top: .3rem; } .co { height: auto; min-height: 50px; } }
+@media (max-width: 860px) { .back-link { padding-top: .3rem; } .co { height: auto; min-height: 56px; } .grid-co { max-height: none; overflow: visible; } }
 </style>
