@@ -31,7 +31,7 @@
 
     <!-- On <body>, so the dim background also covers the sticky header. -->
     <Teleport to="body">
-    <div v-if="bulk" class="overlay" @click.self="bulk = false">
+    <div v-if="bulk" class="overlay">
       <div class="card modal">
         <h2>Download Payslips</h2>
         <input v-model="bq" class="input" type="search" aria-label="Search payslips to download" placeholder="Search period no. or month (e.g. 12, Oct)" style="width:100%;margin-bottom:.75rem">

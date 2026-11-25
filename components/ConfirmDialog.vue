@@ -1,6 +1,6 @@
 <template>
   <Transition name="cd">
-    <div v-if="dialog" class="cd-overlay" @click.self="close(false)">
+    <div v-if="dialog" class="cd-overlay">
       <div class="cd" role="alertdialog" aria-modal="true" aria-labelledby="cd-title" aria-describedby="cd-msg">
         <span class="cd-icon" :class="dialog.tone"><AppIcon :name="dialog.icon" :size="22" /></span>
         <h2 id="cd-title">{{ dialog.title }}</h2>

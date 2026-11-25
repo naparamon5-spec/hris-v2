@@ -1,7 +1,7 @@
 <template>
   <!-- On <body>, so the dim background also covers the sticky header. -->
   <Teleport to="body">
-  <div class="overlay" @mousedown.self="$emit('close')">
+  <div class="overlay">
     <div class="modal card" role="dialog" aria-modal="true" aria-labelledby="pc-title" @keydown.esc="$emit('close')">
       <h3 id="pc-title">Edit profile photo</h3>
       <p class="m sub">Drag to position, use the slider to zoom.</p>

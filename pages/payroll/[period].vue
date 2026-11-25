@@ -47,7 +47,7 @@
 
     <!-- On <body>, so the dim background also covers the sticky header. -->
     <Teleport to="body">
-    <div v-if="askPw" class="pw-overlay" @click.self="cancelPw">
+    <div v-if="askPw" class="pw-overlay">
       <form class="pw-card" role="dialog" aria-modal="true" aria-labelledby="pw-title" @submit.prevent="checkPw" @keydown.esc="cancelPw">
         <span class="pw-icon"><AppIcon name="shield" :size="22" /></span>
         <h2 id="pw-title">Confirm your password</h2>

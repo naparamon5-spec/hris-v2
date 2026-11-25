@@ -1,7 +1,7 @@
 <template>
   <!-- On <body>, so the dim background also covers the sticky header. -->
   <Teleport to="body">
-  <div class="overlay" @click.self="$emit('close')">
+  <div class="overlay">
     <form class="card modal" @submit.prevent="submit">
       <h2>{{ title }}</h2>
       <div class="field">

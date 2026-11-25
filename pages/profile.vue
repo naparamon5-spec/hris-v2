@@ -71,7 +71,7 @@
 
     <!-- On <body>, so the dim background also covers the sticky header. -->
     <Teleport to="body">
-    <div v-if="editing" class="overlay" @click.self="editing = false" @keydown.esc="editing = false">
+    <div v-if="editing" class="overlay" @keydown.esc="editing = false">
       <div class="card modal">
         <h2>Edit Bio</h2>
         <textarea ref="bioBox" v-model="draft" class="input" aria-label="Bio" style="width:100%" maxlength="200" placeholder="Write a short bio about yourself…" />
