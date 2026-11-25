@@ -2,7 +2,10 @@
   <div>
     <div class="page-head">
       <div><h1>Payroll</h1><p>Your payslips per cut-off.</p></div>
-      <button class="btn btn-ghost" @click="bulk = true"><AppIcon name="download" /> Download Payslips</button>
+      <div class="head-actions">
+        <button class="btn btn-ghost" @click="bulk = true"><AppIcon name="download" /> Download Payslips</button>
+        <PayrollTabs />
+      </div>
     </div>
 
     <div class="toolbar">

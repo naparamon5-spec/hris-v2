@@ -981,7 +981,7 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | 1 | `layouts/default.vue` | `user`, `companies`, `useState('company')` | `useSession()` → `/auth/me`, `/auth/profile`; company = `user.company` |
 | 2 | `layouts/default.vue` | bell count from mock | `/auth/notifications` → `unread` (poll 60 s) |
 | 3 | `layouts/default.vue` | Sign out only navigates | `POST /auth/logout` + clear cookies |
-| 4 | `layouts/default.vue` | Approvals nav always shown | hide unless `approvals/access` says approver/witness |
+| 4 | `layouts/default.vue`, `composables/useApprovals.js` | `approvalAccess` mock | hide Approvals unless `approvals/access` says approver/witness. Nav: Home, Requests, Leave Hours, Who's Out, Approvals, Payroll (Payslips + Timesheet tabs), Directory |
 | 5 | `layouts/default.vue` | header search | G16 |
 | 6 | `login.vue` | `companies`, fake sign-in, any OTP | `/public/tenants`, `/public/login` (+ `otp` re-post) |
 | 7 | `login.vue` | Authentik button | remove (G1) |
@@ -995,7 +995,7 @@ The site shows these today with mock data. Choose per row: **remove from the sit
 | 15 | `index.vue` | `approvals.length` | `/auth/approvals/access` totals |
 | 16 | `index.vue` | `recentActivity` | `/auth/notifications` (or G6) |
 | 17 | `composables/useMockData.js` → `requestTypes` | subtypes, keys | add `apiType`; LOA types from §7.4; drop MAD/OT subtypes; Other Requests = 6 codes, Versatech only |
-| 18 | `requests/index.vue` | pending counts | count per list (or G7); hide Other Requests unless `user.tenant === 'versahrs'` |
+| 18 | `requests/index.vue` | pending counts, status totals, recent requests, leave balance card | count/merge each `/auth/requests/:type` list (or G7); balance from `/auth/leaves/hours`; hide Other Requests unless `user.tenant === 'versahrs'` |
 | 19 | `requests/[type].vue` | list, create, edit, cancel, reverse, numbering, date, approver | §7.2–7.4 + draft/send flow + new status chips |
 | 20 | `components/ApprovalHistory.vue` | Approved Records / Approved Requests tabs | `/auth/approvals?scope=history&module=records|requests` |
 | 21 | `components/RequestFormModal.vue` | one generic form | per-type forms of §7.4 (LOA dates, CA rows, MAD/OT times ≤ 75-char reason, Other per code) |

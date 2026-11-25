@@ -110,6 +110,7 @@ table.table { width: 100%; border-collapse: separate; border-spacing: 0; font-si
 .page-head { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; align-items: end; margin-bottom: 1.25rem; }
 .page-head h1 { font-size: 1.65rem; line-height: 1.2; }
 .page-head p { margin: .3rem 0 0; color: var(--muted); font-size: .9rem; }
+.head-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
 .grid { display: grid; gap: 1rem; }
 .grid-4 { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }

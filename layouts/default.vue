@@ -119,9 +119,10 @@ const { canApprove } = useApprovals()
 const nav = [
   { to: '/', label: 'Home', icon: 'home' },
   { to: '/requests', label: 'Requests', icon: 'requests' },
+  { to: '/leave-hours', label: 'Leave Hours', icon: 'hourglass' },
   { to: '/whos-out', label: "Who's Out", icon: 'calendar' },
   canApprove && { to: '/approvals', label: 'Approvals', icon: 'check' },
-  { to: '/payroll', label: 'Payroll', icon: 'wallet' },
+  { to: '/payroll', label: 'Payroll', icon: 'wallet', also: ['/timesheet'] },
   { to: '/directory', label: 'Directory', icon: 'people' }
 ].filter(Boolean)
 const footNav = [
@@ -129,7 +130,7 @@ const footNav = [
   { to: '/privacy-policy', label: 'Privacy Policy', icon: 'shield' }
 ]
 const route = useRoute()
-const isActive = (to) => to === '/' ? route.path === '/' : route.path.startsWith(to)
+const isActive = (to) => to === '/' ? route.path === '/' : [to, ...(nav.find(n => n.to === to)?.also || [])].some(p => route.path.startsWith(p))
 </script>
 
 <style scoped>
