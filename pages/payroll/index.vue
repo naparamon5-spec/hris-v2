@@ -113,7 +113,7 @@ const { page, size, total, pages, pageRows } = usePagination(rows, 7)
 .row { display: flex; align-items: center; gap: 1rem; padding: .85rem 0; border-bottom: 1px solid var(--border); color: inherit; }
 .row:last-child { border-bottom: 0; }
 .row div { display: flex; flex-direction: column; flex: 1; }
-.overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; place-items: center; z-index: 50; padding: 1rem; }
+.overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; grid-template-columns: minmax(0, 1fr); overflow-y: auto; overscroll-behavior: contain; place-items: center; z-index: 50; padding: 1rem; }
 .modal { width: 100%; max-width: 440px; max-height: 90vh; overflow: auto; }
 .modal h2 { font-size: 1.2rem; margin-bottom: 1rem; }
 .pick { display: flex; gap: .6rem; align-items: center; padding: .55rem 0; font-size: .9rem; border-bottom: 1px solid var(--border); }

@@ -155,6 +155,7 @@ const isActive = (to) => to === '/' ? route.path === '/' : [to, ...(nav.find(n =
 .shell {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 aside {
   width: 252px;
@@ -167,8 +168,16 @@ aside {
   position: sticky;
   top: 0;
   height: 100vh;
-  overflow: hidden;
+  height: 100dvh;
+  /* Zoomed in or a short window: the menu scrolls instead of being cut off. */
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.18) transparent;
 }
+aside::-webkit-scrollbar { width: 6px; }
+aside::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.18); border-radius: 6px; }
 aside::after {
   content: "";
   position: absolute;
@@ -485,6 +494,15 @@ main {
 }
 .scrim {
   display: none;
+}
+/* Short windows (or browser zoom): tighter sidebar so more of it fits before scrolling. */
+@media (max-height: 760px) {
+  aside { padding-top: 1rem; }
+  .brand { padding-bottom: 1rem; }
+  nav a { padding: 0.5rem 0.85rem; }
+  .ico { width: 26px; height: 26px; }
+  nav .nav-label:not(:first-child) { margin-top: 0.6rem; }
+  .flink { padding: 0.4rem 0.85rem; }
 }
 @media (max-width: 860px) {
   aside {

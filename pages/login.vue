@@ -72,6 +72,7 @@ const onOtp = (e) => {
 .co-txt b { font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .co-change { font-size: .8rem; font-weight: 700; padding: .35rem .7rem; border-radius: 999px; border: 1px solid var(--border); background: #fff; flex: none; }
 .co-change:hover { border-color: var(--ardent-red); }
+@media (max-width: 400px) { .co-logo { display: none; } .co-pick { padding-left: .85rem; } }
 .eyebrow { display: block; font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ardent-red); font-weight: 700; margin-bottom: .4rem; }
 .row { display: flex; justify-content: space-between; align-items: center; gap: .5rem; font-size: .8rem; margin-bottom: 1.25rem; }
 .check { display: flex; gap: .4rem; align-items: center; color: var(--muted); }

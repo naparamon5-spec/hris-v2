@@ -221,5 +221,13 @@ tr.picked td { background: #fff7f8; }
 .why span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .why small { display: block; font-size: .74rem; }
 @media (max-width: 640px) { .why { max-width: none; } .why span { white-space: normal; } }
+/* Phone cards: request no. is the card title; the checkbox sits in the top-right corner. */
+@media (max-width: 640px) {
+  tbody tr { position: relative; }
+  tbody td.pick { position: absolute; top: .9rem; right: .5rem; width: auto; padding: 0; }
+  tbody td[data-label="No."] { display: block; text-align: left; padding: 0 2.25rem .45rem .5rem; }
+  tbody td[data-label="No."]::before { display: none; }
+  tbody td[data-label="No."] b { font-size: .95rem; }
+}
 .acts .btn + .btn { margin-left: .35rem; }
 </style>

@@ -114,8 +114,8 @@ const cancelPw = () => { askPw.value = false; if (!unlocked.value) navigateTo('/
 .pw-period { color: var(--ardent-red); white-space: nowrap; }
 .locked { display: flex; align-items: center; gap: 1rem; max-width: 820px; }
 .locked div { flex: 1; display: flex; flex-direction: column; }
-.pw-overlay { position: fixed; inset: 0; margin: 0; z-index: 100; background: rgba(19,51,65,.55); backdrop-filter: blur(6px); display: grid; place-items: center; padding: 1rem; }
-.pw-card { width: 100%; max-width: 400px; background: #fff; border-radius: 20px; padding: 1.75rem 1.5rem 1.4rem; text-align: center; box-shadow: var(--shadow-lg); }
+.pw-overlay { position: fixed; inset: 0; margin: 0; z-index: 100; background: rgba(19,51,65,.55); backdrop-filter: blur(6px); display: grid; grid-template-columns: minmax(0, 1fr); place-items: center; padding: 1rem; overflow-y: auto; }
+.pw-card { width: 100%; max-width: 400px; overflow-wrap: anywhere; background: #fff; border-radius: 20px; padding: 1.75rem 1.5rem 1.4rem; text-align: center; box-shadow: var(--shadow-lg); }
 .pw-card h2 { font-size: 1.15rem; }
 .pw-card > p { margin: .5rem 0 1.25rem; font-size: .88rem; line-height: 1.5; }
 .pw-card .field { text-align: left; margin-bottom: .5rem; }
@@ -125,7 +125,7 @@ const cancelPw = () => { askPw.value = false; if (!unlocked.value) navigateTo('/
 .input[aria-invalid="true"] { border-color: var(--ardent-alert); }
 .eye { position: absolute; right: .5rem; top: 50%; transform: translateY(-50%); background: none; border: 0; font: 600 .75rem Montserrat, sans-serif; color: var(--muted); cursor: pointer; padding: .3rem .5rem; }
 .err { color: var(--ardent-alert); font-size: .78rem; min-height: 1.1em; }
-.pw-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; margin-top: 1rem; }
+.pw-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; margin-top: 1rem; }
 .slip { max-width: 820px; padding: 1.75rem; }
 .top { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.25rem; border-bottom: 2px solid var(--ardent-red); }
 .tag { font-weight: 800; letter-spacing: .3em; color: var(--ardent-red); }

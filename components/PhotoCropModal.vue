@@ -88,7 +88,7 @@ const save = () => {
 </script>
 
 <style scoped>
-.overlay { position: fixed; inset: 0; z-index: 60; background: rgba(15, 23, 33, .55); display: grid; place-items: center; padding: 1rem; }
+.overlay { position: fixed; inset: 0; z-index: 60; background: rgba(15, 23, 33, .55); display: grid; grid-template-columns: minmax(0, 1fr); overflow-y: auto; overscroll-behavior: contain; place-items: center; padding: 1rem; }
 .modal { width: 100%; max-width: 380px; padding: 1.4rem; display: flex; flex-direction: column; align-items: center; gap: .9rem; }
 .modal h3 { align-self: flex-start; font-size: 1.1rem; }
 .sub { align-self: flex-start; font-size: .82rem; margin-top: -.6rem; }

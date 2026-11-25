@@ -190,7 +190,7 @@ a.set { text-decoration: none; }
 .switch i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: left .2s; }
 .switch input:checked + i { background: var(--ardent-red); }
 .switch input:checked + i::after { left: 21px; }
-.overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; place-items: center; z-index: 50; padding: 1rem; }
+.overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; grid-template-columns: minmax(0, 1fr); overflow-y: auto; overscroll-behavior: contain; place-items: center; z-index: 50; padding: 1rem; }
 .modal { width: 100%; max-width: 460px; }
 .modal h2 { font-size: 1.2rem; margin-bottom: 1rem; }
 .foot { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }

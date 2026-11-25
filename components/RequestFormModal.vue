@@ -83,7 +83,7 @@ const submit = () => (!f.type && props.subtypes.length ? (typeErr.value = true) 
 <style scoped>
 .err { color: var(--ardent-red); font-size: .75rem; }
 .count { display: block; text-align: right; font-size: .72rem; margin-top: .2rem; }
-.overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; place-items: center; z-index: 50; padding: 1rem; }
+.overlay { position: fixed; inset: 0; background: rgba(19,51,65,.45); display: grid; grid-template-columns: minmax(0, 1fr); overflow-y: auto; overscroll-behavior: contain; place-items: center; z-index: 50; padding: 1rem; }
 .modal { width: 100%; max-width: 480px; max-height: 92vh; overflow: auto; padding: 1.5rem; }
 .modal h2 { font-size: 1.2rem; margin-bottom: 1.25rem; }
 .two { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
