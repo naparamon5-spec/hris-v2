@@ -5,7 +5,7 @@
       <input v-model="q" class="input" type="search" aria-label="Search people or roles" placeholder="Search people or roles">
       <FilterMenu v-model="extra" :fields="filterFields" />
     </div>
-    <div class="grid people">
+    <div ref="gridEl" class="grid people">
       <div v-for="e in pageRows" :key="e.id || e.name" class="card person">
         <span class="av">{{ initialsOf(e.name) }}</span>
         <b>{{ e.name }}</b>
@@ -42,7 +42,37 @@ const filtered = computed(() => directory.value.filter(e =>
   (!extra.value.department || e.department === extra.value.department) &&
   (!extra.value.role || e.role === extra.value.role) &&
   `${e.name} ${e.role} ${e.department}`.toLowerCase().includes(q.value.toLowerCase())))
-const { page, size, total, pages, pageRows } = usePagination(filtered, 7)
+const { page, size, total, pages, pageRows } = usePagination(filtered, 12)
+
+// Fill the screen: one page = as many columns as fit × as many rows as fit
+// above the pager, so the grid never ends in a lone card with empty space.
+const gridEl = ref(null)
+const fit = () => {
+  const el = gridEl.value
+  if (!el) return
+  const style = getComputedStyle(el)
+  const cols = Math.max(1, style.gridTemplateColumns.split(' ').filter(Boolean).length)
+  const gap = parseFloat(style.rowGap) || 16
+  const cards = [...el.children]
+  const cardH = Math.max(180, ...cards.map(c => c.offsetHeight))
+  const pager = 72 // pager row + page padding below the grid
+  const room = window.innerHeight - (el.getBoundingClientRect().top + window.scrollY) - pager
+  const rows = Math.max(window.innerWidth <= 640 ? 3 : 1, Math.floor((room + gap) / (cardH + gap)))
+  const next = cols * rows
+  if (next === size.value) return
+  const first = (page.value - 1) * size.value // keep the same people in view
+  size.value = next
+  page.value = Math.floor(first / next) + 1
+}
+let ro
+onMounted(() => {
+  ro = new ResizeObserver(() => fit())
+  ro.observe(document.documentElement)
+  if (gridEl.value) ro.observe(gridEl.value)
+  nextTick(fit)
+})
+onBeforeUnmount(() => ro?.disconnect())
+watch(pageRows, () => nextTick(fit))
 </script>
 
 <style scoped>

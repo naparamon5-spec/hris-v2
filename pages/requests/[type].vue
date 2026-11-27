@@ -358,7 +358,7 @@ const openFromQuery = () => {
 }
 onMounted(openFromQuery)
 watch(() => route.query.new, openFromQuery)
-const { page, size, total, pages, pageRows } = usePagination(rows, 6)
+const { page, size, total, pages, pageRows } = usePagination(rows, 8)
 
 // ?view=<id> (from a notification): open that request's details once the list is loaded.
 const openFromView = () => {
@@ -375,19 +375,26 @@ const openFromView = () => {
 onMounted(() => nextTick(openFromView))
 watch([() => route.query.view, source, pending], () => nextTick(openFromView))
 
-// Up to 6 rows per page, fewer on a short screen, so the list and pager fit the window
-// with no vertical scroll (desktop only; phones show one card per request and scroll).
-const MAX_ROWS = 6
+// As many rows per page as fit above the pager, so the list fills the window with no
+// empty gap and no vertical scroll (desktop only; phones show one card per request and scroll).
+const PHONE_ROWS = 6
 const tableCard = ref(null)
 const fitRows = () => {
   const el = tableCard.value
-  if (!el || window.innerWidth <= 640) { size.value = MAX_ROWS; return }
+  if (!el || window.innerWidth <= 640) { setSize(PHONE_ROWS); return }
   const top = el.getBoundingClientRect().top + window.scrollY
   const head = el.querySelector('thead')?.offsetHeight || 36
   const row = Math.max(48, ...[...el.querySelectorAll('tbody tr')].map(r => r.offsetHeight))
   const below = 56 /* pager */ + 32 /* page bottom padding */ + 16 /* card padding */
   const fit = Math.floor((window.innerHeight - top - head - below) / row)
-  size.value = Math.max(3, Math.min(MAX_ROWS, fit))
+  setSize(Math.max(3, fit))
+}
+// Change rows per page but keep the same requests in view.
+const setSize = (n) => {
+  if (n === size.value) return
+  const first = (page.value - 1) * size.value
+  size.value = n
+  page.value = Math.floor(first / n) + 1
 }
 const refit = () => nextTick(fitRows)
 onMounted(() => { refit(); window.addEventListener('resize', refit) })
