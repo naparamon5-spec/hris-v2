@@ -120,7 +120,6 @@
       <p v-if="err" class="err" role="alert">{{ err }}</p>
       <div class="foot">
         <button type="button" class="btn btn-ghost" @click="$emit('close')">Cancel</button>
-        <button type="button" class="btn btn-ghost" :disabled="busy" @click="submit(false)">Save as draft</button>
         <button type="submit" class="btn btn-primary" :disabled="busy" :aria-busy="busy">{{ busy ? 'Saving…' : 'Submit' }}</button>
       </div>
     </form>
@@ -131,7 +130,7 @@
 <script setup>
 import { peso, LEAVE_TYPES } from '~/utils/format'
 // Builds the hris_server create/edit body per request type (docs/BACKEND.md §7.4).
-// Submit = save + send for approval; Save as draft = saved as Active.
+// Submit = save + send for approval (no Save as draft button).
 const props = defineProps({ title: String, record: { type: Object, default: null }, kind: String, busy: Boolean })
 const emit = defineEmits(['close', 'save'])
 
