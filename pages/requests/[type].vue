@@ -14,8 +14,11 @@
     <div ref="tableCard" class="card table-wrap no-x" style="padding:.5rem">
       <table class="table stack">
         <colgroup>
-          <col class="c-pick"><col class="c-no"><col v-if="showType" class="c-type"><col class="c-date"><col class="c-hrs">
-          <col class="c-why"><col class="c-appr"><col class="c-stat"><col class="c-act">
+          <col class="c-pick">
+          <!-- LOA / CA / MAD / OT: the HRIS column set for that type (hcols); widths set per column. -->
+          <template v-if="hcols"><col v-for="c in hcols" :key="c.key" :style="{ width: c.w }"><col style="width: 9%"></template>
+          <template v-else><col class="c-no"><col v-if="showType" class="c-type"><col class="c-date"><col class="c-hrs"><col class="c-why"><col class="c-appr"><col class="c-stat"></template>
+          <col class="c-act">
         </colgroup>
         <thead><tr>
           <th class="pick">
@@ -25,25 +28,34 @@
               :title="pickable.length ? 'Select all pending requests' : 'No pending requests to select'" @change="toggleAll"
             >
           </th>
-          <th>No.</th><th v-if="showType">Type</th><th>Date</th><th>Hours</th><th>{{ reasonLabel }}</th><th>Approver</th><th>Status</th><th><span class="sr-only">Actions</span></th>
+          <template v-if="hcols"><th v-for="c in hcols" :key="c.key" :class="{ num: c.num }">{{ c.label }}</th></template>
+          <template v-else><th>No.</th><th v-if="showType">Type</th><th>Date</th><th>Hours</th><th>{{ reasonLabel }}</th><th>Approver</th></template>
+          <th>Status</th><th><span class="sr-only">Actions</span></th>
         </tr></thead>
         <tbody>
           <tr
             v-for="r in pageRows" :key="r.id"
-            class="can" :class="{ picked: selected.includes(r.id) }" @click="openDetail(r, $event)"
+            class="can" :class="{ picked: selected.includes(r.id), fresh: freshId === r.id }" @click="openDetail(r, $event)"
           >
             <td class="pick" @click.stop="canPick(r) && toggle(r.id, $event)">
               <input v-if="canPick(r)" v-model="selected" type="checkbox" :value="r.id" :aria-label="`Select ${r.no}`" @click.stop>
             </td>
-            <td data-label="No." :title="`Filed ${r.dateFiled}`"><b>{{ r.no }}</b></td>
-            <td v-if="showType" data-label="Type" :title="r.type">{{ r.type }}</td>
-            <td data-label="Date" class="date" :title="r.date">{{ fmtDate(r.date) }}</td>
-            <td data-label="Hours">{{ r.hours || '—' }}</td>
-            <td :data-label="reasonLabel" class="why">
-              <span :title="r.reason">{{ r.reason || '—' }}</span>
-              <small v-if="r.customer" class="m">{{ r.customer }}</small>
-            </td>
-            <td data-label="Approver" class="appr" :title="r.approver">{{ r.approver }}</td>
+            <template v-if="hcols">
+              <td v-for="c in hcols" :key="c.key" :data-label="c.label" :class="{ num: c.num, appr: c.key === 'approver' || c.key === 'witness' }" :title="cellOf(r, c.key)">
+                <b v-if="c.key === 'no'">{{ r.no }}</b><template v-else>{{ cellOf(r, c.key) }}</template>
+              </td>
+            </template>
+            <template v-else>
+              <td data-label="No." :title="`Filed ${r.dateFiled}`"><b>{{ r.no }}</b></td>
+              <td v-if="showType" data-label="Type" :title="r.type">{{ r.type }}</td>
+              <td data-label="Date" class="date" :title="r.date">{{ fmtDate(r.date) }}</td>
+              <td data-label="Hours">{{ r.hours || '—' }}</td>
+              <td :data-label="reasonLabel" class="why">
+                <span :title="r.reason">{{ r.reason || '—' }}</span>
+                <small v-if="r.customer" class="m">{{ r.customer }}</small>
+              </td>
+              <td data-label="Approver" class="appr" :title="r.approver">{{ r.approver }}</td>
+            </template>
             <td data-label="Status"><span class="badge" :class="'badge-' + badge(r.status)">{{ r.status }}</span></td>
             <td class="acts">
               <!-- One ⋮ button per row; the menu lists only the actions this status allows. -->
@@ -86,7 +98,7 @@
           <div class="dt-card" role="dialog" aria-modal="true" :aria-label="`${meta.title} ${detail.no}`">
             <header class="dt-head">
               <div>
-                <small class="m">{{ meta.title }}</small>
+                <small class="m">{{ meta.title }}<template v-if="hris"> · {{ hris }} #</template></small>
                 <h2>{{ detail.no }}</h2>
               </div>
               <span class="badge" :class="'badge-' + badge(detail.status)">{{ detail.status }}</span>
@@ -148,6 +160,33 @@ const canEdit = computed(() => apiType.value !== 'other')
 const isPendingStatus = (s) => s === 'For Approval' || s === 'For Witness Approval'
 // Call Approval / MAD / OT have no type — hide the column when no row has one.
 const showType = computed(() => rows.value.some(r => r.type))
+const isLoa = computed(() => type.value === 'leave-of-absence')
+// Types shown with the HRIS column names, keyed to their short name ("LOA #", "CA Date"…).
+const hris = computed(() => ({ 'leave-of-absence': 'LOA', 'call-approval': 'CA', 'manual-arrival-departure': 'MAD', overtime: 'Overtime' })[type.value] || '')
+// The HRIS list columns per type (same names and order as the HRIS web app). Widths add up to
+// ~91%; the checkbox, Status (9%) and ⋮ columns take the rest. num = right-aligned number.
+const HCOLS = {
+  'leave-of-absence': [['no', 'LOA #', 11], ['applied', 'Date Applied', 13], ['date', 'LOA Date', 13], ['type', 'Leave Type', 16], ['approver', 'Approved By', 18], ['approvedDate', 'Approved Date', 13]],
+  'call-approval': [['no', 'CA #', 12], ['applied', 'Date Applied', 17], ['date', 'CA Date', 17], ['approver', 'Approved By', 23], ['approvedDate', 'Approved Date', 17]],
+  'manual-arrival-departure': [['no', 'MAD #', 11], ['applied', 'Date Applied', 17], ['date', 'MAD Date', 17], ['witness', 'Witnessed By', 26], ['approver', 'Approved By', 20]],
+  overtime: [['no', 'Overtime #', 11], ['applied', 'Date Applied', 13], ['date', 'Overtime Date', 13], ['appliedHrs', 'Applied Hours', 10, true], ['approvedHrs', 'Approved Hours', 10, true], ['approver', 'Approved By', 18], ['approvedDate', 'Approved Date', 13]]
+}
+const hcols = computed(() => HCOLS[type.value]?.map(([key, label, w, num]) => ({ key, label, w: `${w}%`, num })) || null)
+const cellOf = (r, key) => {
+  const x = r.raw || {}
+  switch (key) {
+    case 'no': return r.no
+    case 'applied': return fmtDate(r.dateFiled)
+    case 'date': return fmtDate(r.date)
+    case 'type': return r.type || '—'
+    case 'approver': return x.approved_by || r.approver || ''
+    case 'witness': return x.witnessed_by || ''
+    case 'approvedDate': return realDate(x.approved_date) ? fmtDate(x.approved_date) : ''
+    case 'appliedHrs': return x.applied_hours || r.hours || ''
+    case 'approvedHrs': return x.approved_hours || ''
+    default: return ''
+  }
+}
 
 // Row actions, by status (BACKEND.md §7.2): Active = draft → Send / Edit / Cancel;
 // For Approval → Resend; Approved → Cancel / Reverse; Cancelled / Disapproved → Reverse.
@@ -192,20 +231,69 @@ const runDetailAction = (key) => {
   runAction(r, key)
 }
 const dash = (v) => (v == null || v === '' ? '—' : v)
+// SQL Server's empty date is 1 Jan 1900 ("January 1, 1900" / "1900-01-01"): show it as blank.
+const realDate = (v) => (!v || /1900/.test(String(v)) ? '' : v)
+// "Nov 26, 2026 07:02 AM" → "Nov 26, 2026 / 07:02 AM": a slash between the date and the time.
+const slashTime = (v) => String(v || '').replace(/(\d{4})\s+(\d{1,2}:\d{2}(?:\s*[AP]M)?)/i, '$1 / $2')
 const detailFields = (r) => {
   const x = r.raw || {}
   const ca = type.value === 'call-approval'
   const ot = type.value === 'overtime'
+  // LOA: same names as the list columns (Date Applied, LOA Date, Leave Type, Approved By, Approved Date).
+  if (isLoa.value) {
+    return [
+      { label: 'Date Applied', value: dash(r.dateFiled) },
+      { label: 'LOA Date', value: dash(r.date) },
+      { label: 'Leave Type', value: dash(r.type) },
+      { label: 'Hours', value: dash(x.applied_hours || r.hours) },
+      (x.from_display || x.to_display) && { label: 'From', value: dash(slashTime(x.from_display)) },
+      (x.from_display || x.to_display) && { label: 'To', value: dash(slashTime(x.to_display)) },
+      { label: 'Approved By', value: dash(x.approved_by) },
+      { label: 'Approved Date', value: realDate(x.approved_date) }, // blank until approved
+      x.witnessed_by && { label: 'Witness', value: x.witnessed_by },
+      { label: reasonLabel.value, value: dash(r.reason), wide: true }
+    ].filter(Boolean)
+  }
+  // CA: same names as the list columns; the time rows show under Details.
+  if (ca) {
+    return [
+      { label: 'Date Applied', value: dash(r.dateFiled) },
+      { label: 'CA Date', value: dash(r.date) },
+      (x.from_display || x.to_display) && { label: 'From', value: dash(slashTime(x.from_display)) },
+      (x.from_display || x.to_display) && { label: 'To', value: dash(slashTime(x.to_display)) },
+      { label: 'Hours', value: dash(x.applied_hours || r.hours) },
+      { label: 'Approved By', value: dash(x.approved_by) },
+      { label: 'Approved Date', value: realDate(x.approved_date) }, // blank until approved
+      x.witnessed_by && { label: 'Witness', value: x.witnessed_by },
+      !(x.rows || []).length && { label: 'Purpose', value: dash(r.reason), wide: true }
+    ].filter(Boolean)
+  }
+  // MAD / Overtime: same names as the list columns.
+  if (hris.value) {
+    const h = hris.value
+    return [
+      { label: 'Date Applied', value: dash(r.dateFiled) },
+      { label: `${h} Date`, value: dash(r.date) },
+      (x.from_display || x.to_display) && { label: 'From', value: dash(slashTime(x.from_display)) },
+      (x.from_display || x.to_display) && { label: 'To', value: dash(slashTime(x.to_display)) },
+      { label: ot ? 'Applied Hours' : 'Hours', value: dash(x.applied_hours || r.hours) },
+      ot && { label: 'Approved Hours', value: dash(x.approved_hours) },
+      !ot && { label: 'Witnessed By', value: dash(x.witnessed_by) },
+      { label: 'Approved By', value: x.approved_by || '' },
+      { label: 'Approved Date', value: realDate(x.approved_date) }, // blank until approved
+      { label: reasonLabel.value, value: dash(r.reason), wide: true }
+    ].filter(Boolean)
+  }
   return [
     r.type && { label: 'Type', value: r.type },
     { label: 'Date filed', value: dash(r.dateFiled) },
     { label: 'Date', value: dash(r.date) },
-    (x.from_display || x.to_display) && { label: 'From', value: dash(x.from_display) },
-    (x.from_display || x.to_display) && { label: 'To', value: dash(x.to_display) },
+    (x.from_display || x.to_display) && { label: 'From', value: dash(slashTime(x.from_display)) },
+    (x.from_display || x.to_display) && { label: 'To', value: dash(slashTime(x.to_display)) },
     { label: ot ? 'Applied hours' : 'Hours', value: dash(x.applied_hours || r.hours) },
     ot && { label: 'Approved hours', value: dash(x.approved_hours && x.approved_hours !== '0:00' ? x.approved_hours : '') },
     { label: 'Approver', value: dash(x.approved_by) },
-    x.approved_date && { label: 'Date approved', value: x.approved_date },
+    realDate(x.approved_date) && { label: 'Date approved', value: x.approved_date },
     x.witnessed_by && { label: 'Witness', value: x.witnessed_by },
     !ca && { label: reasonLabel.value, value: dash(r.reason), wide: true },
     ca && !(x.rows || []).length && { label: 'Purpose', value: dash(r.reason), wide: true }
@@ -313,14 +401,33 @@ const act = async (r, action) => {
     flash(apiError(e))
   } finally {
     busy.value = false
-    refresh()
+    showRow(r.id)
   }
 }
+
+// After a change, reload and show the request it touched: a new one on page 1 (newest is
+// on top), an edited/sent/cancelled one on whatever page it sits — with a short highlight.
+const freshId = ref(null)
+let freshTimer
+const showRow = async (id, newest = false) => {
+  await refresh()
+  await nextTick() // let the pager settle (it resets to page 1 when the count changes)
+  if (newest) page.value = 1
+  const i = rows.value.findIndex(x => String(x.id) === String(id))
+  if (i < 0) return
+  if (!newest) page.value = Math.floor(i / size.value) + 1
+  freshId.value = rows.value[i].id
+  clearTimeout(freshTimer)
+  freshTimer = setTimeout(() => { freshId.value = null }, 2200)
+}
+onBeforeUnmount(() => clearTimeout(freshTimer))
 
 // body = the server's create/edit body for this type, built by RequestFormModal.
 // sendNow: create and send in one go (Save as draft leaves it Active).
 const save = async ({ body, sendNow }) => {
   busy.value = true
+  let touched = editing.value?.id ?? null
+  const editingWas = !!editing.value
   try {
     if (editing.value) {
       await api(`/auth/requests/${apiType.value}/${editing.value.id}`, { method: 'PUT', body })
@@ -329,6 +436,7 @@ const save = async ({ body, sendNow }) => {
     } else {
       const r = await api(`/auth/requests/${apiType.value}`, { method: 'POST', body })
       const id = r?.data?.id
+      touched = id ?? null
       if (sendNow && id != null) {
         try {
           await api(`/auth/requests/${apiType.value}/${id}/send`, { method: 'POST' })
@@ -343,7 +451,8 @@ const save = async ({ body, sendNow }) => {
     flash(apiError(e, 'Unable to save the request.'))
   } finally {
     busy.value = false
-    refresh()
+    if (touched != null) showRow(touched, !editingWas)
+    else refresh()
   }
 }
 
@@ -447,11 +556,15 @@ const cancelSelected = async () => {
 
 <style scoped>
 .acts { white-space: nowrap; text-align: right; }
+.table th.num, .table td.num { text-align: center; }
 .pick { width: 1%; padding-right: 0; }
 .pick input { accent-color: var(--ardent-red); width: 16px; height: 16px; cursor: pointer; vertical-align: middle; }
 .pick input:disabled { cursor: default; opacity: .4; }
 tr.can { cursor: pointer; }
 tr.picked td { background: #fff7f8; }
+/* Just created or changed: a soft red tint that fades out. */
+tr.fresh td { animation: fresh 2.2s ease-out; }
+@keyframes fresh { 0%, 35% { background: #fde7eb; } 100% { background: transparent; } }
 .why { max-width: 240px; }
 .why span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .why small { display: block; font-size: .74rem; }
