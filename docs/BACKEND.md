@@ -13,7 +13,7 @@ below was read from the server source:
 > `hris_server/API.md` is **out of date** (it still mentions a seed store and
 > `/approvals/:id/approve`). Trust this file and the controllers, not `API.md`.
 
-Last updated **2026-11-25** (site commit `316be2e`). What changed in the site since the last
+Last updated **2026-11-26** — the site is now connected (§00). Previous revision 2026-11-25 (site commit `316be2e`). What changed in the site since the last
 revision, and what it means for the backend, is in **§0.2**.
 
 Sections:
@@ -22,6 +22,55 @@ Sections:
 6. Home · 7. Requests · 8. Approvals · 9. Payroll & timesheet · 10. Leave hours ·
 11. Who's Out · 12. Directory · 13. Notifications · 14. Endpoints the site does not use ·
 15. **Gaps — site features with no server API yet** · 16. Mock-removal checklist · 17. Rollout order
+
+---
+
+## 00. Connection status — 2026-11-26 (site now uses hris_server)
+
+The site no longer uses mock data: `composables/useMockData.js` is deleted and every page calls
+the server through `composables/useApi.js` (base URL `NUXT_PUBLIC_API_BASE`, see `.env.example`).
+
+**Connected** (list A in §0.1, all 38 endpoints): sign-in + 2FA code (`/public/login`), tenants,
+refresh, logout, `/auth/me`, forgot / reset / change password, profile + background (view and
+edit) + PhilHealth MDR + certificates, 2FA status / setup / verify / disable, Home (balance,
+approvals count, recent activity), Requests (list, create, edit, send, resend, cancel, reverse,
+bulk cancel), Approvals (pending records / requests / witness, approve, disapprove, bulk loop,
+OT approved hours, Approved Records / Requests history), payslips (list, detail behind
+`/auth/verify-password`, single + bulk PDF via the browser's print → Save as PDF), timesheet,
+leave hours, Who's Out, directory, notifications (bell polled every 60 s, read, read all),
+header search (same lists, cached).
+
+Files: `composables/useApi.js` (tokens, 401 → refresh once → /login), `useSession.js` (+ `useMe`),
+`useCompany.js`, `useApprovals.js`, `useNotifications.js`, `usePayslips.js`,
+`middleware/auth.global.js`, `utils/format.js` (request types, badges, adapters).
+
+**Still no API — kept in the UI, marked in the code** (details in §0 / §15):
+
+| Feature | What the site does now |
+|---|---|
+| Sign in with Authentik (§0 #1, G1) | button shows "not available yet" |
+| Switch company without signing in again (#2, G2) | signs out → company select (as before) |
+| Edit Bio (#3, G3) | UI only, starts empty ("No bio yet."), like mobile |
+| Manager on Profile (#4, G4) | shows "—" |
+| Certificate upload (#5, G5) | shows "finalized by HR on the web portal", like mobile |
+| Profile photo upload (#6) | kept in this browser only, like mobile |
+| Requests "N pending" counts (#8, G7) | counted from each `/auth/requests/:type` list |
+| Bulk approve / cancel (#9, #9b, G8) | one request per item |
+| Payslip password enforced by the server (#10, G11) | checked client-side before loading |
+| Timesheet "Late" minutes (#11, G12) | no Late column; remarks shown |
+| Directory email / local no. (#12, G13) | contact line hidden when empty |
+| Header search endpoint (#15, G16) | client-side over the loaded lists |
+| Applicant exam link (#16, G17) | "Coming soon — contact HR"; nothing is sent |
+| Leave-type / request-type lists (#17) | hard-coded server lists (`LEAVE_TYPES`, `OTHER_TYPES`) |
+| Web push (#18) | bell polls every 60 s |
+| 2FA QR code | no QR library: the setup key (and an `otpauth://` link) is shown to add manually |
+| Notifications `created_at` (G21) | sorted by id until the server sends it |
+| Payslips older than the last 24 (G22) | not shown |
+| Edit Other Requests | server answers "Edit not available for this type" — no Edit button |
+
+Server-side for the site to work: CORS — `ENVIRONMENT=DEVELOPMENT` (local) or
+`CLIENT_URL=<site origin>` (production); `RESET_LINK_BASE_URL=<site origin>` so reset emails open
+`/reset-password` here.
 
 ---
 

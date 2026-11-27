@@ -6,31 +6,39 @@
       <FilterMenu v-model="extra" :fields="filterFields" />
     </div>
     <div class="grid people">
-      <div v-for="e in pageRows" :key="e.name" class="card person">
-        <span class="av">{{ e.name.split(' ').map(s => s[0]).join('') }}</span>
+      <div v-for="e in pageRows" :key="e.id || e.name" class="card person">
+        <span class="av">{{ initialsOf(e.name) }}</span>
         <b>{{ e.name }}</b>
-        <small class="m">{{ e.role }} · {{ e.department }}</small>
-        <div class="contact"><span>✉ {{ e.email }}</span><span>☎ Local {{ e.local }}</span></div>
+        <small class="m">{{ [e.role, e.department].filter(Boolean).join(' · ') }}</small>
+        <!-- Email and local number are not returned by /auth/directory yet (BACKEND.md §0 #12, G13). -->
+        <div v-if="e.email || e.local" class="contact"><span v-if="e.email">✉ {{ e.email }}</span><span v-if="e.local">☎ Local {{ e.local }}</span></div>
       </div>
     </div>
-    <p v-if="!filtered.length" class="empty">No matches</p>
+    <p v-if="pending" class="empty">Loading…</p>
+    <p v-else-if="error" class="empty">{{ apiError(error, 'Unable to load the directory.') }} <a href="#" @click.prevent="refresh()">Try again</a></p>
+    <p v-else-if="!filtered.length" class="empty">No matches</p>
     <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
   </div>
 </template>
 
 <script setup>
-const { directory } = useMockData()
+import { apiError } from '~/composables/useApi'
+// GET /auth/directory (BACKEND.md §12) — loaded once, searched and filtered here.
+const api = useApi()
+const { data: directory, pending, error, refresh } = await useAsyncData('directory',
+  () => api('/auth/directory').then(r => r.data || []), { default: () => [], server: false })
+const initialsOf = (n) => String(n || '').replace(',', ' ').split(/\s+/).filter(Boolean).map(s => s[0]).slice(0, 2).join('').toUpperCase()
 const route = useRoute()
 const q = ref(String(route.query.q || ''))
 // Header search links here with ?q=<name>.
 watch(() => route.query.q, v => { if (v) q.value = String(v) })
 // Filters menu: department and position (server: GET /auth/directory?department=).
 const extra = ref({ department: '', role: '' })
-const filterFields = [
-  { key: 'department', label: 'Department', options: uniq(directory, e => e.department) },
-  { key: 'role', label: 'Position', options: uniq(directory, e => e.role) }
-]
-const filtered = computed(() => directory.filter(e =>
+const filterFields = computed(() => [
+  { key: 'department', label: 'Department', options: uniq(directory.value, e => e.department) },
+  { key: 'role', label: 'Position', options: uniq(directory.value, e => e.role) }
+])
+const filtered = computed(() => directory.value.filter(e =>
   (!extra.value.department || e.department === extra.value.department) &&
   (!extra.value.role || e.role === extra.value.role) &&
   `${e.name} ${e.role} ${e.department}`.toLowerCase().includes(q.value.toLowerCase())))

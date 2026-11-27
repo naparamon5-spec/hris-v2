@@ -31,7 +31,7 @@ const home = computed(() => (signedIn.value ? '/' : '/login'))
 .doc-nav { display: flex; gap: .25rem; margin-left: auto; }
 .doc-nav a { padding: .45rem .8rem; border-radius: 999px; font-size: .84rem; font-weight: 600; color: var(--muted); }
 .doc-nav a:hover { color: var(--text); background: #f4f5f7; }
-.doc-nav a.router-link-active { color: var(--ardent-red); background: #fdecef; }
+.doc-nav a.router-link-active { color: var(--ardent-red); background: var(--brand-soft); }
 .back-btn { flex: none; }
 .doc-main { flex: 1; width: 100%; max-width: 1560px; margin: 0 auto; padding: 1.25rem 2rem 1.25rem; }
 .doc-foot { text-align: center; color: var(--muted); font-size: .74rem; padding: 0 1rem 1rem; }

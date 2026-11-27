@@ -35,12 +35,12 @@ const year = new Date().getFullYear()
   position: relative; overflow: hidden; background: var(--grad-navy);
   color: #fff; padding: 2.75rem 3rem; display: flex; flex-direction: column; justify-content: space-between; gap: 2rem;
 }
-.hero::before { content: ''; position: absolute; width: 560px; height: 560px; right: -200px; top: -180px; border-radius: 50%; background: radial-gradient(circle, rgba(255,89,105,.42), transparent 65%); }
+.hero::before { content: ''; position: absolute; width: 560px; height: 560px; right: -200px; top: -180px; border-radius: 50%; background: radial-gradient(circle, rgba(var(--brand2-rgb),.42), transparent 65%); }
 .hero::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.08) 1px, transparent 1px); background-size: 22px 22px; mask-image: radial-gradient(circle at 70% 40%, #000, transparent 70%); pointer-events: none; }
 .hero > * { position: relative; z-index: 1; }
 .eyebrow { font-size: .72rem; letter-spacing: .16em; font-weight: 700; color: var(--ardent-coral); }
 .hero h1 { font-size: clamp(2rem, 4vw, 3.3rem); line-height: 1.08; font-weight: 800; margin-top: .5rem; letter-spacing: -.03em; }
-.hero h1 span { background: linear-gradient(135deg, #FF5969, #ffb3bb); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero h1 span { background: linear-gradient(135deg, var(--ardent-coral), var(--brand-soft-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hero p { color: rgba(255,255,255,.72); max-width: 30rem; margin-top: 1rem; }
 .float { display: flex; flex-direction: column; gap: .75rem; margin-top: 2rem; max-width: 300px; }
 .mini { display: flex; gap: .75rem; align-items: center; padding: .8rem 1rem; border-radius: 14px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); backdrop-filter: blur(10px); animation: bob 5s ease-in-out infinite; }

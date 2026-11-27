@@ -23,19 +23,24 @@
       </div>
       <div class="card day-card">
         <div class="day-head">
-          <h3 class="day-title">{{ dayName }}</h3>
+          <h3 class="day-title">{{ q.trim() ? `Search in ${monthLabel}` : dayName }}</h3>
           <div class="counts">
             <span class="cnt loa"><b>{{ dayCount.leave }}</b> LOA</span>
             <span class="cnt ca"><b>{{ dayCount.call }}</b> CA</span>
           </div>
         </div>
-        <div v-if="people.length">
-          <div v-for="p in pageRows" :key="p.name + p.type" class="person">
-            <span class="av">{{ p.name.split(' ').map(s => s[0]).join('') }}</span>
-            <div><b>{{ p.name }}</b><small class="m">{{ p.type }}</small></div>
-            <span class="badge" :class="p.kind === 'leave' ? 'badge-red' : 'badge-ok'">{{ p.kind === 'leave' ? 'Leave' : 'Call Approval' }}</span>
+        <!-- Search: names or leave types across the whole month shown on the calendar. -->
+        <input v-model="q" class="input day-search" type="search" aria-label="Search who's out this month" :placeholder="`Search name, LOA or CA in ${monthLabel}`">
+        <p v-if="loading" class="empty">Loading…</p>
+        <p v-else-if="loadError" class="empty">{{ loadError }}</p>
+        <div v-else-if="people.length">
+          <div v-for="(p, i) in pageRows" :key="p.day + p.name + p.type + i" class="person" :class="{ jump: q.trim() }" @click="q.trim() && pickDay(p.day)">
+            <span class="av">{{ initialsOf(p.name) }}</span>
+            <div><b>{{ p.name }}</b><small v-if="q.trim()" class="m">{{ shortDay(p.day) }}</small></div>
+            <span class="badge" :class="p.kind === 'leave' ? 'badge-red' : 'badge-ok'">{{ p.kind === 'leave' ? 'LOA' : 'CA' }}</span>
           </div>
         </div>
+        <p v-else-if="q.trim()" class="empty">No one matches "{{ q.trim() }}" in {{ monthLabel }}</p>
         <p v-else class="empty">🎉 Full attendance</p>
         <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
       </div>
@@ -44,24 +49,64 @@
 </template>
 
 <script setup>
-// Mock data only exists for November 2026; other months show full attendance.
-const { whosOut } = useMockData()
+// GET /hris/whosout?month=&year= (BACKEND.md §11), refetched on every month change.
+const api = useApi()
 const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const now = new Date()
-const year = ref(2026)
-const month = ref(10)
-const sel = ref(now.getFullYear() === 2026 && now.getMonth() === 10 ? now.getDate() : 1)
+const year = ref(now.getFullYear())
+const month = ref(now.getMonth())
+const sel = ref(now.getDate())
+const initialsOf = (n) => String(n || '').replace(',', ' ').split(/\s+/).filter(Boolean).map(s => s[0]).slice(0, 2).join('').toUpperCase()
+
+// Each person's date range, expanded into the days of the shown month.
+const byDay = ref({})
+const loading = ref(false)
+const loadError = ref('')
+const toWhosOut = (r, y, m) => {
+  const out = {}
+  for (const p of r.data || []) {
+    const from = new Date(p.date_from)
+    const to = new Date(p.date_to || p.date_from)
+    for (let d = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate())); d <= to; d.setUTCDate(d.getUTCDate() + 1)) {
+      if (d.getUTCFullYear() !== y || d.getUTCMonth() + 1 !== m) continue
+      ;(out[d.getUTCDate()] ||= []).push({ name: p.name, type: p.type === 'ca' ? 'CA' : 'LOA', kind: p.type === 'ca' ? 'call' : 'leave' })
+    }
+  }
+  return out
+}
+watch([year, month], async ([y, m]) => {
+  loading.value = true
+  loadError.value = ''
+  try {
+    byDay.value = toWhosOut(await api(`/hris/whosout?month=${m + 1}&year=${y}`), y, m + 1)
+  } catch (e) {
+    byDay.value = {}
+    loadError.value = apiError(e, "Unable to load Who's Out.")
+  } finally {
+    loading.value = false
+  }
+}, { immediate: true })
 const offset = computed(() => new Date(year.value, month.value, 1).getDay())
 const days = computed(() => new Date(year.value, month.value + 1, 0).getDate())
 const monthLabel = computed(() => new Date(year.value, month.value, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }))
-const dayPeople = (d) => (year.value === 2026 && month.value === 10 ? whosOut[d] : undefined) || []
-const people = computed(() => dayPeople(sel.value))
+const dayPeople = (d) => byDay.value[d] || []
+const q = ref('')
+// No search: the selected day. With a search: every match in the month, by date.
+const people = computed(() => {
+  const needle = q.value.trim().toLowerCase()
+  if (!needle) return dayPeople(sel.value).map(p => ({ ...p, day: sel.value }))
+  return Object.keys(byDay.value).map(Number).sort((a, b) => a - b).flatMap(d =>
+    byDay.value[d].filter(p => `${p.name} ${p.type}`.toLowerCase().includes(needle)).map(p => ({ ...p, day: d })))
+})
+const shortDay = (d) => new Date(year.value, month.value, d).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+// Clicking a search result selects that day on the calendar.
+const pickDay = (d) => { sel.value = d; q.value = '' }
 // LOA / CA counts for the selected day.
 const tally = (list) => ({ leave: list.filter(p => p.kind === 'leave').length, call: list.filter(p => p.kind === 'call').length })
 const dayCount = computed(() => tally(people.value))
 
-const { page, size, total, pages, pageRows } = usePagination(people, 7)
-watch(sel, () => { page.value = 1 })
+const { page, size, total, pages, pageRows } = usePagination(people, 6)
+watch([sel, q], () => { page.value = 1 })
 const dayName = computed(() => new Date(year.value, month.value, sel.value).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }))
 const isToday = (d) => year.value === now.getFullYear() && month.value === now.getMonth() && d === now.getDate()
 const shift = (n) => {
@@ -73,7 +118,9 @@ const goToday = () => { year.value = now.getFullYear(); month.value = now.getMon
 </script>
 
 <style scoped>
-.layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+/* Calendar on the left, day card on the right — both cards the same height. */
+.layout { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 1rem; align-items: stretch; }
+.layout > .card { display: flex; flex-direction: column; min-height: 0; }
 @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
 .nav { display: flex; align-items: center; gap: .5rem; }
 .nav b { min-width: 9.5rem; text-align: center; }
@@ -100,14 +147,14 @@ const goToday = () => { year.value = now.getFullYear(); month.value = now.getMon
 .leave { background: var(--ardent-coral); }
 .call { background: #2e9d6a; }
 .day.sel .dots i { background: #fff; }
-.legend { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin-top: 1rem; font-size: .8rem; color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; margin-top: auto; padding-top: 1rem; font-size: .8rem; color: var(--muted); }
 .legend span { display: flex; align-items: center; gap: .4rem; }
 .day-head { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; margin-bottom: .75rem; }
 .day-head .day-title { margin-bottom: 0; }
 .counts { display: flex; gap: .4rem; flex: none; }
 .cnt { font-size: .72rem; font-weight: 700; padding: .25rem .6rem; border-radius: 999px; white-space: nowrap; }
 .cnt b { font-size: .85rem; }
-.cnt.loa { color: var(--ardent-red); background: #fde8ea; }
+.cnt.loa { color: var(--ardent-red); background: var(--brand-soft); }
 .cnt.ca { color: #1f7a52; background: #e3f5ec; }
 .day-card { display: flex; flex-direction: column; align-self: stretch; }
 .day-title { font-size: 1rem; margin-bottom: .75rem; }
@@ -115,4 +162,7 @@ const goToday = () => { year.value = now.getFullYear(); month.value = now.getMon
 .person:last-child { border-bottom: 0; }
 .person div { flex: 1; display: flex; flex-direction: column; }
 .av { width: 38px; height: 38px; border-radius: 50%; background: var(--ardent-navy); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: .78rem; }
+.day-search { width: 100%; margin-bottom: .5rem; }
+.person.jump { cursor: pointer; border-radius: 10px; }
+.person.jump:hover { background: #fafafa; }
 </style>

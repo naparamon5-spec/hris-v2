@@ -39,10 +39,10 @@
       <header :class="{ hidden: hideHeader }">
         <button class="menu" aria-label="Menu" @click="open = !open">☰</button>
         <HeaderSearch />
-        <button type="button" class="company" title="Switch company" @click="switchCompany"
-          ><AppIcon name="people" :size="15" /><span>{{ company }}</span
-          ><AppIcon name="chevron" :size="13"
-        /></button>
+        <!-- Display only: the company comes from the sign-in (switch = sign out, pick another). -->
+        <div class="company" :title="me.company"
+          ><AppIcon name="people" :size="15" /><span>{{ me.company }}</span
+        ></div>
         <NuxtLink to="/notifications" class="bell" aria-label="Notifications"
           ><AppIcon name="bell" :size="20" /><i v-if="unread">{{
             unread
@@ -55,13 +55,13 @@
             :aria-expanded="menu"
             @click="menu = !menu"
           >
-            <span class="avatar"><img v-if="photo" :src="photo" alt="">{{ photo ? '' : user.initials }}</span>
+            <span class="avatar"><img v-if="photo" :src="photo" alt="">{{ photo ? '' : me.initials }}</span>
           </button>
           <Transition name="pop">
             <div v-if="menu" class="menu-pop" role="menu">
               <div class="who">
-                <b>{{ user.name }}</b
-                ><small>{{ user.role }} · {{ user.id }}</small>
+                <b>{{ me.name }}</b
+                ><small>{{ me.role }} · {{ me.id }}</small>
               </div>
               <NuxtLink to="/profile" role="menuitem" @click="menu = false"
                 ><AppIcon name="user" :size="16" /> My profile</NuxtLink
@@ -107,27 +107,24 @@ const { confirm } = useConfirm()
 const signOut = async () => {
   menu.value = false
   const ok = await confirm({ title: 'Sign out?', message: 'You will need to sign in again to use HRIS.', confirmText: 'Sign out', tone: 'danger', icon: 'logout' })
-  if (ok) { useSession().signOut(); navigateTo('/login') }
+  if (ok) { await session.signOut(); navigateTo('/login') }
 }
-const { user, notifications, companies } = useMockData()
+const session = useSession()
+// Signed-in employee: /auth/me + /auth/profile (loaded by middleware/auth.global.js).
+const me = useMe()
 // Profile photo chosen on the Profile page (no server endpoint yet — kept in app state).
 const { photo } = useProfilePhoto()
-const company = useState('company', () => companies[0])
-// The company is part of the sign-in (tenant in the token), so switching = sign out, pick
-// another company, sign in again.
-const switchCompany = async () => {
-  const ok = await confirm({
-    title: 'Switch company?',
-    message: `You'll be signed out of ${company.value}, then you can pick another company and sign in.`,
-    confirmText: 'Sign out & switch', tone: 'primary', icon: 'people'
-  })
-  if (ok) { useSession().signOut(); navigateTo('/company-select') }
-}
-const unread = computed(() => notifications.value.filter(n => n.unread).length)
+// Restores the remembered company (for its logo) — GET /public/tenants.
+onMounted(() => { useCompany().load() })
+// Bell count: GET /auth/notifications → unread, polled every 60 s (no web push).
+const { unread, refresh: refreshNotifications } = useNotifications()
+let poll
+onMounted(() => { refreshNotifications(); poll = setInterval(refreshNotifications, 60000) })
+onBeforeUnmount(() => clearInterval(poll))
 // Approvals (Pending / Approved Records / Approved Requests) only shows for approvers.
 const { canApprove } = useApprovals()
 // Sidebar sections (like v1's MENU / RECORD-REQUEST / APPS headings).
-const navGroups = [
+const navGroups = computed(() => [
   {
     title: 'My records',
     items: [
@@ -144,17 +141,17 @@ const navGroups = [
       { to: '/directory', label: 'Directory', icon: 'people' }
     ]
   },
-  canApprove && { title: 'Approver', items: [{ to: '/approvals', label: 'Approvals', icon: 'check' }] },
+  canApprove.value && { title: 'Approver', items: [{ to: '/approvals', label: 'Approvals', icon: 'check' }] },
   // Other Ardent apps (open in a new tab).
   { title: 'Apps', items: [{ to: 'https://ticket.ardentnetworks.com.ph/login', label: 'Ticket', icon: 'ticket', external: true }] }
-].filter(Boolean)
-const nav = navGroups.flatMap(g => g.items)
+].filter(Boolean))
+const nav = computed(() => navGroups.value.flatMap(g => g.items))
 const footNav = [
   { to: '/support', label: 'Support', icon: 'bell' },
   { to: '/privacy-policy', label: 'Privacy Policy', icon: 'shield' }
 ]
 const route = useRoute()
-const isActive = (to) => to === '/' ? route.path === '/' : [to, ...(nav.find(n => n.to === to)?.also || [])].some(p => route.path.startsWith(p))
+const isActive = (to) => to === '/' ? route.path === '/' : [to, ...(nav.value.find(n => n.to === to)?.also || [])].some(p => route.path.startsWith(p))
 </script>
 
 <style scoped>
@@ -194,7 +191,7 @@ aside::after {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(255, 89, 105, 0.22),
+    rgba(var(--brand2-rgb), 0.22),
     transparent 70%
   );
   pointer-events: none;
@@ -258,7 +255,7 @@ nav a.active {
 nav a.active .ico {
   background: var(--grad-brand);
   color: #fff;
-  box-shadow: 0 6px 14px -4px rgba(255, 89, 105, 0.6);
+  box-shadow: 0 6px 14px -4px rgba(var(--brand2-rgb), 0.6);
 }
 .ico {
   display: grid;
@@ -333,14 +330,14 @@ header {
 .company {
   margin-left: auto;
   border: 0;
-  cursor: pointer;
+  cursor: default;
   font-family: inherit;
   display: flex;
   align-items: center;
   gap: 0.45rem;
   padding: 0.5rem 0.85rem;
   border-radius: 999px;
-  background: #fdecef;
+  background: var(--brand-soft);
   color: var(--ardent-red);
   font-size: 0.78rem;
   font-weight: 700;
@@ -350,9 +347,6 @@ header {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.company:hover {
-  background: #fbdde2;
 }
 .bell {
   position: relative;
@@ -400,7 +394,7 @@ header {
 }
 .user:hover,
 .user[aria-expanded="true"] {
-  border-color: rgba(198, 50, 76, 0.35);
+  border-color: rgba(var(--brand-rgb), 0.35);
 }
 .menu-pop {
   position: absolute;
@@ -549,9 +543,6 @@ main {
     height: 38px;
     justify-content: center;
     flex-shrink: 0;
-  }
-  .company > :last-child {
-    display: none;
   }
   .bell {
     width: 38px;

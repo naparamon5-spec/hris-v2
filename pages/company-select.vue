@@ -13,15 +13,17 @@
     <!-- Tapping a row only selects it; Continue does the switch (avoids accidental switches). -->
     <div class="grid-co" role="radiogroup" aria-label="Companies">
       <button
-        v-for="c in list" :key="c" type="button" role="radio" class="co"
-        :class="{ on: c === chosen }" :aria-checked="c === chosen"
+        v-for="c in list" :key="c.id" type="button" role="radio" class="co"
+        :class="{ on: c.id === chosen?.id }" :aria-checked="c.id === chosen?.id"
         @click="chosen = c" @dblclick="chosen = c; go()"
       >
         <span class="co-logo"><ArdentLogo :company="c" /></span>
-        <span class="co-name">{{ c }}<small v-if="chosenBefore && c === company" class="cur">Last used</small></span>
-        <span class="tick" aria-hidden="true"><AppIcon v-if="c === chosen" name="check" :size="14" /></span>
+        <span class="co-name">{{ c.name }}<small v-if="chosenBefore && c.id === company?.id" class="cur">Last used</small></span>
+        <span class="tick" aria-hidden="true"><AppIcon v-if="c.id === chosen?.id" name="check" :size="14" /></span>
       </button>
-      <p v-if="!list.length" class="empty">No company matches "{{ q }}".</p>
+      <p v-if="loading" class="empty">Loading companies…</p>
+      <p v-else-if="error" class="empty">{{ error }} <a href="#" @click.prevent="retry">Try again</a></p>
+      <p v-else-if="!list.length" class="empty">No company matches "{{ q }}".</p>
     </div>
 
     <div class="footer-bar">
@@ -37,18 +39,23 @@
 definePageMeta({ layout: 'auth' })
 // Sign-in step 1: pick the company (tenant), then /login. Also where "Switch company"
 // lands after signing out.
-const { companies, company, load, choose } = useCompany()
-const chosen = ref('')
+const { companies, company, loading, error, load, choose, fetchCompanies } = useCompany()
+const chosen = ref(null)
 const chosenBefore = ref(false)
-onMounted(() => {
-  chosenBefore.value = load()
+const retry = () => fetchCompanies()
+onMounted(async () => {
+  chosenBefore.value = await load()
   if (chosenBefore.value) chosen.value = company.value
   // Bring the remembered company into view if it sits below the fold of the list.
   nextTick(() => document.querySelector('.grid-co .co.on')?.scrollIntoView({ block: 'nearest' }))
 })
+// Recolor the page to the highlighted company right away (plugins/brand.client.js).
+const preview = useState('company-preview', () => null)
+watch(chosen, (c) => { preview.value = c || null })
+onBeforeUnmount(() => { preview.value = null })
 const go = () => { if (!chosen.value) return; choose(chosen.value); navigateTo('/login') }
 const q = ref('')
-const list = computed(() => companies.filter(c => c.toLowerCase().includes(q.value.trim().toLowerCase())))
+const list = computed(() => companies.value.filter(c => c.name.toLowerCase().includes(q.value.trim().toLowerCase())))
 </script>
 
 <style scoped>

@@ -23,7 +23,7 @@ defineProps({ label: String, value: String, trend: String, unit: String, icon: S
 .stat:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 .row { display: flex; justify-content: space-between; align-items: center; }
 .label { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
-.ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: linear-gradient(135deg, #fdecef, #ffe1e4); color: var(--ardent-red); }
+.ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: linear-gradient(135deg, var(--brand-soft), var(--brand-soft-2)); color: var(--ardent-red); }
 strong { font-size: 2rem; font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
 em { font-style: normal; font-size: .8rem; font-weight: 600; color: var(--muted); margin-left: .35rem; letter-spacing: 0; }
 small { color: var(--muted); font-size: .78rem; }

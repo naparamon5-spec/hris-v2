@@ -33,11 +33,32 @@
 
 <script setup>
 // Header quick finder. Searches what the site already loads (no search endpoint on the
-// server): pages & actions, Directory, my requests, payslips and — for approvers — pending
-// approvals. Live: /auth/directory, /auth/requests/:type, /auth/payslips,
-// /auth/approvals?scope=pending (fetch on first open, then cache).
-const { directory, requests, payslips } = useMockData()
-const { pending, canApprove, access } = useApprovals()
+// server, BACKEND.md G16): pages & actions, Directory, my requests, payslips and — for
+// approvers — pending approvals. Fetched on first open, then cached for the session.
+const api = useApi()
+const { user } = useSession()
+const { canApprove: canApproveRef, approvesRequests, access } = useApprovals()
+const canApprove = computed(() => canApproveRef.value)
+const src = useState('search-cache', () => null)
+const loadSources = async () => {
+  if (src.value) return
+  src.value = { directory: [], requests: {}, payslips: [], approvals: [] }
+  const keys = Object.keys(requestTypes).filter(k => !requestTypes[k].versatechOnly || hasOtherRequests(user.value))
+  const [dir, reqs, slips, appr] = await Promise.all([
+    api('/auth/directory').then(r => r.data || []).catch(() => []),
+    Promise.all(keys.map(k => api(`/auth/requests/${requestTypes[k].apiType}`).then(r => [k, (r.data || []).map(toRequestRow)]).catch(() => [k, []]))),
+    api('/auth/payslips').then(r => (r.data || []).map(toPayslip)).catch(() => []),
+    canApprove.value
+      ? Promise.all(['records', ...(approvesRequests.value ? ['requests'] : []), ...(access.value?.isWitness ? ['witness'] : [])]
+        .map(m => api(`/auth/approvals?scope=pending&module=${m}`).then(r => (r.data || []).map(toApproval)).catch(() => []))).then(x => x.flat())
+      : []
+  ])
+  src.value = { directory: dir, requests: Object.fromEntries(reqs), payslips: slips, approvals: appr }
+}
+const directory = computed(() => src.value?.directory || [])
+const requests = computed(() => src.value?.requests || {})
+const payslips = computed(() => src.value?.payslips || [])
+const pending = computed(() => src.value?.approvals || [])
 
 const q = ref('')
 const isOpen = ref(false)
@@ -46,9 +67,9 @@ const root = ref(null)
 const input = ref(null)
 
 // ---- What can be found ----
-const fileable = Object.keys(requestTypes)
+const fileable = computed(() => Object.keys(requestTypes).filter(k => !requestTypes[k].versatechOnly || hasOtherRequests(user.value)))
 const short = { 'leave-of-absence': 'loa leave vacation sick', 'call-approval': 'ca call client', 'manual-arrival-departure': 'mad manual arrival departure time in out', overtime: 'ot', 'other-requests': 'coe epp certificate' }
-const pages = [
+const pages = computed(() => [
   { label: 'Home', to: '/', icon: 'home', kw: 'dashboard' },
   { label: 'Requests', to: '/requests', icon: 'requests', kw: '' },
   { label: 'Leave Hours', to: '/leave-hours', icon: 'hourglass', kw: 'balance vl sl ut undertime credits' },
@@ -56,38 +77,37 @@ const pages = [
   { label: 'Timesheet', to: '/timesheet', icon: 'table', kw: 'time in out dtr attendance' },
   { label: "Who's Out", to: '/whos-out', icon: 'calendar', kw: 'whos out absent calendar' },
   { label: 'Directory', to: '/directory', icon: 'people', kw: 'people employees contacts' },
-  ...(canApprove ? [
+  ...(canApprove.value ? [
     { label: 'Approvals', to: '/approvals', icon: 'check', kw: 'pending approve' },
     { label: 'Approved Records', to: '/approvals?tab=records', icon: 'check', kw: 'history decided' }
   ] : []),
-  ...(access.approvesRequests ? [{ label: 'Approved Requests', to: '/approvals?tab=requests', icon: 'doc', kw: 'history decided other' }] : []),
+  ...(approvesRequests.value ? [{ label: 'Approved Requests', to: '/approvals?tab=requests', icon: 'doc', kw: 'history decided other' }] : []),
   { label: 'Notifications', to: '/notifications', icon: 'bell', kw: 'alerts' },
   { label: 'Profile', to: '/profile', icon: 'people', kw: 'account me photo 2fa' },
   { label: 'Change Password', to: '/change-password', icon: 'shield', kw: 'password security' },
-  { label: 'Switch Company', to: '/company-select', icon: 'people', kw: 'company tenant' },
   { label: 'Support', to: '/support', icon: 'bell', kw: 'help ticket' },
   { label: 'Privacy Policy', to: '/privacy-policy', icon: 'shield', kw: 'privacy' }
-].map(p => ({ ...p, sub: 'Page' }))
-const actions = [
-  ...fileable.map(k => ({
+].map(p => ({ ...p, sub: 'Page' })))
+const actions = computed(() => [
+  ...fileable.value.map(k => ({
     label: `File ${requestTypes[k].title}`, sub: 'New request', icon: 'plus',
     to: `/requests/${k}?new=1`, kw: `new create file ${short[k] || ''}`
   })),
   { label: 'Download Payslips', sub: 'Payroll', icon: 'download', to: '/payroll?download=1', kw: 'pdf bulk' }
-]
-const people = computed(() => directory.map(d => ({
-  label: d.name, sub: `${d.role} · ${d.department}`, icon: 'people',
-  to: `/directory?q=${encodeURIComponent(d.name)}`, kw: d.email
+])
+const people = computed(() => directory.value.map(d => ({
+  label: d.name, sub: [d.role, d.department].filter(Boolean).join(' · '), icon: 'people',
+  to: `/directory?q=${encodeURIComponent(d.name)}`, kw: d.id
 })))
-const myRequests = computed(() => fileable.flatMap(k => requests.value[k].map(r => ({
+const myRequests = computed(() => fileable.value.flatMap(k => (requests.value[k] || []).map(r => ({
   label: r.no, sub: `${requestTypes[k].title} · ${r.type} · ${r.status}`, icon: requestTypes[k].icon,
   to: `/requests/${k}?q=${encodeURIComponent(r.no)}`, kw: `${short[k] || ''} ${r.reason || ''} ${r.customer || ''} ${r.date} ${r.approver}`
 }))))
-const slips = computed(() => payslips.map(p => ({
+const slips = computed(() => payslips.value.map(p => ({
   label: `Period ${p.period} · ${p.label}`, sub: `Payslip · Pay date ${p.payDate}`, icon: 'wallet',
-  to: `/payroll/${p.period}`, kw: `payslip ${p.payDate}`
+  to: `/payroll/${p.id}`, kw: `payslip ${p.payDate}`
 })))
-const approvals = computed(() => (canApprove ? pending.value : []).map(t => ({
+const approvals = computed(() => (canApprove.value ? pending.value : []).map(t => ({
   label: `${t.name} · ${t.no}`, sub: `${t.app} · ${t.date} · waiting for you`, icon: 'check',
   to: `/approvals?q=${encodeURIComponent(t.no)}`, kw: `${t.empId} ${t.reason || ''} approval`
 })))
@@ -126,7 +146,7 @@ const groups = computed(() => {
   if (!words.length) {
     list = [
       { title: 'Recent', items: recent.value },
-      { title: 'Quick actions', items: [actions[0], pages.find(p => p.to === '/timesheet'), slips.value[0] && { ...slips.value[0], label: `Latest payslip · ${slips.value[0].label}` }, ...(canApprove ? [pages.find(p => p.to === '/approvals')] : [])].filter(Boolean) }
+      { title: 'Quick actions', items: [actions.value[0], pages.value.find(p => p.to === '/timesheet'), slips.value[0] && { ...slips.value[0], label: `Latest payslip · ${slips.value[0].label}` }, ...(canApprove.value ? [pages.value.find(p => p.to === '/approvals')] : [])].filter(Boolean) }
     ]
   } else {
     const pick = (arr) => arr
@@ -137,7 +157,7 @@ const groups = computed(() => {
       .map(x => x.it)
     const payslipGroup = { title: 'Payslips', items: pick(slips.value) }
     list = [
-      { title: 'Go to', items: pick([...actions, ...pages]) },
+      { title: 'Go to', items: pick([...actions.value, ...pages.value]) },
       { title: 'People', items: pick(people.value) },
       { title: 'My requests', items: pick(myRequests.value) },
       { title: 'Approvals', items: pick(approvals.value) }
@@ -154,7 +174,7 @@ const flat = computed(() => groups.value.flatMap(g => g.items))
 watch(q, () => { active.value = flat.value.length ? 0 : -1 })
 
 // ---- Open / close / pick ----
-const openPanel = () => { isOpen.value = true; active.value = flat.value.length && q.value ? 0 : -1 }
+const openPanel = () => { loadSources(); isOpen.value = true; active.value = flat.value.length && q.value ? 0 : -1 }
 const close = () => { isOpen.value = false; active.value = -1 }
 const go = (it) => {
   remember(it)
@@ -212,7 +232,7 @@ kbd { font: 600 .7rem Montserrat, sans-serif; color: var(--muted); background: #
 }
 .opt.act { background: #fff4f5; }
 .ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; flex: none; background: #f4f5f7; color: var(--muted); }
-.opt.act .ic { background: #fde8ea; color: var(--ardent-red); }
+.opt.act .ic { background: var(--brand-soft); color: var(--ardent-red); }
 .tx { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .tx b { font-size: .86rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tx small { font-size: .74rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

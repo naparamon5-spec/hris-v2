@@ -1,13 +1,14 @@
-// Approver inbox shared by the Approvals page tabs, the sidebar and Home.
-// Replace with: GET /auth/approvals/access, and GET /auth/approvals?scope=pending|history&module=records|requests
+// Approver inbox shared by the Approvals page, the sidebar and Home (docs/BACKEND.md §8).
+//   GET /auth/approvals/access
+//   GET /auth/approvals?scope=pending|history&module=records|requests|witness
 export const useApprovals = () => {
-  const { approvals, approvalAccess } = useMockData()
-  const items = useState('mock-approvals', () => approvals.map(a => ({ ...a })))
-  const access = approvalAccess
-  const canApprove = access.isApprover || access.isWitness
-  const pending = computed(() => items.value.filter(t => t.status === 'For Approval'))
-  return { items, access, canApprove, pending }
+  const { access, reloadAccess, user } = useSession()
+  const canApprove = computed(() => !!(access.value?.isApprover || access.value?.isWitness))
+  // Other Requests are Versatech's (HR managers approve them).
+  const approvesRequests = computed(() => !!access.value?.isApprover && hasOtherRequests(user.value))
+  const pendingCount = computed(() => {
+    const a = access.value || {}
+    return (a.pending || 0) + (a.pendingRequests || 0) + (a.pendingWitness || 0)
+  })
+  return { access, canApprove, approvesRequests, pendingCount, reloadAccess }
 }
-
-// Same split as hris_mobile: "records" = LOA / CA / MAD / OT, "requests" = Other Requests.
-export const isRequestsModule = (app) => app === 'Other Requests'

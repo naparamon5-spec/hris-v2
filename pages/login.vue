@@ -8,7 +8,7 @@
       <!-- Company was picked on step 1 (/company-select). -->
       <div class="co-pick">
         <span class="co-logo"><ArdentLogo :company="company" /></span>
-        <div class="co-txt"><small>Signing in to</small><b>{{ company }}</b></div>
+        <div class="co-txt"><small>Signing in to</small><b>{{ company?.name }}</b></div>
         <NuxtLink to="/company-select" class="co-change">Change</NuxtLink>
       </div>
 
@@ -16,18 +16,20 @@
         <input id="emp" v-model="empId" class="input" placeholder="Enter Employee ID" autocomplete="username" required></div>
       <div class="field"><label for="pw">Password</label>
         <div class="pw">
-          <input id="pw" class="input" :type="show ? 'text' : 'password'" placeholder="Enter password" autocomplete="current-password" required>
+          <input id="pw" v-model="password" class="input" :type="show ? 'text' : 'password'" placeholder="Enter password" autocomplete="current-password" required>
           <button type="button" class="eye" :aria-label="show ? 'Hide password' : 'Show password'" @click="show = !show">{{ show ? 'Hide' : 'Show' }}</button>
         </div></div>
 
       <div class="row">
-        <label class="check"><input type="checkbox"> Remember me</label>
+        <label class="check"><input v-model="remember" type="checkbox"> Remember me</label>
         <NuxtLink to="/forgot-password">Forgot your password?</NuxtLink>
       </div>
-      <button class="btn btn-primary full" type="submit">Log in</button>
+      <p v-if="err" class="err" role="alert">{{ err }}</p>
+      <button class="btn btn-primary full" type="submit" :disabled="busy">{{ busy ? 'Signing in…' : 'Log in' }}</button>
 
       <div class="or"><span>or</span></div>
-      <button type="button" class="btn btn-ghost full" @click="step = 'otp'"><AppIcon name="shield" /> Sign in with Authentik</button>
+      <!-- No Authentik sign-in on hris_server yet (BACKEND.md §0 #1). -->
+      <button type="button" class="btn btn-ghost full" @click="err = 'Sign in with Authentik is not available yet. Please use your Employee ID and password.'"><AppIcon name="shield" /> Sign in with Authentik</button>
 
       <NuxtLink to="/examination" class="exam"><AppIcon name="doc" :size="15" /> For examination?</NuxtLink>
     </form>
@@ -35,26 +37,58 @@
     <form v-else @submit.prevent="finish">
       <span class="eyebrow">Two-factor authentication</span>
       <h2>Verify it's you</h2>
-      <p class="sub">Enter the 6-digit code from your authenticator app. (Any code works in this mock.)</p>
+      <p class="sub">Enter the 6-digit code from your authenticator app.</p>
       <div class="field"><label for="otp">Enter 6-Digit Code</label>
         <input id="otp" :value="otp" class="input otp" type="text" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" placeholder="000000" title="6 digits" required @input="onOtp"></div>
-      <button class="btn btn-primary full" type="submit">Verify &amp; continue</button>
-      <a href="#" class="alt" @click.prevent="step = 'login'">‹ Back to sign in</a>
+      <p v-if="err" class="err" role="alert">{{ err }}</p>
+      <button class="btn btn-primary full" type="submit" :disabled="busy || otp.length !== 6">{{ busy ? 'Verifying…' : 'Verify & continue' }}</button>
+      <a href="#" class="alt" @click.prevent="step = 'login'; err = ''; otp = ''">‹ Back to sign in</a>
     </form>
   </AuthCard>
 </template>
 
 <script setup>
 definePageMeta({ layout: 'auth' })
-// Step 2 of sign-in. No company chosen yet (first visit) → step 1 first.
+// Step 2 of sign-in: POST /public/login (BACKEND.md §3.1). No company chosen yet → step 1 first.
 const { company, load } = useCompany()
-onMounted(() => { if (!load()) navigateTo('/company-select', { replace: true }) })
+onMounted(async () => { if (!(await load())) navigateTo('/company-select', { replace: true }) })
 const empId = ref('')
+const password = ref('')
+const remember = ref(false)
 const show = ref(false)
 const step = ref('login')
-const signIn = () => { step.value = 'otp' }
+const busy = ref(false)
+const err = ref('')
+const api = useApi()
 const session = useSession()
-const finish = () => { session.signIn(); navigateTo('/') }
+
+// The OTP step posts the same body again with `otp` (the password stays in memory).
+const login = async (otpCode) => {
+  if (!company.value) { navigateTo('/company-select'); return }
+  busy.value = true
+  err.value = ''
+  try {
+    const r = await api('/public/login', {
+      method: 'POST',
+      body: {
+        user_id: empId.value.trim(), password: password.value, tenant: company.value.id,
+        checked: remember.value, ...(otpCode ? { otp: otpCode } : {})
+      }
+    })
+    if (r.twoFactorRequired) { step.value = 'otp'; return }
+    session.signIn(r)
+    password.value = ''
+    await session.load().catch(() => {})
+    navigateTo('/')
+  } catch (e) {
+    if (e?.data?.twoFactorRequired) step.value = 'otp'
+    err.value = apiError(e, 'Unable to sign in.')
+  } finally {
+    busy.value = false
+  }
+}
+const signIn = () => login()
+const finish = () => login(otp.value)
 // Code field takes digits only: letters and symbols are dropped as you type or paste.
 const otp = ref('')
 const onOtp = (e) => {

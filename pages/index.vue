@@ -3,8 +3,8 @@
     <section class="hero">
       <div class="hero-text">
         <span class="eyebrow">{{ today }}</span>
-        <h1>{{ greeting }}, {{ user.name.split(' ')[0] }} 👋</h1>
-        <p>{{ user.role }} · {{ user.company }}</p>
+        <h1>{{ greeting }}, {{ firstName }} 👋</h1>
+        <p>{{ [me.role, me.company].filter(Boolean).join(' · ') }}</p>
         <div class="hero-actions">
           <NuxtLink to="/requests/leave-of-absence?new=1" class="btn btn-light"><AppIcon name="plus" /> File leave</NuxtLink>
           <NuxtLink to="/timesheet" class="btn btn-outline-light"><AppIcon name="table" /> My timesheet</NuxtLink>
@@ -12,7 +12,7 @@
       </div>
       <NuxtLink v-if="canApprove" to="/approvals" class="hero-card">
         <span class="hc-label">Approvals required</span>
-        <strong>{{ pending.length }}</strong>
+        <strong>{{ pendingCount }}</strong>
         <span class="hc-sub">Requests from your team waiting on you</span>
         <span class="hc-go">Review now <AppIcon name="chevron" :size="14" /></span>
       </NuxtLink>
@@ -21,7 +21,7 @@
     <h3 class="section-title">Leave credits</h3>
     <div class="grid credits">
       <NuxtLink v-for="(c, i) in credits" :key="c.label" to="/leave-hours" class="plain">
-        <StatCard :label="c.label" :value="String(c.value)" :unit="c.unit" :icon="icons[i]" :progress="(c.value / 15) * 100" />
+        <StatCard :label="c.label" :value="c.value" :unit="c.unit" :icon="icons[i]" />
       </NuxtLink>
     </div>
 
@@ -61,31 +61,55 @@
 </template>
 
 <script setup>
-const { user, leaveCredits, requests, badge } = useMockData()
-const { company } = useCompany()
+import { badge } from '~/utils/format'
+// Live: /auth/me + /auth/profile (session), /auth/leaves/hours, /auth/approvals/access,
+// and GET /auth/requests/:type per type for Recent activity (BACKEND.md §6).
+const api = useApi()
+const me = useMe()
+const { user } = useSession()
+const firstName = computed(() => {
+  const n = me.value.name || ''
+  // "Dela Cruz, Juan" -> Juan; "Juan Dela Cruz" -> Juan
+  return (n.includes(',') ? n.split(',')[1] : n).trim().split(/\s+/)[0] || ''
+})
 
 // Recent activity — same as hris_mobile (dashboard_screen.dart _loadRecent): my own filings from
 // every request list, newest first, top 3. LOA sorts by date filed, CA/MAD/OT by request date;
-// Other Requests only for Versatech. Live: GET /auth/requests/:type for each type (BACKEND.md §6).
+// Other Requests only for Versatech.
 const RECENT = [
   { key: 'leave-of-absence', app: 'LOA', sortBy: 'dateFiled', detail: r => r.type || 'Leave of Absence' },
   { key: 'call-approval', app: 'CA', sortBy: 'date', detail: () => 'Call Approval' },
   { key: 'manual-arrival-departure', app: 'MAD', sortBy: 'date', detail: () => 'Manual Arrival/Departure' },
   { key: 'overtime', app: 'OT', sortBy: 'date', detail: r => (r.hours ? `${r.hours} hrs` : 'Overtime') },
-  { key: 'other-requests', app: 'REQ', sortBy: 'dateFiled', detail: r => r.reason || 'Other Request', only: 'Versatech International' }
+  { key: 'other-requests', app: 'REQ', sortBy: 'dateFiled', detail: r => r.reason || 'Other Request', versatech: true }
 ]
+const { data: lists } = await useAsyncData('home-recent', async () => {
+  const types = RECENT.filter(t => !t.versatech || hasOtherRequests(user.value))
+  const res = await Promise.all(types.map(t =>
+    api(`/auth/requests/${requestTypes[t.key].apiType}`).then(r => [t.key, (r.data || []).map(toRequestRow)]).catch(() => [t.key, []])))
+  return Object.fromEntries(res)
+}, { default: () => ({}), server: false })
 const recent = computed(() => {
-  const rows = RECENT.filter(t => !t.only || company.value === t.only).flatMap(t =>
-    (requests.value[t.key] || []).map(r => ({
+  const rows = RECENT.flatMap(t =>
+    (lists.value[t.key] || []).map(r => ({
       app: t.app, no: r.no, status: r.status, detail: t.detail(r),
       date: r.date || r.dateFiled, sort: r[t.sortBy] || r.dateFiled,
       to: { path: `/requests/${t.key}`, query: { q: r.no } } // opens the list showing that record
     })))
   return newestFirst(rows, r => r.sort, r => r.no).slice(0, 3)
 })
-const { canApprove, pending } = useApprovals()
-// Home shows only Vacation and Sick Leave; the full list is on Leave Hours.
-const credits = leaveCredits.slice(0, 2)
+const { canApprove, pendingCount } = useApprovals()
+
+// Home shows only VL Paid and SL Paid; the full list is on Leave Hours.
+// Same VL Paid / SL Paid hours as the Leave Hours page (GET /auth/leaves/hours, shared cache).
+const { data: hours } = await useAsyncData('leave-hours', () => api('/auth/leaves/hours'), { default: () => ({}), server: false })
+const credits = computed(() => [
+  { label: 'VL Paid', key: 'vl_paid' },
+  { label: 'SL Paid', key: 'sl_paid' }
+].map(c => {
+  const v = hours.value?.[c.key]
+  return { label: c.label, value: v || '— —', unit: v ? 'hrs' : '' }
+}))
 const icons = ['calendar', 'shield']
 const h = new Date().getHours()
 const greeting = h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'
@@ -105,7 +129,7 @@ const quick = {
   position: relative; overflow: hidden; display: flex; flex-wrap: wrap; gap: 1.5rem; align-items: stretch; justify-content: space-between;
   background: var(--grad-navy); color: #fff; border-radius: 22px; padding: 1.9rem 2rem; box-shadow: var(--shadow-lg);
 }
-.hero::before { content: ''; position: absolute; width: 420px; height: 420px; right: -120px; top: -200px; border-radius: 50%; background: radial-gradient(circle, rgba(255,89,105,.45), transparent 65%); }
+.hero::before { content: ''; position: absolute; width: 420px; height: 420px; right: -120px; top: -200px; border-radius: 50%; background: radial-gradient(circle, rgba(var(--brand2-rgb),.45), transparent 65%); }
 .hero::after { content: ''; position: absolute; inset: 0; background-image: radial-gradient(rgba(255,255,255,.07) 1px, transparent 1px); background-size: 18px 18px; mask-image: linear-gradient(90deg, transparent 40%, #000); pointer-events: none; }
 .hero-text { position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; }
 .eyebrow { font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ardent-coral); font-weight: 700; }

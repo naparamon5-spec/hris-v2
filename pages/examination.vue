@@ -10,7 +10,7 @@
     </form>
     <div v-else>
       <h2>Coming soon</h2>
-      <p class="sub">Online examinations will open here soon. (Mock — nothing was sent.)</p>
+      <p class="sub">Online examinations are not available yet. Please contact HR for your exam link.</p>
       <NuxtLink to="/login" class="btn btn-ghost full">Back to sign in</NuxtLink>
     </div>
   </AuthCard>
@@ -18,5 +18,6 @@
 
 <script setup>
 definePageMeta({ layout: 'auth' })
+// No hris_server endpoint for applicant exam links yet (BACKEND.md §0 #16, G17) — nothing is sent.
 const sent = ref(false)
 </script>

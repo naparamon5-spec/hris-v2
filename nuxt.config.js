@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   // The app manifest is unused here and its virtual import fails to resolve in dev after a production build.
   experimental: { appManifest: false },
   css: ['~/assets/css/main.css'],
+  // hris_server base URL (docs/BACKEND.md §1). Set NUXT_PUBLIC_API_BASE in .env.
+  runtimeConfig: {
+    public: { apiBase: process.env.NUXT_PUBLIC_API_BASE || 'http://localhost:3000/api/v1' }
+  },
   app: {
     pageTransition: false,
     layoutTransition: false,

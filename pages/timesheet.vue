@@ -58,11 +58,13 @@
               <td data-label="OT">{{ fmt(d.ot_hrs) }}</td>
               <td data-label="Leave">{{ fmt(d.leave_hrs) }}</td>
               <td data-label="Total"><b>{{ fmt(d.total_hrs) }}</b></td>
-              <td data-label="Remarks"><span v-if="d.remarks" class="badge" :class="d.remarks === 'Late' ? 'badge-warn' : 'badge-gray'">{{ d.remarks }}</span><span v-else class="m">—</span></td>
+              <td data-label="Remarks"><span v-if="d.remarks" class="badge" :class="/late/i.test(d.remarks) ? 'badge-warn' : 'badge-gray'">{{ d.remarks.replace(/\*/g, '').trim() }}</span><span v-else class="m">—</span></td>
             </tr>
           </tbody>
         </table>
-        <p v-if="!sheet.data.length" class="empty">No time records for this period yet</p>
+        <p v-if="loading" class="empty">Loading…</p>
+        <p v-else-if="loadError" class="empty">{{ loadError }}</p>
+        <p v-else-if="!sheet.data.length" class="empty">No time records for this period yet</p>
       </div>
     </div>
     <Pager v-model:page="page" :pages="pages" :total="total" :size="size" />
@@ -70,24 +72,60 @@
 </template>
 
 <script setup>
-const { timesheetPeriods, timesheetFor } = useMockData()
-
+// GET /auth/pay-periods?type=timesheet (only periods with time logs) and
+// GET /auth/timesheets/<year>-<code> (BACKEND.md §9.3). Total hours include paid leave.
+const api = useApi()
 const thisYear = new Date().getFullYear()
-const years = [thisYear, thisYear - 1]
+const { data: allPeriods } = await useAsyncData('timesheet-periods',
+  () => api('/auth/pay-periods?type=timesheet').then(r => r.data || []).catch(() => []), { default: () => [], server: false })
+const years = computed(() => {
+  const ys = [...new Set(allPeriods.value.map(p => Number(p.year)))].sort((a, b) => b - a)
+  return ys.length ? ys : [thisYear]
+})
 const year = ref(thisYear)
+watch(years, (ys) => { if (!ys.includes(year.value)) year.value = ys[0] }, { immediate: true })
 const isCurrentYear = computed(() => year.value === thisYear)
-
-// Replace with: api('/auth/pay-periods?type=timesheet') filtered by year
-const periods = computed(() => timesheetPeriods(year.value))
+// Newest first.
+const periods = computed(() => allPeriods.value
+  .filter(p => Number(p.year) === year.value)
+  .sort((a, b) => Number(b.code) - Number(a.code)))
 const sel = ref(periods.value[0]?.code)
-watch(periods, (p) => { sel.value = p[0]?.code })
+// ?period=YYYY-PP (from a "Timesheet available" notification) picks that period once loaded.
+const route = useRoute()
+const router = useRouter()
+const wanted = ref(String(route.query.period || ''))
+watch(periods, (p) => {
+  const [wy, wp] = wanted.value.split('-')
+  const hit = wp && Number(wy) === year.value && p.find(x => Number(x.code) === Number(wp))
+  sel.value = hit ? hit.code : p[0]?.code
+  if (hit) { wanted.value = ''; router.replace({ query: {} }) }
+})
+watch(allPeriods, () => {
+  const wy = Number(wanted.value.split('-')[0])
+  if (wy && wy !== year.value && years.value.includes(wy)) year.value = wy
+})
 const idx = computed(() => periods.value.findIndex(p => p.code === sel.value))
 const current = computed(() => periods.value[idx.value])
-
-// Replace with: api(`/auth/timesheets/${year}-${code}`)
-const sheet = computed(() => timesheetFor(year.value, sel.value))
+const EMPTY = { data: [], totals: { basic: 0, basic_nd: 0, ot: 0, nd_ot: 0, leave: 0, total: 0 }, total: 0 }
+const sheet = ref(EMPTY)
+const loading = ref(false)
+const loadError = ref('')
+watch([year, sel], async ([y, code]) => {
+  if (!code) { sheet.value = EMPTY; return }
+  loading.value = true
+  loadError.value = ''
+  try {
+    const r = await api(`/auth/timesheets/${y}-${code}`)
+    sheet.value = { ...EMPTY, ...r, totals: { ...EMPTY.totals, ...(r.totals || {}) } }
+  } catch (e) {
+    sheet.value = EMPTY
+    loadError.value = apiError(e, 'Unable to load this timesheet.')
+  } finally {
+    loading.value = false
+  }
+}, { immediate: true })
 const rows = computed(() => sheet.value.data)
-const { page, size, total, pages, pageRows } = usePagination(rows, 7)
+const { page, size, total, pages, pageRows } = usePagination(rows, 6)
 watch(sel, () => { page.value = 1 })
 
 // ---- Period strip sliding ----
@@ -152,7 +190,7 @@ const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const parse = (s) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d) }
 const dayLabel = (s) => { const d = parse(s); return `${MON[d.getMonth()]} ${d.getDate()}` }
 const dowLabel = (s) => DOW[parse(s).getDay()]
-const fmt = (n) => (n ? (Number.isInteger(n) ? String(n) : n.toFixed(1)) : '—')
+const fmt = (n) => (n ? (Number.isInteger(Number(n)) ? String(n) : String(Math.round(n * 100) / 100)) : '—')
 const typeBadge = (d) =>
   d.leave_type ? 'badge-navy' : /Holiday/.test(d.day_type) ? 'badge-red' : d.day_type === 'Regular' ? 'badge-ok' : 'badge-gray'
 </script>
@@ -169,8 +207,8 @@ const typeBadge = (d) =>
 .period b { display: flex; align-items: center; gap: .4rem; font-size: .88rem; white-space: nowrap; }
 .period small { white-space: nowrap; }
 .period small { font-size: .76rem; }
-.period.on { border-color: var(--ardent-red); box-shadow: 0 0 0 2px rgba(198,50,76,.2); }
-.now { flex: none; font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ardent-red); background: #fde8ea; padding: .1rem .4rem; border-radius: 999px; }
+.period.on { border-color: var(--ardent-red); box-shadow: 0 0 0 2px rgba(var(--brand-rgb),.2); }
+.now { flex: none; font-size: .6rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ardent-red); background: var(--brand-soft); padding: .1rem .4rem; border-radius: 999px; }
 .nav { flex: none; width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--border); background: #fff; display: grid; place-items: center; cursor: pointer; color: var(--text); }
 .nav:hover:not(:disabled) { border-color: var(--ardent-red); color: var(--ardent-red); }
 .nav:disabled { opacity: .4; cursor: default; }

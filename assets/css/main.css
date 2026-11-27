@@ -7,7 +7,14 @@
   --ardent-gray: #D7D7D7;
   --white: #FFFFFF;
 
-  --grad-brand: linear-gradient(135deg, #C6324C 0%, #FF5969 100%);
+  --grad-brand: linear-gradient(135deg, var(--ardent-red) 0%, var(--ardent-coral) 100%);
+  /* Company accent (plugins/brand.client.js): Ardent keeps these; other companies get
+     their own color from GET /public/tenants, like the mobile app. */
+  --brand-rgb: 198, 50, 76;
+  --brand2-rgb: 255, 89, 105;
+  --brand-soft: #fdecef;
+  --brand-soft-2: #ffe1e4;
+  --brand-line: #f3cdd4;
   --grad-navy: linear-gradient(160deg, #183f50 0%, #133341 45%, #0b2230 100%);
 
   --bg: #F4F5F7;
@@ -20,7 +27,7 @@
   --shadow-xs: 0 1px 2px rgba(19, 51, 65, .05);
   --shadow: 0 1px 2px rgba(19, 51, 65, .04), 0 6px 20px -6px rgba(19, 51, 65, .08);
   --shadow-lg: 0 2px 4px rgba(19, 51, 65, .04), 0 18px 40px -12px rgba(19, 51, 65, .18);
-  --ring: 0 0 0 4px rgba(198, 50, 76, .14);
+  --ring: 0 0 0 4px rgba(var(--brand-rgb), .14);
 }
 
 * { box-sizing: border-box; }
@@ -32,7 +39,7 @@ img, video { max-width: 100%; }
 body {
   font-family: 'Montserrat', system-ui, sans-serif;
   background:
-    radial-gradient(1200px 500px at 100% -10%, rgba(255, 89, 105, .07), transparent 60%),
+    radial-gradient(1200px 500px at 100% -10%, rgba(var(--brand2-rgb), .07), transparent 60%),
     radial-gradient(900px 400px at 0% 0%, rgba(19, 51, 65, .05), transparent 60%),
     var(--bg);
   background-attachment: fixed;
@@ -42,7 +49,7 @@ body {
 }
 a { color: var(--ardent-red); text-decoration: none; }
 h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -.02em; }
-::selection { background: rgba(255, 89, 105, .25); }
+::selection { background: rgba(var(--brand2-rgb), .25); }
 
 /* Page fade-in (CSS only, so it never delays navigation). Opacity only: a transform
    here would trap position:fixed pop-ups (dialogs, toasts) inside the page area. */
@@ -62,11 +69,11 @@ main .wrap > * { animation: page-in .2s ease both; }
 }
 .btn:active { transform: scale(.97); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
-.btn-primary { background: var(--grad-brand); color: #fff; box-shadow: 0 6px 16px -6px rgba(198, 50, 76, .6); }
-.btn-primary:hover { box-shadow: 0 10px 24px -8px rgba(198, 50, 76, .7); }
+.btn-primary { background: var(--grad-brand); color: #fff; box-shadow: 0 6px 16px -6px rgba(var(--brand-rgb), .6); }
+.btn-primary:hover { box-shadow: 0 10px 24px -8px rgba(var(--brand-rgb), .7); }
 .btn-ghost { background: #fff; color: var(--text); border-color: var(--border); box-shadow: var(--shadow-xs); }
 .btn-ghost:hover { border-color: var(--ardent-gray); }
-.btn-danger { background: #fff; color: var(--ardent-red); border-color: #f3cdd4; }
+.btn-danger { background: #fff; color: var(--ardent-red); border-color: var(--brand-line); }
 .btn-danger:hover { background: #fdf1f3; }
 .btn-sm { padding: .42rem .85rem; font-size: .78rem; }
 
@@ -96,7 +103,7 @@ textarea.input { resize: vertical; min-height: 90px; }
 .badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .badge-ok { background: #e8f6ef; color: #18794e; }
 .badge-warn { background: #fff4e5; color: #a35a0b; }
-.badge-red { background: #fdecef; color: var(--ardent-red); }
+.badge-red { background: var(--brand-soft); color: var(--ardent-red); }
 .badge-navy { background: #e7eef2; color: var(--ardent-navy); }
 .badge-blue { background: #e6f0fd; color: #1d5fc7; }
 .badge-gray { background: #f0f1f3; color: #6b7280; }
@@ -139,7 +146,7 @@ table.table { width: 100%; border-collapse: separate; border-spacing: 0; font-si
 .tabs button { background: none; border: 0; padding: .5rem 1.1rem; border-radius: 999px; font: 600 .85rem 'Montserrat', sans-serif; color: var(--muted); cursor: pointer; white-space: nowrap; transition: all .15s; }
 .tabs button.on { color: #fff; background: var(--ardent-navy); }
 
-.icon-tile { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, #fdecef, #ffe1e4); color: var(--ardent-red); display: grid; place-items: center; flex-shrink: 0; }
+.icon-tile { width: 42px; height: 42px; border-radius: 12px; background: linear-gradient(135deg, var(--brand-soft), var(--brand-soft-2)); color: var(--ardent-red); display: grid; place-items: center; flex-shrink: 0; }
 
 /* Shared modal look */
 .overlay { backdrop-filter: blur(4px); }
@@ -202,3 +209,9 @@ table.table { width: 100%; border-collapse: separate; border-spacing: 0; font-si
   .bar-enter-from, .bar-leave-to { transform: translateY(12px); }
   .ab-btns { flex: 1 1 100%; } .ab-btns .btn { flex: 1; }
 }
+
+/* Form error line (server messages). */
+.err { color: var(--ardent-alert); font-size: .85rem; margin: 0 0 .75rem; }
+/* Loading / error state inside cards and pages. */
+.state { padding: 2rem 1rem; text-align: center; color: var(--muted); font-size: .9rem; }
+.state.bad { color: var(--ardent-alert); }

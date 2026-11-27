@@ -11,15 +11,17 @@
 
 <script setup>
 // Company logo, same files as hris_mobile (assets/logos/<id>.png), copied to public/logos.
-// Uses the given company, or the currently selected one.
-const props = defineProps({ light: Boolean, sub: String, company: String })
-const { companies, companyLogo } = useMockData()
-const selected = useState('company', () => companies[0])
-const name = computed(() => props.company || selected.value)
+// Uses the given company ({ id, name, logo } from GET /public/tenants), or the signed-in one.
+const props = defineProps({ light: Boolean, sub: String, company: Object })
+const { company: selected, companies } = useCompany()
+const { user } = useSession()
+const current = computed(() =>
+  props.company || selected.value || companies.value.find(c => c.name === user.value?.company) || null)
+const name = computed(() => current.value?.name || user.value?.company || '')
 const failed = ref(false)
 watch(name, () => { failed.value = false })
-const src = computed(() => (failed.value ? null : companyLogo(name.value)))
-const initials = computed(() => name.value.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase())
+const src = computed(() => (failed.value ? null : companyLogo(current.value)))
+const initials = computed(() => name.value.split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase())
 </script>
 
 <style scoped>

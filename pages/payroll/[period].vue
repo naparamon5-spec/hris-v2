@@ -1,5 +1,6 @@
 <template>
-  <div v-if="slip">
+  <div v-if="loadError" class="state bad">{{ loadError }} <NuxtLink to="/payroll">Back to payslips</NuxtLink></div>
+  <div v-else-if="slip">
     <NuxtLink to="/payroll" class="back">‹ Back</NuxtLink>
     <div class="page-head">
       <div>
@@ -7,8 +8,7 @@
         <p><b class="cut">{{ slip.label }}</b> · Pay date {{ slip.payDate }}</p>
       </div>
       <div v-if="unlocked" style="display:flex;gap:.5rem">
-        <button class="btn btn-ghost" @click="flash('PNG')"><AppIcon name="download" /> Image (PNG)</button>
-        <button class="btn btn-primary" @click="flash('PDF')"><AppIcon name="download" /> PDF</button>
+        <button class="btn btn-primary" @click="downloadPdf"><AppIcon name="download" /> PDF</button>
       </div>
     </div>
 
@@ -25,9 +25,9 @@
         <span class="tag">PAYSLIP</span>
       </div>
       <div class="emp">
-        <div><small class="m">Employee</small><b>{{ user.name }}</b></div>
-        <div><small class="m">Employee ID</small><b>{{ user.id }}</b></div>
-        <div><small class="m">Department</small><b>{{ user.department }}</b></div>
+        <div><small class="m">Employee</small><b>{{ me.name }}</b></div>
+        <div><small class="m">Employee ID</small><b>{{ me.id }}</b></div>
+        <div><small class="m">Department</small><b>{{ me.department }}</b></div>
       </div>
       <div class="grid grid-2">
         <div>
@@ -76,14 +76,34 @@
 </template>
 
 <script setup>
-const { payslips, user, peso } = useMockData()
+import { peso } from '~/utils/format'
+// Route param = payslip id ("2026-022"). Password first (POST /auth/verify-password), then
+// GET /auth/payslips/:id. The PDF is built in the browser (BACKEND.md §9.2).
+const api = useApi()
+const me = useMe()
 const route = useRoute()
-const slip = computed(() => payslips.find(p => p.period === Number(route.params.period)))
+const id = computed(() => String(route.params.period))
+// Header from the list entry (period / dates) until the full payslip is loaded.
+const head = ref(null)
+const full = ref(null)
+const loadError = ref('')
+onMounted(async () => {
+  try {
+    const list = await api('/auth/payslips')
+    const hit = (list.data || []).find(p => p.id === id.value)
+    head.value = hit ? toPayslip(hit) : toPayslip({ id: id.value })
+  } catch (e) {
+    loadError.value = apiError(e, 'Unable to load this payslip.')
+  }
+})
+const slip = computed(() => full.value || head.value)
 const toast = ref('')
-const flash = (k) => { toast.value = `Downloading payslip as ${k}… (mock)`; setTimeout(() => (toast.value = ''), 2200) }
+const flash = (m) => { toast.value = m; setTimeout(() => (toast.value = ''), 2600) }
+const downloadPdf = () => {
+  if (!printPayslips([slip.value], me.value, companyLogo(useCompany().company.value))) flash('Allow pop-ups for this site to download the PDF.')
+}
 
 // Password check before showing the payslip. Asked every time a payslip is opened.
-// Mock: any password of 6+ characters is accepted; replace checkPw with the real API call.
 const unlocked = ref(false)
 const askPw = ref(false)
 const pw = ref('')
@@ -97,9 +117,16 @@ const checkPw = async () => {
   pwError.value = ''
   if (!pw.value) { pwError.value = 'Enter your password.'; return }
   checking.value = true
-  await new Promise(r => setTimeout(r, 500))
+  const bad = await verifyPassword(api, pw.value)
+  if (bad) { checking.value = false; pwError.value = bad; pw.value = ''; pwBox.value?.focus(); return }
+  try {
+    full.value = toPayslip(await api(`/auth/payslips/${id.value}`))
+  } catch (e) {
+    checking.value = false
+    pwError.value = apiError(e, 'Unable to load this payslip.')
+    return
+  }
   checking.value = false
-  if (pw.value.length < 6) { pwError.value = 'Incorrect password. Please try again.'; pw.value = ''; pwBox.value?.focus(); return }
   pw.value = ''
   askPw.value = false
   unlocked.value = true
@@ -110,7 +137,7 @@ const cancelPw = () => { askPw.value = false; if (!unlocked.value) navigateTo('/
 <style scoped>
 /* The period is what people check first, so it stands out next to the title. */
 .ph { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
-.period-pill { font-size: .85rem; font-weight: 700; letter-spacing: 0; color: #fff; background: var(--grad-brand); padding: .3rem .8rem; border-radius: 999px; box-shadow: 0 6px 14px -6px rgba(198, 50, 76, .6); }
+.period-pill { font-size: .85rem; font-weight: 700; letter-spacing: 0; color: #fff; background: var(--grad-brand); padding: .3rem .8rem; border-radius: 999px; box-shadow: 0 6px 14px -6px rgba(var(--brand-rgb), .6); }
 .cut { color: var(--text); font-weight: 600; }
 .pw-period { color: var(--ardent-red); white-space: nowrap; }
 .locked { display: flex; align-items: center; gap: 1rem; max-width: 820px; }
@@ -120,7 +147,7 @@ const cancelPw = () => { askPw.value = false; if (!unlocked.value) navigateTo('/
 .pw-card h2 { font-size: 1.15rem; }
 .pw-card > p { margin: .5rem 0 1.25rem; font-size: .88rem; line-height: 1.5; }
 .pw-card .field { text-align: left; margin-bottom: .5rem; }
-.pw-icon { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 1rem; background: #fdecef; color: var(--ardent-red); }
+.pw-icon { width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 1rem; background: var(--brand-soft); color: var(--ardent-red); }
 .pw-wrap { position: relative; display: flex; }
 .pw-wrap .input { flex: 1; padding-right: 4rem; }
 .input[aria-invalid="true"] { border-color: var(--ardent-alert); }

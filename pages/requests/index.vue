@@ -17,12 +17,21 @@
 </template>
 
 <script setup>
-// Replace with: one GET /auth/requests/:type per type for the pending counts.
-const { requests } = useMockData()
-const keys = Object.keys(requestTypes)
-const fileable = computed(() => keys.map(k => ({
+// Pending counts: no summary endpoint (BACKEND.md §0 #8, G7) — one GET /auth/requests/:type per
+// type, counting "For Approval". Other Requests only for Versatech.
+const api = useApi()
+const { user } = useSession()
+const keys = computed(() => Object.keys(requestTypes).filter(k => !requestTypes[k].versatechOnly || hasOtherRequests(user.value)))
+const { data: counts } = await useAsyncData('request-counts', async () => {
+  const res = await Promise.all(keys.value.map(k =>
+    api(`/auth/requests/${requestTypes[k].apiType}`)
+      .then(r => [k, (r.data || []).filter(x => x.status === 'For Approval').length])
+      .catch(() => [k, 0])))
+  return Object.fromEntries(res)
+}, { default: () => ({}), server: false })
+const fileable = computed(() => keys.value.map(k => ({
   to: `/requests/${k}`, title: requestTypes[k].title, desc: requestTypes[k].desc, icon: requestTypes[k].icon,
-  count: requests.value[k].filter(r => r.status === 'For Approval').length
+  count: counts.value[k] || 0
 })))
 </script>
 
