@@ -94,7 +94,8 @@ const recent = computed(() => {
     (lists.value[t.key] || []).map(r => ({
       app: t.app, no: r.no, status: r.status, detail: t.detail(r),
       date: r.date || r.dateFiled, sort: r[t.sortBy] || r.dateFiled,
-      to: { path: `/requests/${t.key}`, query: { q: r.no } } // opens the list showing that record
+      // Opens that type's list on the record's page with its details dialog open (?view=<id>).
+      to: { path: `/requests/${t.key}`, query: r.id != null ? { view: r.id } : { q: r.no } }
     })))
   return newestFirst(rows, r => r.sort, r => r.no).slice(0, 3)
 })

@@ -11,13 +11,31 @@
         <div class="field">
           <label for="rf-type">Leave Type</label>
           <AppSelect id="rf-type" v-model="f.leaveType" :options="LEAVE_TYPES" placeholder="Select…" full />
-          <small v-if="remaining" class="m">Current Remaining: {{ remaining }}</small>
         </div>
+        <div>
+          <!-- Date and time picked separately (a calendar + a time box you can type any minute into, e.g. 8:01) — easier than
+               the browser's combined date-time box. -->
+          <div class="field">
+            <label for="rf-from">From</label>
+            <div class="dt">
+              <input id="rf-from" v-model="fromDay" class="input" type="date" required @click="openPicker">
+              <input v-model="fromTime" class="input" type="time" step="60" aria-label="From time" required>
+            </div>
+          </div>
+          <div class="field">
+            <label for="rf-to">To</label>
+            <div class="dt">
+              <input id="rf-to" v-model="toDay" class="input" type="date" :min="fromDay || undefined" required @click="openPicker">
+              <input v-model="toTime" class="input" type="time" step="60" aria-label="To time" required>
+            </div>
+          </div>
+        </div>
+        <!-- Same as the mobile form: read-only Applied Hours and Current Remaining (HH:MM). -->
         <div class="two">
-          <div class="field"><label for="rf-from">From</label><input id="rf-from" v-model="f.dateFrom" class="input" type="datetime-local" required></div>
-          <div class="field"><label for="rf-to">To</label><input id="rf-to" v-model="f.dateTo" class="input" type="datetime-local" required></div>
+          <div class="field"><label for="rf-applied">Applied Hours</label><input id="rf-applied" :value="appliedHours" class="input ro" readonly tabindex="-1"></div>
+          <div class="field"><label for="rf-remaining">Current Remaining</label><input id="rf-remaining" :value="remaining" class="input ro" readonly tabindex="-1"></div>
         </div>
-        <small class="m hint">Hours are computed by the server. Up to 45 days back.</small>
+        <small class="m hint">Applied Hours: From–To less a 1-hour break on spans of 5 hours or more. Up to 45 days back.</small>
       </template>
 
       <!-- ===== Call Approval: one date, one or more time rows ===== -->
@@ -28,9 +46,11 @@
             <b>Detail {{ i + 1 }}</b>
             <button v-if="f.rows.length > 1" type="button" class="btn btn-ghost btn-sm" @click="f.rows.splice(i, 1)">Remove</button>
           </div>
-          <div class="two">
+          <!-- Hrs. = read-only, like the mobile form (lunch 12:00–1:00 PM not counted). -->
+          <div class="ca-times">
             <div class="field"><label :for="`rf-tf-${i}`">Time From</label><input :id="`rf-tf-${i}`" v-model="row.from" class="input" type="time" required></div>
             <div class="field"><label :for="`rf-tt-${i}`">Time To</label><input :id="`rf-tt-${i}`" v-model="row.to" class="input" type="time" required></div>
+            <div class="field"><label :for="`rf-hr-${i}`">Hrs.</label><input :id="`rf-hr-${i}`" :value="callHrs(row)" class="input ro" readonly tabindex="-1"></div>
           </div>
           <div class="field"><label :for="`rf-cu-${i}`">Customer</label>
             <input :id="`rf-cu-${i}`" v-model="row.customer" class="input" maxlength="200" placeholder="Customer or client name" required></div>
@@ -44,9 +64,12 @@
       <!-- ===== Manual Arrival/Departure & Overtime: date + times ===== -->
       <template v-else-if="kind === 'manual-arrival-departure' || kind === 'overtime'">
         <div class="field"><label for="rf-date">Date</label><input id="rf-date" v-model="f.date" class="input" type="date" required></div>
-        <div class="two">
-          <div class="field"><label for="rf-from">{{ kind === 'overtime' ? 'Time From' : 'Arrival' }}</label><input id="rf-from" v-model="f.timeFrom" class="input" type="time" required></div>
-          <div class="field"><label for="rf-to">{{ kind === 'overtime' ? 'Time To' : 'Departure' }}</label><input id="rf-to" v-model="f.timeTo" class="input" type="time" required></div>
+        <div class="ca-times">
+          <div class="field"><label for="rf-from">Time From</label><input id="rf-from" v-model="f.timeFrom" class="input" type="time" required></div>
+          <div class="field"><label for="rf-to">Time To</label><input id="rf-to" v-model="f.timeTo" class="input" type="time" required></div>
+          <!-- Read-only Hrs., like the mobile form (MAD: 1-hour break off spans of 5 hrs or more;
+               Overtime: every hour counts). -->
+          <div class="field"><label for="rf-hrs">Hrs.</label><input id="rf-hrs" :value="timeHrs" class="input ro" readonly tabindex="-1"></div>
         </div>
         <small v-if="kind === 'overtime'" class="m hint">Overtime may end at 12:00 AM (next day).</small>
       </template>
@@ -142,13 +165,15 @@ const BUP_ELITE = [...BUP_PREMIUM,
   'Education/Training/Certification Reimbursement']
 const otherOptions = Object.entries(OTHER_TYPES).map(([value, label]) => ({ value, label }))
 
+const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
 const raw = props.record?.raw || null
 const blankRow = () => ({ from: '', to: '', customer: '', purpose: '' })
 const f = reactive({
   // LOA
   leaveType: raw?.leave_type || '',
-  dateFrom: raw?.date_from ? `${isoDay(raw.date_from)}T${isoClock(raw.date_from)}` : '',
-  dateTo: raw?.date_to ? `${isoDay(raw.date_to)}T${isoClock(raw.date_to)}` : '',
+  // New LOA: today 08:00 AM → 06:00 PM (same defaults as the mobile app).
+  dateFrom: raw?.date_from ? `${isoDay(raw.date_from)}T${isoClock(raw.date_from)}` : `${todayIso()}T08:00`,
+  dateTo: raw?.date_to ? `${isoDay(raw.date_to)}T${isoClock(raw.date_to)}` : `${todayIso()}T18:00`,
   // CA / MAD / OT
   date: raw ? isoDay(raw.date_from || (raw.rows && raw.rows[0]?.date_from)) : '',
   rows: raw?.rows?.length
@@ -186,7 +211,58 @@ const remaining = computed(() => {
   const h = hours.value
   if (!h) return ''
   const key = { 'Vacation Leave': 'vl_paid', 'Sick Leave': 'sl_paid', 'Additional VL': 'additional_vl', 'Accumulated Leave': 'accumulated_leave' }[f.leaveType]
-  return key && h[key] != null ? `${h[key]} hrs` : ''
+  return key && h[key] != null && h[key] !== '' ? String(h[key]) : '—'
+})
+// LOA From/To: date and time edited separately, stored as "YYYY-MM-DDTHH:MM".
+const part = (key, i) => computed({
+  get: () => (f[key] || 'T').split('T')[i] || '',
+  set: (v) => {
+    const [d, t] = (f[key] || 'T').split('T')
+    f[key] = i === 0 ? `${v}T${t || '08:00'}` : `${d || todayIso()}T${v}`
+  }
+})
+const fromDay = part('dateFrom', 0), fromTime = part('dateFrom', 1)
+const toDay = part('dateTo', 0), toTime = part('dateTo', 1)
+// Clicking anywhere in a date box opens the calendar (not only the small icon).
+const openPicker = (e) => { try { e.target.showPicker?.() } catch {} }
+// Moving From past To pulls To along to the same day.
+watch(fromDay, (d) => { if (d && (!toDay.value || toDay.value < d)) toDay.value = d })
+// Call Approval Hrs. per detail, as H:MM — same as the mobile app: To − From (past
+// midnight wraps to the next day), less any part of the 12:00–1:00 PM lunch hour.
+const callHrs = (row) => {
+  if (!row.from || !row.to) return '0:00'
+  const min = (t) => { const [h, m] = t.split(':'); return +h * 60 + +m }
+  const start = min(row.from)
+  let end = min(row.to)
+  if (end < start) end += 24 * 60
+  let mins = end - start
+  for (const day of [0, 24 * 60]) {
+    const overlap = Math.min(end, 13 * 60 + day) - Math.max(start, 12 * 60 + day)
+    if (overlap > 0) mins -= overlap
+  }
+  return `${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, '0')}`
+}
+
+// Manual Arrival/Departure and Overtime Hrs., as H:MM — same as the mobile app: To − From
+// (past midnight wraps, e.g. 7 PM–12 AM). MAD takes off a 1-hour break when the span is
+// 5 hours or more; overtime counts every hour.
+const timeHrs = computed(() => {
+  if (!f.timeFrom || !f.timeTo) return '0:00'
+  const min = (t) => { const [h, m] = t.split(':'); return +h * 60 + +m }
+  let mins = min(f.timeTo) - min(f.timeFrom)
+  if (mins < 0) mins += 24 * 60
+  if (props.kind === 'manual-arrival-departure' && mins >= 300) mins -= 60
+  return `${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, '0')}`
+})
+
+// Applied Hours as H:MM, computed like the mobile app: the From–To span, less a
+// 1-hour break when it is 5 hours or more (08:00 AM–06:00 PM → 9:00).
+const appliedHours = computed(() => {
+  const from = new Date(f.dateFrom), to = new Date(f.dateTo)
+  if (!f.dateFrom || !f.dateTo || Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return '0:00'
+  let mins = Math.max(0, Math.round((to - from) / 60000))
+  if (mins >= 300) mins -= 60
+  return `${Math.floor(mins / 60)}:${String(mins % 60).padStart(2, '0')}`
 })
 
 const err = ref('')
@@ -248,6 +324,10 @@ const submit = (sendNow) => {
 .modal { position: relative; width: 100%; max-width: 520px; max-height: 92vh; overflow: auto; padding: 1.5rem; }
 .modal h2 { padding-right: 2.25rem; font-size: 1.2rem; margin-bottom: 1.25rem; }
 .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .75rem; }
+.ca-times { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 5.5rem; gap: .75rem; }
+@media (max-width: 480px) { .ca-times { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .ca-times > :last-child { grid-column: 1 / -1; } }
+.dt { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: .4rem; }
+.ro { background: #f4f5f7; color: var(--text); font-weight: 700; cursor: default; }
 .modal .input { width: 100%; min-width: 0; box-sizing: border-box; }
 .ca-row { border: 1px solid var(--border); border-radius: 12px; padding: .75rem .85rem .25rem; margin-bottom: .75rem; }
 .ca-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: .5rem; font-size: .85rem; }
