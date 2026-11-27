@@ -7,7 +7,7 @@
       <div class="field"><label for="rp-new">New password</label><input id="rp-new" v-model="a" class="input" type="password" minlength="8" autocomplete="new-password" required></div>
       <div class="field"><label for="rp-confirm">Confirm new password</label><input id="rp-confirm" v-model="b" class="input" type="password" autocomplete="new-password" required></div>
       <p v-if="err" class="err" role="alert">{{ err }}</p>
-      <button class="btn btn-primary full" type="submit" :disabled="busy || !token">{{ busy ? 'Updating…' : 'Update password' }}</button>
+      <button class="btn btn-primary full" type="submit" :disabled="busy || !token" :aria-busy="busy">{{ busy ? 'Updating…' : 'Update password' }}</button>
       <NuxtLink to="/forgot-password" class="alt">‹ Request a new link</NuxtLink>
     </form>
     <div v-else>

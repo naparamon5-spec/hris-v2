@@ -8,7 +8,7 @@
       <div class="field"><label for="e">Employee ID or email</label>
         <input id="e" v-model="identifier" class="input" placeholder="AN-0142 or name@ardentnetworks.com.ph" autocomplete="username" required></div>
       <p v-if="err" class="err" role="alert">{{ err }}</p>
-      <button class="btn btn-primary full" type="submit" :disabled="busy || !company">{{ busy ? 'Sending…' : 'Send reset link' }}</button>
+      <button class="btn btn-primary full" type="submit" :disabled="busy || !company" :aria-busy="busy">{{ busy ? 'Sending…' : 'Send reset link' }}</button>
       <NuxtLink to="/login" class="alt">‹ Back to sign in</NuxtLink>
     </form>
     <div v-else>

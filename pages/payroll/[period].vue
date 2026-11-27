@@ -67,7 +67,7 @@
         </div>
         <div class="pw-actions">
           <button type="button" class="btn btn-ghost" @click="cancelPw">Cancel</button>
-          <button type="submit" class="btn btn-primary" :disabled="checking">{{ checking ? 'Checking…' : 'View payslip' }}</button>
+          <button type="submit" class="btn btn-primary" :disabled="checking" :aria-busy="checking">{{ checking ? 'Checking…' : 'View payslip' }}</button>
         </div>
       </form>
     </div>

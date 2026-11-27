@@ -121,7 +121,7 @@
       <div class="foot">
         <button type="button" class="btn btn-ghost" @click="$emit('close')">Cancel</button>
         <button type="button" class="btn btn-ghost" :disabled="busy" @click="submit(false)">Save as draft</button>
-        <button type="submit" class="btn btn-primary" :disabled="busy">{{ busy ? 'Saving…' : 'Submit' }}</button>
+        <button type="submit" class="btn btn-primary" :disabled="busy" :aria-busy="busy">{{ busy ? 'Saving…' : 'Submit' }}</button>
       </div>
     </form>
   </div>

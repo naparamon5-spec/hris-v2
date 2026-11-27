@@ -65,7 +65,7 @@
         </div>
         <div class="foot">
           <button class="btn btn-ghost" @click="bulk = false">Cancel</button>
-          <button class="btn btn-primary" :disabled="!picked.length || !bulkPw || downloading" @click="download">{{ downloading ? 'Preparing…' : `Download (${picked.length})` }}</button>
+          <button class="btn btn-primary" :disabled="!picked.length || !bulkPw || downloading" :aria-busy="downloading" @click="download">{{ downloading ? 'Preparing…' : `Download (${picked.length})` }}</button>
         </div>
       </div>
     </div>

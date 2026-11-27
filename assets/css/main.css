@@ -215,3 +215,14 @@ table.table { width: 100%; border-collapse: separate; border-spacing: 0; font-si
 /* Loading / error state inside cards and pages. */
 .state { padding: 2rem 1rem; text-align: center; color: var(--muted); font-size: .9rem; }
 .state.bad { color: var(--ardent-alert); }
+
+/* Loading state: any button with aria-busy="true" shows a spinner before its label. */
+.btn[aria-busy="true"] { cursor: progress; }
+.btn[aria-busy="true"]::before {
+  content: ''; width: 1em; height: 1em; flex: none; border-radius: 50%;
+  border: 2px solid currentColor; border-right-color: transparent;
+  animation: btn-spin .7s linear infinite;
+}
+.btn[aria-busy="true"]:disabled { opacity: .85; }
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .btn[aria-busy="true"]::before { animation-duration: 1.6s; } }

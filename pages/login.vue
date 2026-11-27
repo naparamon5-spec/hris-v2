@@ -25,7 +25,7 @@
         <NuxtLink to="/forgot-password">Forgot your password?</NuxtLink>
       </div>
       <p v-if="err" class="err" role="alert">{{ err }}</p>
-      <button class="btn btn-primary full" type="submit" :disabled="busy">{{ busy ? 'Signing in…' : 'Log in' }}</button>
+      <button class="btn btn-primary full" type="submit" :disabled="busy" :aria-busy="busy">{{ busy ? 'Signing in…' : 'Log in' }}</button>
 
       <div class="or"><span>or</span></div>
       <!-- No Authentik sign-in on hris_server yet (BACKEND.md §0 #1). -->
@@ -39,9 +39,9 @@
       <h2>Verify it's you</h2>
       <p class="sub">Enter the 6-digit code from your authenticator app.</p>
       <div class="field"><label for="otp">Enter 6-Digit Code</label>
-        <input id="otp" :value="otp" class="input otp" type="text" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" placeholder="000000" title="6 digits" required @input="onOtp"></div>
+        <input id="otp" :value="otp" class="input otp" type="text" inputmode="numeric" pattern="[0-9]{6}" autocomplete="one-time-code" placeholder="000000" title="6 digits" required :disabled="busy" @input="onOtp"></div>
       <p v-if="err" class="err" role="alert">{{ err }}</p>
-      <button class="btn btn-primary full" type="submit" :disabled="busy || otp.length !== 6">{{ busy ? 'Verifying…' : 'Verify & continue' }}</button>
+      <button class="btn btn-primary full" type="submit" :disabled="busy || otp.length !== 6" :aria-busy="busy">{{ busy ? 'Verifying…' : 'Verify & continue' }}</button>
       <a href="#" class="alt" @click.prevent="step = 'login'; err = ''; otp = ''">‹ Back to sign in</a>
     </form>
   </AuthCard>
@@ -88,12 +88,27 @@ const login = async (otpCode) => {
   }
 }
 const signIn = () => login()
-const finish = () => login(otp.value)
+const finish = async () => {
+  if (busy.value || otp.value.length !== 6) return
+  lastTried = otp.value
+  await login(otp.value)
+  // Still on the code step = wrong/expired code: clear it and put the cursor back.
+  if (step.value === 'otp') {
+    otp.value = ''
+    lastTried = ''
+    await nextTick()
+    document.getElementById('otp')?.focus()
+  }
+}
 // Code field takes digits only: letters and symbols are dropped as you type or paste.
 const otp = ref('')
+// Auto-submit once 6 digits are in. Each code is only tried once, so a wrong code
+// doesn't loop — the field clears and the next 6 digits submit again.
+let lastTried = ''
 const onOtp = (e) => {
   otp.value = e.target.value.replace(/\D/g, '').slice(0, 6)
   e.target.value = otp.value
+  if (otp.value.length === 6 && !busy.value && otp.value !== lastTried) finish()
 }
 </script>
 

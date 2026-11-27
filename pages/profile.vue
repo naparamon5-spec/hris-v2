@@ -141,11 +141,11 @@
           <p class="m small">On a phone with an authenticator app, you can also <a :href="tfa.url">open the setup link</a>.</p>
         </template>
         <p v-else class="m">Enter the 6-digit code from your authenticator app to turn 2FA off.</p>
-        <input v-model="tfa.code" class="input otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" aria-label="6-digit code" style="width:100%" @input="tfa.code = tfa.code.replace(/\D/g, '').slice(0, 6)">
+        <input id="tfa-code" v-model="tfa.code" class="input otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" aria-label="6-digit code" style="width:100%" :disabled="tfa.busy" @input="onTfaCode">
         <p v-if="tfa.err" class="err">{{ tfa.err }}</p>
         <div class="foot">
           <button type="button" class="btn btn-ghost" @click="tfa.open = false">Cancel</button>
-          <button type="submit" class="btn" :class="tfa.mode === 'on' ? 'btn-primary' : 'btn-danger'" :disabled="tfa.code.length !== 6 || tfa.busy">{{ tfa.mode === 'on' ? 'Turn on' : 'Turn off' }}</button>
+          <button type="submit" class="btn" :class="tfa.mode === 'on' ? 'btn-primary' : 'btn-danger'" :disabled="tfa.code.length !== 6 || tfa.busy" :aria-busy="tfa.busy">{{ tfa.busy ? 'Verifying…' : tfa.mode === 'on' ? 'Turn on' : 'Turn off' }}</button>
         </div>
       </form>
     </div>
@@ -167,7 +167,7 @@
         <p v-if="edit.err" class="err">{{ edit.err }}</p>
         <div class="foot">
           <button type="button" class="btn btn-ghost" @click="edit.open = false">Cancel</button>
-          <button type="submit" class="btn btn-primary" :disabled="edit.busy">{{ edit.busy ? 'Saving…' : 'Save' }}</button>
+          <button type="submit" class="btn btn-primary" :disabled="edit.busy" :aria-busy="edit.busy">{{ edit.busy ? 'Saving…' : 'Save' }}</button>
         </div>
       </form>
     </div>
@@ -266,7 +266,15 @@ const toggle2fa = async () => {
     flash(apiError(e, 'Unable to start 2FA setup.'))
   }
 }
+// Auto-submit the 2FA code at 6 digits (each code tried once; a wrong one is cleared).
+let tfaTried = ''
+const onTfaCode = () => {
+  tfa.code = tfa.code.replace(/\D/g, '').slice(0, 6)
+  if (tfa.code.length === 6 && !tfa.busy && tfa.code !== tfaTried) confirm2fa()
+}
 const confirm2fa = async () => {
+  if (tfa.busy || tfa.code.length !== 6) return
+  tfaTried = tfa.code
   tfa.busy = true
   tfa.err = ''
   try {
@@ -276,8 +284,11 @@ const confirm2fa = async () => {
     flash(r.message || (twofa.value ? '2FA Enabled' : '2FA Disabled'))
   } catch (e) {
     tfa.err = apiError(e, 'Invalid code.')
+    tfa.code = ''
+    tfaTried = ''
   } finally {
     tfa.busy = false
+    if (tfa.open) nextTick(() => document.getElementById('tfa-code')?.focus())
   }
 }
 const logOut = async () => {
